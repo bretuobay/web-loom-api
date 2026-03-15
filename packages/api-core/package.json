@@ -31,7 +31,9 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@webloom/api-shared": "*"
+    "@webloom/api-shared": "*",
+    "dotenv": "^16.0.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

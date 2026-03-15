@@ -2,7 +2,7 @@
  * Configuration management module
  * 
  * Provides type-safe configuration schema, environment variable interpolation,
- * and configuration utilities for the Web Loom API Framework.
+ * validation, and configuration utilities for the Web Loom API Framework.
  * 
  * @module config
  */
@@ -15,3 +15,12 @@ export * from './env-interpolation';
 
 // Export configuration definition utilities
 export * from './define-config';
+
+// Export configuration validation
+export * from './validation';
+
+// Export environment file loading
+export * from './env-loader';
+
+// Export configuration loading utilities
+export * from './load-config';
