@@ -5,11 +5,15 @@ CRUD generator for Web Loom API Framework. Automatically generates REST API endp
 ## Features
 
 - Generates 6 standard REST endpoints: List, Create, Get, Update (PUT), Update (PATCH), Delete
-- Pagination support with configurable page size and limits
-- Customizable base paths
+- **Page-based pagination** with configurable page size and limits
+- **Cursor-based pagination** for efficient large dataset traversal
+- **Filtering** with multiple operators (eq, ne, gt, gte, lt, lte, in, like)
+- **Sorting** with multiple fields (ascending/descending)
+- **Field selection** (sparse fieldsets) to reduce payload size
+- **Search** across multiple fields
+- **Relationship loading** (coming soon)
 - Soft delete support (coming soon)
 - Optimistic locking support (coming soon)
-- Field exclusion from responses (coming soon)
 
 ## Installation
 
@@ -46,10 +50,16 @@ const database = new DrizzleAdapter({
 // Create CRUD generator
 const generator = new CRUDGenerator(database);
 
-// Generate routes
+// Generate routes with all features enabled
 const routes = generator.generate(UserModel, {
   basePath: '/users',
   enablePagination: true,
+  enableFiltering: true,
+  enableSorting: true,
+  enableFieldSelection: true,
+  enableSearch: true,
+  searchFields: ['name', 'email'],
+  enableCursorPagination: true,
   defaultPageSize: 20,
   maxPageSize: 100,
 });
@@ -66,13 +76,39 @@ The CRUD generator creates the following endpoints:
 
 ### 1. List (GET /resource)
 
-Returns a paginated list of resources.
+Returns a paginated list of resources with support for filtering, sorting, search, and field selection.
 
 **Query Parameters:**
-- `page` - Page number (default: 1)
-- `limit` - Items per page (default: 20, max: configurable)
 
-**Response:**
+**Pagination:**
+- `page` - Page number (default: 1) for page-based pagination
+- `limit` - Items per page (default: 20, max: configurable)
+- `cursor` - Cursor for cursor-based pagination (base64 encoded ID)
+
+**Filtering:**
+- `filter[field][operator]=value` - Filter by field with operator
+- Supported operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `like`
+- Examples:
+  - `?filter[age][gte]=18` - Age greater than or equal to 18
+  - `?filter[name][eq]=John` - Name equals John
+  - `?filter[status][in]=active,pending` - Status in list
+
+**Sorting:**
+- `sort=field1,-field2` - Sort by fields (- prefix for descending)
+- Examples:
+  - `?sort=name` - Sort by name ascending
+  - `?sort=-createdAt` - Sort by createdAt descending
+  - `?sort=name,-createdAt` - Sort by name asc, then createdAt desc
+
+**Field Selection:**
+- `fields=field1,field2` - Select specific fields to return
+- Example: `?fields=id,name,email` - Only return id, name, and email
+
+**Search:**
+- `search=term` - Search across configured searchFields
+- Example: `?search=john` - Search for "john" in name and email fields
+
+**Page-based Response:**
 ```json
 {
   "data": [...],
@@ -80,6 +116,19 @@ Returns a paginated list of resources.
     "page": 1,
     "limit": 20,
     "total": 42
+  }
+}
+```
+
+**Cursor-based Response:**
+```json
+{
+  "data": [...],
+  "pagination": {
+    "cursor": "abc123",
+    "nextCursor": "def456",
+    "hasNextPage": true,
+    "limit": 20
   }
 }
 ```
@@ -144,19 +193,97 @@ interface CRUDOptions {
   
   /** Maximum page size allowed */
   maxPageSize?: number;
+  
+  /** Enable filtering support */
+  enableFiltering?: boolean;
+  
+  /** Enable sorting support */
+  enableSorting?: boolean;
+  
+  /** Enable field selection support */
+  enableFieldSelection?: boolean;
+  
+  /** Enable search functionality */
+  enableSearch?: boolean;
+  
+  /** Fields to enable search on */
+  searchFields?: string[];
+  
+  /** Enable cursor-based pagination */
+  enableCursorPagination?: boolean;
+  
+  /** Enable relationship loading */
+  enableRelationships?: boolean;
 }
+```
+
+## Advanced Examples
+
+### Filtering Example
+
+```typescript
+// GET /users?filter[age][gte]=18&filter[status][eq]=active
+// Returns users with age >= 18 and status = active
+```
+
+### Sorting Example
+
+```typescript
+// GET /users?sort=name,-createdAt
+// Returns users sorted by name ascending, then createdAt descending
+```
+
+### Field Selection Example
+
+```typescript
+// GET /users?fields=id,name,email
+// Returns only id, name, and email fields (excludes password, etc.)
+```
+
+### Search Example
+
+```typescript
+const routes = generator.generate(UserModel, {
+  basePath: '/users',
+  enableSearch: true,
+  searchFields: ['name', 'email', 'bio'],
+});
+
+// GET /users?search=john
+// Searches for "john" in name, email, and bio fields
+```
+
+### Cursor Pagination Example
+
+```typescript
+// First request
+// GET /users?limit=20
+// Returns first 20 users with nextCursor
+
+// Next request
+// GET /users?cursor=abc123&limit=20
+// Returns next 20 users after cursor
+```
+
+### Exclude Sensitive Fields
+
+```typescript
+const routes = generator.generate(UserModel, {
+  basePath: '/users',
+  excludeFields: ['password', 'passwordHash', 'apiKey'],
+});
+
+// Password fields are automatically excluded from all responses
 ```
 
 ## Advanced Features (Coming Soon)
 
-- Filtering with operators (eq, gte, lte, like, in)
-- Sorting with multiple fields
-- Field selection (sparse fieldsets)
-- Search functionality
-- Relationship loading (include parameter)
 - Nested relationship creation
+- Relationship loading (include parameter)
 - Soft delete support
 - Optimistic locking
+- Computed fields
+- Aggregations (count, sum, avg)
 
 ## License
 

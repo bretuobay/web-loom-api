@@ -275,7 +275,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Implement route generation for all 6 endpoints
     - Add customization support via CRUDOptions
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
-  - [ ] 14.2 Implement List endpoint (GET /resource)
+  - [x] 14.2 Implement List endpoint (GET /resource)
     - Add page-based pagination support
     - Add cursor-based pagination support
     - Implement filtering with operators (eq, gte, lte, etc.)

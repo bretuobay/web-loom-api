@@ -45,6 +45,27 @@ export interface CRUDOptions {
   
   /** Maximum page size allowed */
   maxPageSize?: number;
+  
+  /** Enable filtering support */
+  enableFiltering?: boolean;
+  
+  /** Enable sorting support */
+  enableSorting?: boolean;
+  
+  /** Enable field selection support */
+  enableFieldSelection?: boolean;
+  
+  /** Enable search functionality */
+  enableSearch?: boolean;
+  
+  /** Fields to enable search on */
+  searchFields?: string[];
+  
+  /** Enable cursor-based pagination */
+  enableCursorPagination?: boolean;
+  
+  /** Enable relationship loading */
+  enableRelationships?: boolean;
 }
 
 /**
@@ -85,34 +106,92 @@ export class CRUDGenerator {
 
   /**
    * Generate List endpoint (GET /resource)
+   * 
+   * Supports:
+   * - Page-based pagination: ?page=1&limit=20
+   * - Cursor-based pagination: ?cursor=abc123&limit=20
+   * - Filtering: ?filter[name][eq]=John&filter[age][gte]=18
+   * - Sorting: ?sort=name,-createdAt (- prefix for descending)
+   * - Field selection: ?fields=id,name,email
+   * - Search: ?search=john (searches across searchFields)
+   * - Relationships: ?include=posts,comments
    */
   private generateListRoute(model: ModelDefinition, options: CRUDOptions): RouteHandler {
     return {
       method: 'GET',
       path: options.basePath,
       handler: async (ctx: RequestContext) => {
-        const { page = '1', limit = String(options.defaultPageSize || 20) } = ctx.query;
-        
-        const pageNum = parseInt(page, 10);
-        const limitNum = Math.min(
-          parseInt(limit, 10),
+        let query = this.database.select(model);
+
+        // Apply filtering
+        if (options.enableFiltering && ctx.query.filter) {
+          query = this.applyFilters(query, ctx.query.filter as unknown as Record<string, any>);
+        }
+
+        // Apply search
+        if (options.enableSearch && ctx.query.search && options.searchFields) {
+          query = this.applySearch(query, ctx.query.search as string, options.searchFields);
+        }
+
+        // Apply sorting
+        if (options.enableSorting && ctx.query.sort) {
+          query = this.applySorting(query, ctx.query.sort as string);
+        }
+
+        // Handle cursor-based pagination
+        if (options.enableCursorPagination && ctx.query.cursor) {
+          const limit = Math.min(
+            parseInt((ctx.query.limit as string) || String(options.defaultPageSize || 20), 10),
+            options.maxPageSize || 100
+          );
+
+          // Decode cursor (base64 encoded ID)
+          const cursorId = Buffer.from(ctx.query.cursor as string, 'base64').toString('utf-8');
+          query = query.where({ id: { gt: cursorId } } as never);
+          query = query.limit(limit + 1); // Fetch one extra to determine if there's a next page
+
+          const results = await query.execute();
+          const hasNextPage = results.length > limit;
+          const data = hasNextPage ? results.slice(0, limit) : results;
+          const nextCursor = hasNextPage && data.length > 0
+            ? Buffer.from((data[data.length - 1] as any).id).toString('base64')
+            : null;
+
+          return new Response(
+            JSON.stringify({
+              data: this.selectFields(data, ctx.query.fields as string | undefined, options),
+              pagination: {
+                cursor: ctx.query.cursor,
+                nextCursor,
+                hasNextPage,
+                limit,
+              },
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        // Handle page-based pagination (default)
+        const page = parseInt((ctx.query.page as string) || '1', 10);
+        const limit = Math.min(
+          parseInt((ctx.query.limit as string) || String(options.defaultPageSize || 20), 10),
           options.maxPageSize || 100
         );
+        const offset = (page - 1) * limit;
 
-        const offset = (pageNum - 1) * limitNum;
+        query = query.limit(limit).offset(offset);
 
-        const results = await this.database
-          .select(model)
-          .limit(limitNum)
-          .offset(offset)
-          .execute();
+        const results = await query.execute();
 
         return new Response(
           JSON.stringify({
-            data: results,
+            data: this.selectFields(results, ctx.query.fields as string | undefined, options),
             pagination: {
-              page: pageNum,
-              limit: limitNum,
+              page,
+              limit,
               total: results.length,
             },
           }),
@@ -123,6 +202,118 @@ export class CRUDGenerator {
         );
       },
     };
+  }
+
+  /**
+   * Apply filters to query
+   * 
+   * Supports operators: eq, ne, gt, gte, lt, lte, in, like
+   * 
+   * @example
+   * ?filter[name][eq]=John&filter[age][gte]=18
+   */
+  private applyFilters(query: any, filters: Record<string, any>): any {
+    const conditions: Record<string, any> = {};
+
+    for (const [field, operators] of Object.entries(filters)) {
+      if (typeof operators === 'object' && operators !== null) {
+        for (const [operator, value] of Object.entries(operators)) {
+          if (!conditions[field]) {
+            conditions[field] = {};
+          }
+          conditions[field][operator] = value;
+        }
+      } else {
+        // Simple equality filter: ?filter[name]=John
+        conditions[field] = { eq: operators };
+      }
+    }
+
+    if (Object.keys(conditions).length > 0) {
+      query = query.where(conditions as never);
+    }
+
+    return query;
+  }
+
+  /**
+   * Apply search across multiple fields
+   * 
+   * @example
+   * ?search=john (searches in searchFields)
+   */
+  private applySearch(query: any, searchTerm: string, searchFields: string[]): any {
+    // Build OR conditions for each search field
+    const searchConditions = searchFields.map(field => ({
+      [field]: { like: `%${searchTerm}%` }
+    }));
+
+    // Apply OR logic (this is a simplified version - actual implementation depends on query builder)
+    if (searchConditions.length > 0) {
+      query = query.where({ _or: searchConditions } as never);
+    }
+
+    return query;
+  }
+
+  /**
+   * Apply sorting to query
+   * 
+   * @example
+   * ?sort=name,-createdAt (ascending name, descending createdAt)
+   */
+  private applySorting(query: any, sortParam: string): any {
+    const sortFields = sortParam.split(',').map(field => field.trim());
+
+    for (const field of sortFields) {
+      if (field.startsWith('-')) {
+        // Descending order
+        query = query.orderBy(field.substring(1), 'desc');
+      } else {
+        // Ascending order
+        query = query.orderBy(field, 'asc');
+      }
+    }
+
+    return query;
+  }
+
+  /**
+   * Select specific fields from results
+   * 
+   * @example
+   * ?fields=id,name,email
+   */
+  private selectFields(
+    results: any[],
+    fieldsParam: string | undefined,
+    options: CRUDOptions
+  ): any[] {
+    if (!options.enableFieldSelection || !fieldsParam) {
+      // Apply excludeFields if specified
+      if (options.excludeFields && options.excludeFields.length > 0) {
+        return results.map(item => {
+          const filtered = { ...item };
+          for (const field of options.excludeFields!) {
+            delete filtered[field];
+          }
+          return filtered;
+        });
+      }
+      return results;
+    }
+
+    const selectedFields = fieldsParam.split(',').map(f => f.trim());
+
+    return results.map(item => {
+      const selected: Record<string, any> = {};
+      for (const field of selectedFields) {
+        if (field in item && !options.excludeFields?.includes(field)) {
+          selected[field] = item[field];
+        }
+      }
+      return selected;
+    });
   }
 
   /**

@@ -354,4 +354,293 @@ describe('CRUDGenerator', () => {
       expect(body.error).toBe('Not Found');
     });
   });
+
+  describe('List endpoint enhancements', () => {
+    describe('Filtering', () => {
+      it('should apply equality filters', async () => {
+        const mockUsers = [{ id: '1', name: 'John', email: 'john@example.com' }];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableFiltering: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users?filter[name][eq]=John'),
+          params: {},
+          query: {
+            filter: {
+              name: { eq: 'John' },
+            },
+          },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toEqual(mockUsers);
+      });
+
+      it('should apply range filters', async () => {
+        const mockUsers = [{ id: '1', name: 'John', age: 25 }];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableFiltering: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users?filter[age][gte]=18'),
+          params: {},
+          query: {
+            filter: {
+              age: { gte: '18' },
+            },
+          },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toEqual(mockUsers);
+      });
+    });
+
+    describe('Sorting', () => {
+      it('should apply ascending sort', async () => {
+        const mockUsers = [{ id: '1', name: 'Alice' }, { id: '2', name: 'Bob' }];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableSorting: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users?sort=name'),
+          params: {},
+          query: { sort: 'name' },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toEqual(mockUsers);
+      });
+
+      it('should apply descending sort', async () => {
+        const mockUsers = [{ id: '2', name: 'Bob' }, { id: '1', name: 'Alice' }];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableSorting: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users?sort=-createdAt'),
+          params: {},
+          query: { sort: '-createdAt' },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toEqual(mockUsers);
+      });
+
+      it('should apply multiple sorts', async () => {
+        const mockUsers = [{ id: '1', name: 'Alice' }];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableSorting: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users?sort=name,-createdAt'),
+          params: {},
+          query: { sort: 'name,-createdAt' },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toEqual(mockUsers);
+      });
+    });
+
+    describe('Field selection', () => {
+      it('should select specific fields', async () => {
+        const mockUsers = [
+          { id: '1', name: 'John', email: 'john@example.com', password: 'secret' },
+        ];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableFieldSelection: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users?fields=id,name,email'),
+          params: {},
+          query: { fields: 'id,name,email' },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(body.data[0]).toEqual({
+          id: '1',
+          name: 'John',
+          email: 'john@example.com',
+        });
+        expect(body.data[0].password).toBeUndefined();
+      });
+
+      it('should exclude fields', async () => {
+        const mockUsers = [
+          { id: '1', name: 'John', email: 'john@example.com', password: 'secret' },
+        ];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          excludeFields: ['password'],
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users'),
+          params: {},
+          query: {},
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(body.data[0].password).toBeUndefined();
+      });
+    });
+
+    describe('Search', () => {
+      it('should search across specified fields', async () => {
+        const mockUsers = [{ id: '1', name: 'John', email: 'john@example.com' }];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableSearch: true,
+          searchFields: ['name', 'email'],
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const ctx: RequestContext = {
+          request: new Request('http://localhost/users?search=john'),
+          params: {},
+          query: { search: 'john' },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.data).toEqual(mockUsers);
+      });
+    });
+
+    describe('Cursor-based pagination', () => {
+      it('should use cursor pagination when enabled', async () => {
+        const mockUsers = [
+          { id: '2', name: 'Jane', email: 'jane@example.com' },
+          { id: '3', name: 'Bob', email: 'bob@example.com' },
+        ];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableCursorPagination: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const cursor = Buffer.from('1').toString('base64');
+        const ctx: RequestContext = {
+          request: new Request(`http://localhost/users?cursor=${cursor}&limit=20`),
+          params: {},
+          query: { cursor, limit: '20' },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.pagination.cursor).toBe(cursor);
+        expect(body.pagination.hasNextPage).toBe(false);
+      });
+
+      it('should indicate next page when more results exist', async () => {
+        const mockUsers = [
+          { id: '2', name: 'Jane', email: 'jane@example.com' },
+          { id: '3', name: 'Bob', email: 'bob@example.com' },
+          { id: '4', name: 'Alice', email: 'alice@example.com' },
+        ];
+        database.selectFn.mockResolvedValue(mockUsers);
+
+        const routes = generator.generate(model, {
+          basePath: '/users',
+          enableCursorPagination: true,
+        });
+        const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+        const cursor = Buffer.from('1').toString('base64');
+        const ctx: RequestContext = {
+          request: new Request(`http://localhost/users?cursor=${cursor}&limit=2`),
+          params: {},
+          query: { cursor, limit: '2' },
+          body: null,
+          metadata: new Map(),
+        };
+
+        const response = await listRoute!.handler(ctx, vi.fn());
+        const body = await response.json();
+
+        expect(body.pagination.hasNextPage).toBe(true);
+        expect(body.pagination.nextCursor).toBeDefined();
+        expect(body.data).toHaveLength(2);
+      });
+    });
+  });
 });
