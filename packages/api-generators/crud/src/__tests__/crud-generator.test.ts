@@ -3,6 +3,7 @@ import { CRUDGenerator } from '../crud-generator';
 import type {
   ModelDefinition,
   DatabaseAdapter,
+  ValidationAdapter,
   RequestContext,
   QueryBuilder,
 } from '@web-loom/api-core';
@@ -13,6 +14,7 @@ class MockDatabaseAdapter implements Partial<DatabaseAdapter> {
   insertFn = vi.fn();
   updateFn = vi.fn();
   deleteFn = vi.fn();
+  transactionFn = vi.fn();
 
   select<T>(model: ModelDefinition): QueryBuilder<T> {
     const mockQueryBuilder = {
@@ -35,6 +37,11 @@ class MockDatabaseAdapter implements Partial<DatabaseAdapter> {
 
   async delete(_model: ModelDefinition, id: string): Promise<void> {
     return this.deleteFn(id);
+  }
+
+  async transaction<T>(callback: () => Promise<T>): Promise<T> {
+    // Mock transaction - just execute the callback
+    return this.transactionFn(callback) || callback();
   }
 }
 
@@ -641,6 +648,292 @@ describe('CRUDGenerator', () => {
         expect(body.pagination.nextCursor).toBeDefined();
         expect(body.data).toHaveLength(2);
       });
+    });
+  });
+
+  describe('Create endpoint enhancements', () => {
+    it('should apply default values', async () => {
+      const modelWithDefaults: ModelDefinition = {
+        name: 'User',
+        tableName: 'users',
+        fields: [
+          { name: 'id', type: 'uuid', database: { primaryKey: true } },
+          { name: 'name', type: 'string', required: true },
+          { name: 'status', type: 'string', default: 'active' },
+        ],
+      };
+
+      const createdUser = { id: '1', name: 'John', status: 'active' };
+      database.insertFn.mockResolvedValue(createdUser);
+
+      const routes = generator.generate(modelWithDefaults, { basePath: '/users' });
+      const createRoute = routes.find(r => r.method === 'POST');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users', { method: 'POST' }),
+        params: {},
+        query: {},
+        body: { name: 'John' }, // status not provided
+        metadata: new Map(),
+      };
+
+      const response = await createRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(201);
+      expect(body.status).toBe('active');
+    });
+
+    it('should generate timestamps on create', async () => {
+      const modelWithTimestamps: ModelDefinition = {
+        name: 'User',
+        tableName: 'users',
+        fields: [
+          { name: 'id', type: 'uuid', database: { primaryKey: true } },
+          { name: 'name', type: 'string', required: true },
+          { name: 'createdAt', type: 'date' },
+          { name: 'updatedAt', type: 'date' },
+        ],
+        options: { timestamps: true },
+      };
+
+      database.insertFn.mockImplementation((data: any) => ({
+        id: '1',
+        ...data,
+      }));
+
+      const routes = generator.generate(modelWithTimestamps, { basePath: '/users' });
+      const createRoute = routes.find(r => r.method === 'POST');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users', { method: 'POST' }),
+        params: {},
+        query: {},
+        body: { name: 'John' },
+        metadata: new Map(),
+      };
+
+      await createRoute!.handler(ctx, vi.fn());
+
+      // Verify timestamps were added
+      expect(database.insertFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'John',
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        })
+      );
+    });
+  });
+
+  describe('Get endpoint enhancements', () => {
+    it('should support field selection', async () => {
+      const user = { id: '1', name: 'John', email: 'john@example.com', password: 'secret' };
+      database.selectFn.mockResolvedValue([user]);
+
+      const routes = generator.generate(model, {
+        basePath: '/users',
+        enableFieldSelection: true,
+      });
+      const getRoute = routes.find(r => r.method === 'GET' && r.path === '/users/:id');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1?fields=id,name,email'),
+        params: { id: '1' },
+        query: { fields: 'id,name,email' },
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await getRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(body).toEqual({
+        id: '1',
+        name: 'John',
+        email: 'john@example.com',
+      });
+      expect(body.password).toBeUndefined();
+    });
+  });
+
+  describe('Update endpoint enhancements', () => {
+    it('should update timestamps on update', async () => {
+      const modelWithTimestamps: ModelDefinition = {
+        name: 'User',
+        tableName: 'users',
+        fields: [
+          { name: 'id', type: 'uuid', database: { primaryKey: true } },
+          { name: 'name', type: 'string', required: true },
+          { name: 'updatedAt', type: 'date' },
+        ],
+        options: { timestamps: true },
+      };
+
+      database.updateFn.mockImplementation((_id: string, data: any) => ({
+        id: '1',
+        name: 'Jane',
+        ...data,
+      }));
+
+      const routes = generator.generate(modelWithTimestamps, { basePath: '/users' });
+      const updateRoute = routes.find(r => r.method === 'PUT');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'PUT' }),
+        params: { id: '1' },
+        query: {},
+        body: { name: 'Jane' },
+        metadata: new Map(),
+      };
+
+      await updateRoute!.handler(ctx, vi.fn());
+
+      // Verify updatedAt was added
+      expect(database.updateFn).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          name: 'Jane',
+          updatedAt: expect.any(String),
+        })
+      );
+    });
+
+    it('should handle optimistic locking', async () => {
+      const modelWithVersion: ModelDefinition = {
+        name: 'User',
+        tableName: 'users',
+        fields: [
+          { name: 'id', type: 'uuid', database: { primaryKey: true } },
+          { name: 'name', type: 'string', required: true },
+          { name: 'version', type: 'number', required: true },
+        ],
+      };
+
+      // Mock current version
+      database.selectFn.mockResolvedValue([{ id: '1', name: 'John', version: 2 }]);
+
+      const routes = generator.generate(modelWithVersion, {
+        basePath: '/users',
+        enableOptimisticLocking: true,
+      });
+      const updateRoute = routes.find(r => r.method === 'PUT');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'PUT' }),
+        params: { id: '1' },
+        query: {},
+        body: { name: 'Jane', version: 1 }, // Stale version
+        metadata: new Map(),
+      };
+
+      const response = await updateRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(409);
+      expect(body.error).toBe('Conflict');
+      expect(body.code).toBe('OPTIMISTIC_LOCK_ERROR');
+    });
+
+    it('should increment version on successful update', async () => {
+      const modelWithVersion: ModelDefinition = {
+        name: 'User',
+        tableName: 'users',
+        fields: [
+          { name: 'id', type: 'uuid', database: { primaryKey: true } },
+          { name: 'name', type: 'string', required: true },
+          { name: 'version', type: 'number', required: true },
+        ],
+      };
+
+      // Mock current version
+      database.selectFn.mockResolvedValue([{ id: '1', name: 'John', version: 1 }]);
+      database.updateFn.mockResolvedValue({ id: '1', name: 'Jane', version: 2 });
+
+      const routes = generator.generate(modelWithVersion, {
+        basePath: '/users',
+        enableOptimisticLocking: true,
+      });
+      const updateRoute = routes.find(r => r.method === 'PUT');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'PUT' }),
+        params: { id: '1' },
+        query: {},
+        body: { name: 'Jane', version: 1 }, // Correct version
+        metadata: new Map(),
+      };
+
+      const response = await updateRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.version).toBe(2);
+    });
+  });
+
+  describe('Delete endpoint enhancements', () => {
+    it('should perform soft delete when enabled', async () => {
+      const modelWithSoftDelete: ModelDefinition = {
+        name: 'User',
+        tableName: 'users',
+        fields: [
+          { name: 'id', type: 'uuid', database: { primaryKey: true } },
+          { name: 'name', type: 'string', required: true },
+          { name: 'deletedAt', type: 'date' },
+        ],
+      };
+
+      database.updateFn.mockResolvedValue({ id: '1', name: 'John', deletedAt: new Date().toISOString() });
+
+      const routes = generator.generate(modelWithSoftDelete, {
+        basePath: '/users',
+        enableSoftDelete: true,
+      });
+      const deleteRoute = routes.find(r => r.method === 'DELETE');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'DELETE' }),
+        params: { id: '1' },
+        query: {},
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await deleteRoute!.handler(ctx, vi.fn());
+
+      expect(response.status).toBe(204);
+      // Verify update was called instead of delete
+      expect(database.updateFn).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          deletedAt: expect.any(String),
+        })
+      );
+      expect(database.deleteFn).not.toHaveBeenCalled();
+    });
+
+    it('should perform hard delete when soft delete is disabled', async () => {
+      database.deleteFn.mockResolvedValue(undefined);
+
+      const routes = generator.generate(model, {
+        basePath: '/users',
+        enableSoftDelete: false,
+      });
+      const deleteRoute = routes.find(r => r.method === 'DELETE');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'DELETE' }),
+        params: { id: '1' },
+        query: {},
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await deleteRoute!.handler(ctx, vi.fn());
+
+      expect(response.status).toBe(204);
+      expect(database.deleteFn).toHaveBeenCalledWith('1');
     });
   });
 });

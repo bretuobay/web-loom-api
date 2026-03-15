@@ -318,6 +318,13 @@ export class CRUDGenerator {
 
   /**
    * Generate Create endpoint (POST /resource)
+   * 
+   * Features:
+   * - Request body validation (handled by validation middleware)
+   * - Apply default values from model definition
+   * - Generate timestamps automatically (createdAt, updatedAt)
+   * - Wrap in transaction for data consistency
+   * - Nested relationship creation (coming soon - requires relationship support)
    */
   private generateCreateRoute(model: ModelDefinition, options: CRUDOptions): RouteHandler {
     return {
@@ -325,18 +332,108 @@ export class CRUDGenerator {
       path: options.basePath,
       handler: async (ctx: RequestContext) => {
         // Body should already be validated by validation middleware
-        const created = await this.database.insert(model, ctx.body);
+        let data = { ...(ctx.body as Record<string, any>) };
 
-        return new Response(JSON.stringify(created), {
-          status: 201,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        // Apply default values from model definition
+        data = this.applyDefaults(model, data);
+
+        // Generate timestamps
+        data = this.applyTimestamps(model, data, 'create');
+
+        // Wrap in transaction for consistency
+        try {
+          const created = await this.database.transaction(async () => {
+            return await this.database.insert(model, data);
+          });
+
+          return new Response(JSON.stringify(created), {
+            status: 201,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          // Let error handler middleware handle database errors
+          throw error;
+        }
       },
     };
   }
 
   /**
+   * Apply default values from model definition
+   */
+  private applyDefaults(model: ModelDefinition, data: any): any {
+    const result = { ...data };
+
+    for (const field of model.fields) {
+      // Skip if value already provided
+      if (result[field.name] !== undefined) {
+        continue;
+      }
+
+      // Apply default value if defined
+      if (field.default !== undefined) {
+        // Handle function defaults
+        if (typeof field.default === 'function') {
+          result[field.name] = field.default();
+        } else {
+          result[field.name] = field.default;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Apply timestamp fields (createdAt, updatedAt)
+   * 
+   * Note: This is a simplified implementation. In production, you would check
+   * for specific field metadata or model options to determine which fields
+   * should be auto-generated.
+   */
+  private applyTimestamps(model: ModelDefinition, data: any, operation: 'create' | 'update'): any {
+    const result = { ...data };
+    const now = new Date().toISOString();
+
+    // Check if model has timestamps enabled
+    const hasTimestamps = model.options?.timestamps !== false;
+
+    if (!hasTimestamps) {
+      return result;
+    }
+
+    for (const field of model.fields) {
+      if (field.type === 'date') {
+        // For create, set both createdAt and updatedAt
+        if (operation === 'create') {
+          if (field.name === 'createdAt' || field.name === 'created_at') {
+            result[field.name] = now;
+          }
+          if (field.name === 'updatedAt' || field.name === 'updated_at') {
+            result[field.name] = now;
+          }
+        }
+        // For update, only set updatedAt
+        else if (operation === 'update') {
+          if (field.name === 'updatedAt' || field.name === 'updated_at') {
+            result[field.name] = now;
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Generate Get endpoint (GET /resource/:id)
+   * 
+   * Features:
+   * - ID validation
+   * - 404 handling
+   * - Field selection support
+   * - Relationship eager loading (coming soon - requires relationship support)
+   * - Computed fields (coming soon - requires computed field definitions)
    */
   private generateGetRoute(model: ModelDefinition, options: CRUDOptions): RouteHandler {
     return {
@@ -376,7 +473,14 @@ export class CRUDGenerator {
           );
         }
 
-        return new Response(JSON.stringify(results[0]), {
+        // Apply field selection if requested
+        const data = this.selectFields(
+          [results[0]],
+          ctx.query.fields as string | undefined,
+          options
+        )[0];
+
+        return new Response(JSON.stringify(data), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
@@ -386,6 +490,12 @@ export class CRUDGenerator {
 
   /**
    * Generate Update endpoint (PUT/PATCH /resource/:id)
+   * 
+   * Features:
+   * - Full update (PUT) vs partial update (PATCH) semantics
+   * - Automatic updatedAt timestamp
+   * - Optimistic locking support (if enabled)
+   * - Relationship updates (coming soon - requires relationship support)
    */
   private generateUpdateRoute(
     model: ModelDefinition,
@@ -411,8 +521,52 @@ export class CRUDGenerator {
           );
         }
 
+        let data = { ...(ctx.body as Record<string, any>) };
+
+        // Apply timestamps
+        data = this.applyTimestamps(model, data, 'update');
+
+        // Handle optimistic locking
+        if (options.enableOptimisticLocking && data.version !== undefined) {
+          // Check current version
+          const current = await this.database
+            .select(model)
+            .where({ id } as never)
+            .execute();
+
+          if (current.length === 0) {
+            return new Response(
+              JSON.stringify({
+                error: 'Not Found',
+                message: `${model.name} with id ${id} not found`,
+              }),
+              {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          }
+
+          if ((current[0] as any).version !== data.version) {
+            return new Response(
+              JSON.stringify({
+                error: 'Conflict',
+                message: 'Resource has been modified by another request. Please refresh and try again.',
+                code: 'OPTIMISTIC_LOCK_ERROR',
+              }),
+              {
+                status: 409,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          }
+
+          // Increment version
+          data.version = data.version + 1;
+        }
+
         try {
-          const updated = await this.database.update(model, id, ctx.body as never);
+          const updated = await this.database.update(model, id, data as never);
 
           return new Response(JSON.stringify(updated), {
             status: 200,
@@ -439,6 +593,11 @@ export class CRUDGenerator {
 
   /**
    * Generate Delete endpoint (DELETE /resource/:id)
+   * 
+   * Features:
+   * - Soft delete support (if enabled)
+   * - Cascade delete handling (coming soon - requires relationship metadata)
+   * - Constraint checking (handled by database)
    */
   private generateDeleteRoute(model: ModelDefinition, options: CRUDOptions): RouteHandler {
     return {
@@ -461,6 +620,42 @@ export class CRUDGenerator {
         }
 
         try {
+          // Handle soft delete
+          if (options.enableSoftDelete) {
+            // Check if model has deletedAt field
+            const hasDeletedAt = model.fields.some(
+              (f) => f.name === 'deletedAt' || f.name === 'deleted_at'
+            );
+
+            if (hasDeletedAt) {
+              // Soft delete: set deletedAt timestamp
+              const now = new Date().toISOString();
+              const deleteData: any = {};
+              
+              // Find the correct field name
+              const deletedAtField = model.fields.find(
+                (f) => f.name === 'deletedAt' || f.name === 'deleted_at'
+              );
+              
+              if (deletedAtField) {
+                deleteData[deletedAtField.name] = now;
+                
+                // Also update updatedAt if it exists
+                const updatedAtField = model.fields.find(
+                  (f) => f.name === 'updatedAt' || f.name === 'updated_at'
+                );
+                if (updatedAtField) {
+                  deleteData[updatedAtField.name] = now;
+                }
+
+                await this.database.update(model, id, deleteData as never);
+
+                return new Response(null, { status: 204 });
+              }
+            }
+          }
+
+          // Hard delete
           await this.database.delete(model, id);
 
           return new Response(null, { status: 204 });

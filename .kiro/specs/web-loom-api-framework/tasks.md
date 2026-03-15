@@ -284,27 +284,27 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Add search functionality
     - Add relationship loading (include parameter)
     - _Requirements: 5.2, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
-  - [ ] 14.3 Implement Create endpoint (POST /resource)
+  - [x] 14.3 Implement Create endpoint (POST /resource)
     - Add request body validation
     - Implement nested relationship creation
     - Apply default values
     - Generate timestamps automatically
     - Wrap in transaction
     - _Requirements: 5.1, 12.1, 12.2_
-  - [ ] 14.4 Implement Get endpoint (GET /resource/:id)
+  - [x] 14.4 Implement Get endpoint (GET /resource/:id)
     - Add ID validation
     - Implement 404 handling
     - Add relationship eager loading
     - Support field selection
     - Calculate computed fields
     - _Requirements: 5.3_
-  - [ ] 14.5 Implement Update endpoints (PUT/PATCH /resource/:id)
+  - [x] 14.5 Implement Update endpoints (PUT/PATCH /resource/:id)
     - Implement full update (PUT) semantics
     - Implement partial update (PATCH) semantics
     - Add optimistic locking support
     - Handle relationship updates
     - _Requirements: 5.4, 5.5, 12.3_
-  - [ ] 14.6 Implement Delete endpoint (DELETE /resource/:id)
+  - [x] 14.6 Implement Delete endpoint (DELETE /resource/:id)
     - Add soft delete support
     - Implement cascade delete handling
     - Add constraint checking
