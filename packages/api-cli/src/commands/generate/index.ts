@@ -6,6 +6,7 @@
 
 import { Command } from 'commander';
 import { createGenerateModelCommand } from './model.js';
+import { createGenerateRouteCommand } from './route.js';
 import { createGenerateCRUDCommand } from './crud.js';
 
 /**
@@ -18,8 +19,8 @@ export function createGenerateCommand(): Command {
 
   // Add subcommands
   generate.addCommand(createGenerateModelCommand());
+  generate.addCommand(createGenerateRouteCommand());
   generate.addCommand(createGenerateCRUDCommand());
-  // generate.addCommand(createGenerateRouteCommand());
 
   return generate;
 }

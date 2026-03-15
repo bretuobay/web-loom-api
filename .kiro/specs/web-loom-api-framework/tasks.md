@@ -389,7 +389,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Register model in Model Registry
     - Support relationships and options
     - _Requirements: 18.4_
-  - [ ] 19.2 Implement 'webloom generate route' command
+  - [x] 19.2 Implement 'webloom generate route' command
     - Generate route file with HTTP method handlers
     - Support dynamic segments in path
     - Add validation schema stubs
