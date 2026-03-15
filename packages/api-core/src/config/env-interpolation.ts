@@ -7,7 +7,7 @@
  * @module config/env-interpolation
  */
 
-import { ConfigurationError } from '@webloom/api-shared';
+import { ConfigurationError } from '@web-loom/api-shared';
 
 /**
  * Regular expression to match environment variable references
@@ -183,7 +183,7 @@ export function interpolateValue<T>(
  * 
  * @example
  * ```typescript
- * import { interpolateConfig } from '@webloom/api-core';
+ * import { interpolateConfig } from '@web-loom/api-core';
  * 
  * const config = {
  *   database: {

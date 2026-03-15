@@ -1,4 +1,4 @@
-import type { HTTPMethod } from '@webloom/api-shared';
+import type { HTTPMethod } from '@web-loom/api-shared';
 
 /**
  * API Framework Adapter Interface

@@ -16,8 +16,8 @@ The Model Registry is a central component that tracks all model definitions in t
 ### Basic Registration
 
 ```typescript
-import { ModelRegistry } from '@webloom/api-core';
-import type { ModelDefinition } from '@webloom/api-core';
+import { ModelRegistry } from '@web-loom/api-core';
+import type { ModelDefinition } from '@web-loom/api-core';
 
 const registry = new ModelRegistry();
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ModelRegistry } from '../model-registry';
 import type { ModelDefinition } from '../types';
-import { ValidationError } from '@webloom/api-shared';
+import { ValidationError } from '@web-loom/api-shared';
 
 /**
  * Helper function to check if a validation error contains a specific message

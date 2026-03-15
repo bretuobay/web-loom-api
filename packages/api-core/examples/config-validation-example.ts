@@ -22,9 +22,9 @@ console.log('=== Example 1: Valid Configuration ===\n');
 
 const validConfig = defineConfig({
   adapters: {
-    api: { package: '@webloom/api-adapter-hono' },
-    database: { package: '@webloom/api-adapter-drizzle' },
-    validation: { package: '@webloom/api-adapter-zod' },
+    api: { package: '@web-loom/api-adapter-hono' },
+    database: { package: '@web-loom/api-adapter-drizzle' },
+    validation: { package: '@web-loom/api-adapter-zod' },
   },
   database: {
     url: 'postgresql://localhost:5432/mydb',
@@ -70,7 +70,7 @@ console.log('\n=== Example 2: Invalid Configuration - Missing Fields ===\n');
 
 const invalidConfig1 = {
   adapters: {
-    api: { package: '@webloom/api-adapter-hono' },
+    api: { package: '@web-loom/api-adapter-hono' },
     // Missing database and validation adapters
   },
   database: {
@@ -139,9 +139,9 @@ console.log('\n=== Example 5: Configuration with Environment Variables ===\n');
 
 const configWithEnvVars = defineConfig({
   adapters: {
-    api: { package: '@webloom/api-adapter-hono' },
-    database: { package: '@webloom/api-adapter-drizzle' },
-    validation: { package: '@webloom/api-adapter-zod' },
+    api: { package: '@web-loom/api-adapter-hono' },
+    database: { package: '@web-loom/api-adapter-drizzle' },
+    validation: { package: '@web-loom/api-adapter-zod' },
   },
   database: {
     url: '${DATABASE_URL}', // Will be interpolated from environment

@@ -19,7 +19,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
   - Configure Vitest for testing across all packages
   - _Requirements: Project setup foundation_
 
-- [ ] 2. Create @webloom/api-shared package
+- [ ] 2. Create @web-loom/api-shared package
   - [x] 2.1 Implement shared TypeScript types and interfaces
     - Create base types for HTTP methods, status codes
     - Define common utility types (Prettify, DeepPartial, etc.)
@@ -30,7 +30,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test error type construction
     - _Requirements: 45.1_
 
-- [ ] 3. Create @webloom/api-core package structure
+- [ ] 3. Create @web-loom/api-core package structure
   - [x] 3.1 Define core adapter interfaces
     - Create APIFrameworkAdapter interface with route registration methods
     - Create DatabaseAdapter interface with CRUD and transaction methods
@@ -175,7 +175,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
 
 ## Phase 2: Adapters and CRUD (Weeks 5-8)
 
-- [ ] 10. Create @webloom/api-adapter-hono package
+- [ ] 10. Create @web-loom/api-adapter-hono package
   - [ ] 10.1 Implement Hono APIFrameworkAdapter
     - Implement registerRoute() with Hono routing
     - Implement registerMiddleware() with Hono middleware
@@ -193,7 +193,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test request handling
     - _Requirements: 2.1, 8.3, 8.4_
 
-- [ ] 11. Create @webloom/api-adapter-drizzle package
+- [ ] 11. Create @web-loom/api-adapter-drizzle package
   - [ ] 11.1 Implement Drizzle DatabaseAdapter
     - Implement connect() with Neon connection pooling
     - Implement query() and execute() with prepared statements
@@ -218,7 +218,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test schema operations
     - _Requirements: 2.2, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
-- [ ] 12. Create @webloom/api-adapter-zod package
+- [ ] 12. Create @web-loom/api-adapter-zod package
   - [ ] 12.1 Implement Zod ValidationAdapter
     - Implement defineSchema() with Zod schema builder
     - Implement validate() with error formatting
@@ -246,7 +246,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test error message formatting
     - _Requirements: 2.3, 7.1, 7.5, 7.6, 7.7_
 
-- [ ] 13. Create @webloom/api-middleware-validation package
+- [ ] 13. Create @web-loom/api-middleware-validation package
   - [ ] 13.1 Implement validation middleware
     - Create middleware for body validation
     - Create middleware for query parameter validation
@@ -269,7 +269,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test error formatting
     - _Requirements: 7.2, 7.3, 7.4_
 
-- [ ] 14. Create @webloom/api-generator-crud package
+- [ ] 14. Create @web-loom/api-generator-crud package
   - [ ] 14.1 Implement CRUD Generator core
     - Create CRUDGenerator class with generate() method
     - Implement route generation for all 6 endpoints
@@ -350,7 +350,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
 
 ## Phase 3: CLI and Code Generation (Weeks 9-12)
 
-- [ ] 17. Create @webloom/api-cli package structure
+- [ ] 17. Create @web-loom/api-cli package structure
   - [ ] 17.1 Set up CLI framework with Commander.js
     - Initialize CLI with version and description
     - Set up command structure
@@ -368,7 +368,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Support template selection
     - Generate project structure with src/models, src/routes
     - Create webloom.config.ts with defaults
-    - Generate package.json with @webloom/\* dependencies
+    - Generate package.json with @web-loom/\* dependencies
     - Create .env.example file
     - _Requirements: 18.2, 18.3_
   - [ ] 18.2 Create project templates
@@ -396,7 +396,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 18.4_
   - [ ] 19.3 Implement 'webloom generate crud' command
     - Generate CRUD routes for specified model
-    - Use CRUD Generator from @webloom/api-generator-crud
+    - Use CRUD Generator from @web-loom/api-generator-crud
     - _Requirements: 18.4_
   - [ ]\* 19.4 Write unit tests for generate commands
     - Test model generation
@@ -404,7 +404,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test CRUD generation
     - _Requirements: 18.4_
 
-- [ ] 20. Create @webloom/api-generator-openapi package
+- [ ] 20. Create @web-loom/api-generator-openapi package
   - [ ] 20.1 Implement OpenAPI Generator
     - Create OpenAPIGenerator class
     - Generate OpenAPI 3.1 specification structure
@@ -436,7 +436,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test metadata inclusion
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6_
 
-- [ ] 21. Create @webloom/api-generator-client package
+- [ ] 21. Create @web-loom/api-generator-client package
   - [ ] 21.1 Implement TypeScript Client Generator
     - Create ClientGenerator class
     - Generate TypeScript interfaces from models
@@ -465,7 +465,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test error handling
     - _Requirements: 20.1, 20.2, 20.3, 20.4_
 
-- [ ] 22. Create @webloom/api-generator-types package
+- [ ] 22. Create @web-loom/api-generator-types package
   - [ ] 22.1 Implement Type Generator
     - Generate TypeScript types from models
     - Generate request/response types
@@ -542,7 +542,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
 
 ## Phase 4: Security and Auth (Weeks 13-16)
 
-- [ ] 27. Create @webloom/api-adapter-lucia package
+- [ ] 27. Create @web-loom/api-adapter-lucia package
   - [ ] 27.1 Implement Lucia AuthAdapter
     - Implement createSession() with database storage
     - Implement validateSession() with expiration checking
@@ -572,7 +572,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test API key management
     - _Requirements: 2.4, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
 
-- [ ] 28. Create @webloom/api-middleware-auth package
+- [ ] 28. Create @web-loom/api-middleware-auth package
   - [ ] 28.1 Implement authentication middleware
     - Create session authentication middleware
     - Create API key authentication middleware
@@ -591,7 +591,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test permission checking
     - _Requirements: 15.1, 15.2, 15.3, 15.4_
 
-- [ ] 29. Create @webloom/api-middleware-rate-limit package
+- [ ] 29. Create @web-loom/api-middleware-rate-limit package
   - [ ] 29.1 Implement rate limiting middleware
     - Create token bucket rate limiter
     - Support per-IP rate limiting
@@ -610,7 +610,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test storage backends
     - _Requirements: 16.1, 16.2, 16.3_
 
-- [ ] 30. Create @webloom/api-middleware-cors package
+- [ ] 30. Create @web-loom/api-middleware-cors package
   - [ ] 30.1 Implement CORS middleware
     - Handle preflight OPTIONS requests
     - Add CORS headers to responses
@@ -679,7 +679,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test invalidation
     - _Requirements: 21.1, 21.2, 21.3, 21.4_
 
-- [ ] 34. Create @webloom/api-adapter-resend package
+- [ ] 34. Create @web-loom/api-adapter-resend package
   - [ ] 34.1 Implement Resend EmailAdapter
     - Implement send() with Resend API
     - Implement sendBatch() for bulk emails
@@ -847,7 +847,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test check failures
     - _Requirements: 30.1, 30.2, 30.3_
 
-- [ ] 44. Create @webloom/api-deployment-vercel package
+- [ ] 44. Create @web-loom/api-deployment-vercel package
   - [ ] 44.1 Implement Vercel deployment adapter
     - Create createVercelHandler() function
     - Support Edge Runtime compatibility
@@ -864,7 +864,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test edge runtime compatibility
     - _Requirements: 31.1, 31.2_
 
-- [ ] 45. Create @webloom/api-deployment-cloudflare package
+- [ ] 45. Create @web-loom/api-deployment-cloudflare package
   - [ ] 45.1 Implement Cloudflare deployment adapter
     - Create createCloudflareHandler() function
     - Support Workers runtime
@@ -882,7 +882,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test D1 integration
     - _Requirements: 32.1, 32.2_
 
-- [ ] 46. Create @webloom/api-deployment-aws package
+- [ ] 46. Create @web-loom/api-deployment-aws package
   - [ ] 46.1 Implement AWS Lambda deployment adapter
     - Create createLambdaHandler() function
     - Support Lambda function URLs
@@ -920,7 +920,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
 
 ## Phase 7: Testing and Documentation (Weeks 25-28)
 
-- [ ] 49. Create @webloom/api-testing package
+- [ ] 49. Create @web-loom/api-testing package
   - [ ] 49.1 Implement test client
     - Create TestClient class with HTTP methods
     - Support authentication (session, API key)
@@ -1090,5 +1090,5 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
 - Unit tests validate specific examples and edge cases
 - Checkpoints ensure incremental validation at phase boundaries
 - Implementation uses TypeScript throughout all packages
-- All packages follow @webloom/api-\* naming convention
+- All packages follow @web-loom/api-\* naming convention
 - Monorepo managed with Turborepo under packages/\* directory

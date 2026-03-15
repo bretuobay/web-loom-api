@@ -1,5 +1,5 @@
 {
-  "name": "@webloom/api-middleware-auth",
+  "name": "@web-loom/api-middleware-auth",
   "version": "0.1.0",
   "description": "Authentication middleware for Web Loom API Framework",
   "main": "./dist/index.js",
@@ -23,8 +23,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@webloom/api-core": "*",
-    "@webloom/api-shared": "*"
+    "@web-loom/api-core": "*",
+    "@web-loom/api-shared": "*"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

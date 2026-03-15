@@ -15,13 +15,13 @@ This module provides comprehensive configuration management for the Web Loom API
 Create `webloom.config.ts` in your project root:
 
 ```typescript
-import { defineConfig } from '@webloom/api-core';
+import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   adapters: {
-    api: { package: '@webloom/api-adapter-hono' },
-    database: { package: '@webloom/api-adapter-drizzle' },
-    validation: { package: '@webloom/api-adapter-zod' },
+    api: { package: '@web-loom/api-adapter-hono' },
+    database: { package: '@web-loom/api-adapter-drizzle' },
+    validation: { package: '@web-loom/api-adapter-zod' },
   },
   database: {
     url: '${DATABASE_URL}',
@@ -69,7 +69,7 @@ DATABASE_URL=postgresql://prod-host:5432/mydb_prod
 ### 3. Load and Validate Configuration
 
 ```typescript
-import { loadConfig } from '@webloom/api-core';
+import { loadConfig } from '@web-loom/api-core';
 import config from './webloom.config';
 
 try {
@@ -105,7 +105,7 @@ const { config } = loadConfig({ config: myConfig });
 You can also validate configuration manually:
 
 ```typescript
-import { validateConfig, validateConfigOrThrow } from '@webloom/api-core';
+import { validateConfig, validateConfigOrThrow } from '@web-loom/api-core';
 
 // Returns validation result
 const result = validateConfig(myConfig);
@@ -277,7 +277,7 @@ Loads .env files with environment-specific overrides.
 ## Example: Complete Startup Flow
 
 ```typescript
-import { loadConfig } from '@webloom/api-core';
+import { loadConfig } from '@web-loom/api-core';
 import config from './webloom.config';
 
 async function bootstrap() {

@@ -22,13 +22,13 @@ import type { WebLoomConfig } from './types';
  * @example
  * ```typescript
  * // webloom.config.ts
- * import { defineConfig } from '@webloom/api-core';
+ * import { defineConfig } from '@web-loom/api-core';
  * 
  * export default defineConfig({
  *   adapters: {
- *     api: { package: '@webloom/api-adapter-hono' },
- *     database: { package: '@webloom/api-adapter-drizzle' },
- *     validation: { package: '@webloom/api-adapter-zod' }
+ *     api: { package: '@web-loom/api-adapter-hono' },
+ *     database: { package: '@web-loom/api-adapter-drizzle' },
+ *     validation: { package: '@web-loom/api-adapter-zod' }
  *   },
  *   database: {
  *     url: '${DATABASE_URL}',
@@ -68,13 +68,13 @@ export function defineConfig(config: WebLoomConfig): WebLoomConfig {
  * @example
  * ```typescript
  * // config/base.ts
- * import { definePartialConfig } from '@webloom/api-core';
+ * import { definePartialConfig } from '@web-loom/api-core';
  * 
  * export const baseConfig = definePartialConfig({
  *   adapters: {
- *     api: { package: '@webloom/api-adapter-hono' },
- *     database: { package: '@webloom/api-adapter-drizzle' },
- *     validation: { package: '@webloom/api-adapter-zod' }
+ *     api: { package: '@web-loom/api-adapter-hono' },
+ *     database: { package: '@web-loom/api-adapter-drizzle' },
+ *     validation: { package: '@web-loom/api-adapter-zod' }
  *   },
  *   features: {
  *     crud: true
@@ -97,7 +97,7 @@ export function defineConfig(config: WebLoomConfig): WebLoomConfig {
  * });
  * 
  * // webloom.config.ts
- * import { mergeConfigs } from '@webloom/api-core';
+ * import { mergeConfigs } from '@web-loom/api-core';
  * import { baseConfig } from './config/base';
  * import { devConfig } from './config/development';
  * 
@@ -211,7 +211,7 @@ function isObject(item: unknown): item is Record<string, unknown> {
  * 
  * @example
  * ```typescript
- * import { defineConfig, createPreset } from '@webloom/api-core';
+ * import { defineConfig, createPreset } from '@web-loom/api-core';
  * 
  * export default defineConfig({
  *   ...createPreset('serverless'),

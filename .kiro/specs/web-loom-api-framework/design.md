@@ -28,34 +28,34 @@ Web Loom API is a TypeScript-based meta-framework for building production-ready 
 
 ## Monorepo Structure
 
-The framework is organized as a Turborepo-managed monorepo with packages under `packages/*`. All API packages use the `@webloom/api-*` prefix to avoid collision with frontend framework packages:
+The framework is organized as a Turborepo-managed monorepo with packages under `packages/*`. All API packages use the `@web-loom/api-*` prefix to avoid collision with frontend framework packages:
 
 ```
 packages/
-├── api-core/                    # @webloom/api-core - Core runtime and interfaces
-├── api-cli/                     # @webloom/api-cli - CLI tool
+├── api-core/                    # @web-loom/api-core - Core runtime and interfaces
+├── api-cli/                     # @web-loom/api-cli - CLI tool
 ├── api-adapters/
-│   ├── hono/                   # @webloom/api-adapter-hono - Hono adapter
-│   ├── drizzle/                # @webloom/api-adapter-drizzle - Drizzle adapter
-│   ├── zod/                    # @webloom/api-adapter-zod - Zod adapter
-│   ├── lucia/                  # @webloom/api-adapter-lucia - Lucia auth adapter
-│   └── resend/                 # @webloom/api-adapter-resend - Resend email adapter
+│   ├── hono/                   # @web-loom/api-adapter-hono - Hono adapter
+│   ├── drizzle/                # @web-loom/api-adapter-drizzle - Drizzle adapter
+│   ├── zod/                    # @web-loom/api-adapter-zod - Zod adapter
+│   ├── lucia/                  # @web-loom/api-adapter-lucia - Lucia auth adapter
+│   └── resend/                 # @web-loom/api-adapter-resend - Resend email adapter
 ├── api-generators/
-│   ├── crud/                   # @webloom/api-generator-crud - CRUD generator
-│   ├── openapi/                # @webloom/api-generator-openapi - OpenAPI generator
-│   ├── client/                 # @webloom/api-generator-client - Client generator
-│   └── types/                  # @webloom/api-generator-types - Type generator
+│   ├── crud/                   # @web-loom/api-generator-crud - CRUD generator
+│   ├── openapi/                # @web-loom/api-generator-openapi - OpenAPI generator
+│   ├── client/                 # @web-loom/api-generator-client - Client generator
+│   └── types/                  # @web-loom/api-generator-types - Type generator
 ├── api-middleware/
-│   ├── auth/                   # @webloom/api-middleware-auth - Auth middleware
-│   ├── cors/                   # @webloom/api-middleware-cors - CORS middleware
-│   ├── rate-limit/             # @webloom/api-middleware-rate-limit - Rate limiting
-│   └── validation/             # @webloom/api-middleware-validation - Validation
-├── api-testing/                # @webloom/api-testing - Testing utilities
+│   ├── auth/                   # @web-loom/api-middleware-auth - Auth middleware
+│   ├── cors/                   # @web-loom/api-middleware-cors - CORS middleware
+│   ├── rate-limit/             # @web-loom/api-middleware-rate-limit - Rate limiting
+│   └── validation/             # @web-loom/api-middleware-validation - Validation
+├── api-testing/                # @web-loom/api-testing - Testing utilities
 ├── api-deployment/
-│   ├── vercel/                 # @webloom/api-deployment-vercel - Vercel adapter
-│   ├── cloudflare/             # @webloom/api-deployment-cloudflare - Cloudflare adapter
-│   └── aws/                    # @webloom/api-deployment-aws - AWS Lambda adapter
-└── api-shared/                 # @webloom/api-shared - Shared types and utilities
+│   ├── vercel/                 # @web-loom/api-deployment-vercel - Vercel adapter
+│   ├── cloudflare/             # @web-loom/api-deployment-cloudflare - Cloudflare adapter
+│   └── aws/                    # @web-loom/api-deployment-aws - AWS Lambda adapter
+└── api-shared/                 # @web-loom/api-shared - Shared types and utilities
 ```
 
 ## Architecture
@@ -64,26 +64,26 @@ packages/
 
 ```mermaid
 graph TB
-    CLI[CLI Tool<br/>@webloom/api-cli] --> Core[Core Runtime<br/>@webloom/api-core]
-    Core --> Registry[Registries<br/>@webloom/api-core]
+    CLI[CLI Tool<br/>@web-loom/api-cli] --> Core[Core Runtime<br/>@web-loom/api-core]
+    Core --> Registry[Registries<br/>@web-loom/api-core]
     Core --> Adapters[Adapter Layer]
 
     Registry --> ModelReg[Model Registry]
     Registry --> RouteReg[Route Registry]
 
-    Adapters --> API[API Framework Adapter<br/>@webloom/api-adapter-hono]
-    Adapters --> DB[Database Adapter<br/>@webloom/api-adapter-drizzle]
-    Adapters --> Val[Validation Adapter<br/>@webloom/api-adapter-zod]
-    Adapters --> Auth[Auth Adapter<br/>@webloom/api-adapter-lucia]
-    Adapters --> Email[Email Adapter<br/>@webloom/api-adapter-resend]
+    Adapters --> API[API Framework Adapter<br/>@web-loom/api-adapter-hono]
+    Adapters --> DB[Database Adapter<br/>@web-loom/api-adapter-drizzle]
+    Adapters --> Val[Validation Adapter<br/>@web-loom/api-adapter-zod]
+    Adapters --> Auth[Auth Adapter<br/>@web-loom/api-adapter-lucia]
+    Adapters --> Email[Email Adapter<br/>@web-loom/api-adapter-resend]
 
-    Core --> Middleware[Middleware System<br/>@webloom/api-middleware-*]
+    Core --> Middleware[Middleware System<br/>@web-loom/api-middleware-*]
     Core --> Plugins[Plugin System]
 
-    Generators[Code Generators] --> CRUD[CRUD Generator<br/>@webloom/api-generator-crud]
-    Generators --> OpenAPI[OpenAPI Generator<br/>@webloom/api-generator-openapi]
-    Generators --> Client[Client Generator<br/>@webloom/api-generator-client]
-    Generators --> Types[Type Generator<br/>@webloom/api-generator-types]
+    Generators[Code Generators] --> CRUD[CRUD Generator<br/>@web-loom/api-generator-crud]
+    Generators --> OpenAPI[OpenAPI Generator<br/>@web-loom/api-generator-openapi]
+    Generators --> Client[Client Generator<br/>@web-loom/api-generator-client]
+    Generators --> Types[Type Generator<br/>@web-loom/api-generator-types]
 
     CLI --> Generators
     ModelReg --> Generators
@@ -936,7 +936,7 @@ const graphqlPlugin: Plugin = {
 **Plugin Discovery:**
 
 - Plugins specified in `webloom.config.ts`
-- Auto-discovery from `node_modules/@webloom/*`
+- Auto-discovery from `node_modules/@web-loom/*`
 - Local plugins from `src/plugins`
 
 ### Testing Utilities
@@ -1549,12 +1549,12 @@ const routeGenerator = fc.record({
 
 ### Testing Utilities Provided
 
-The `@webloom/api-testing` package provides comprehensive testing utilities:
+The `@web-loom/api-testing` package provides comprehensive testing utilities:
 
-**Test Client** (`@webloom/api-testing`):
+**Test Client** (`@web-loom/api-testing`):
 
 ```typescript
-import { createTestClient } from '@webloom/api-testing';
+import { createTestClient } from '@web-loom/api-testing';
 
 const client = createTestClient(app);
 
@@ -1568,10 +1568,10 @@ client.authenticate({ id: '1', role: 'admin' });
 const response = await client.post('/admin/users', userData);
 ```
 
-**Database Seeding** (`@webloom/api-testing`):
+**Database Seeding** (`@web-loom/api-testing`):
 
 ```typescript
-import { defineFactory, seed } from '@webloom/api-testing';
+import { defineFactory, seed } from '@web-loom/api-testing';
 
 // Factory-based seeding
 const userFactory = defineFactory(User, {
@@ -1582,10 +1582,10 @@ const userFactory = defineFactory(User, {
 await seed(User, 10, userFactory);
 ```
 
-**Mock Adapters** (`@webloom/api-testing`):
+**Mock Adapters** (`@web-loom/api-testing`):
 
 ```typescript
-import { createMockDatabase, createMockAuth } from '@webloom/api-testing';
+import { createMockDatabase, createMockAuth } from '@web-loom/api-testing';
 
 // Mock database for isolated testing
 const mockDb = createMockDatabase();
@@ -1601,7 +1601,7 @@ mockAuth.mockUser({ id: '1', role: 'admin' });
 Verify that the actual API implementation matches the OpenAPI specification:
 
 ```typescript
-import { testContract } from '@webloom/api-testing';
+import { testContract } from '@web-loom/api-testing';
 
 await testContract({
   spec: './openapi.json',
@@ -1619,7 +1619,7 @@ await testContract({
 Benchmark critical paths to ensure performance requirements are met:
 
 ```typescript
-import { benchmark } from '@webloom/api-testing';
+import { benchmark } from '@web-loom/api-testing';
 
 benchmark(
   'cold start initialization',
@@ -1865,7 +1865,7 @@ The framework provides deployment adapters for major platforms:
 
 ```typescript
 // api/index.ts
-import { createVercelHandler } from '@webloom/api-deployment-vercel';
+import { createVercelHandler } from '@web-loom/api-deployment-vercel';
 import { app } from '../src/app';
 
 export default createVercelHandler(app);
@@ -1882,7 +1882,7 @@ export default createVercelHandler(app);
 
 ```typescript
 // worker.ts
-import { createCloudflareHandler } from '@webloom/api-deployment-cloudflare';
+import { createCloudflareHandler } from '@web-loom/api-deployment-cloudflare';
 import { app } from './src/app';
 
 export default createCloudflareHandler(app, {
@@ -1902,7 +1902,7 @@ export default createCloudflareHandler(app, {
 
 ```typescript
 // lambda.ts
-import { createLambdaHandler } from '@webloom/api-deployment-aws';
+import { createLambdaHandler } from '@web-loom/api-deployment-aws';
 import { app } from './src/app';
 
 export const handler = createLambdaHandler(app);
@@ -2033,7 +2033,7 @@ my-api/
 ├── migrations/         # Database migrations
 ├── webloom.config.ts   # Configuration
 ├── .env.example        # Environment variables
-├── package.json        # Dependencies on @webloom/* packages
+├── package.json        # Dependencies on @web-loom/* packages
 └── tsconfig.json
 ```
 
@@ -2042,16 +2042,16 @@ my-api/
 ```json
 {
   "dependencies": {
-    "@webloom/api-core": "^1.0.0",
-    "@webloom/api-adapter-hono": "^1.0.0",
-    "@webloom/api-adapter-drizzle": "^1.0.0",
-    "@webloom/api-adapter-zod": "^1.0.0",
-    "@webloom/api-middleware-cors": "^1.0.0",
-    "@webloom/api-middleware-validation": "^1.0.0"
+    "@web-loom/api-core": "^1.0.0",
+    "@web-loom/api-adapter-hono": "^1.0.0",
+    "@web-loom/api-adapter-drizzle": "^1.0.0",
+    "@web-loom/api-adapter-zod": "^1.0.0",
+    "@web-loom/api-middleware-cors": "^1.0.0",
+    "@web-loom/api-middleware-validation": "^1.0.0"
   },
   "devDependencies": {
-    "@webloom/api-cli": "^1.0.0",
-    "@webloom/api-testing": "^1.0.0"
+    "@web-loom/api-cli": "^1.0.0",
+    "@web-loom/api-testing": "^1.0.0"
   }
 }
 ```
@@ -2123,11 +2123,11 @@ webloom db:reset
 
 ### Custom Adapters
 
-Developers can create custom adapters by implementing the adapter interfaces from `@webloom/api-core`:
+Developers can create custom adapters by implementing the adapter interfaces from `@web-loom/api-core`:
 
 ```typescript
 // custom-database-adapter.ts
-import { DatabaseAdapter } from '@webloom/api-core';
+import { DatabaseAdapter } from '@web-loom/api-core';
 
 export class MyDatabaseAdapter implements DatabaseAdapter {
   async connect(config: DatabaseConfig): Promise<void> {
@@ -2158,7 +2158,7 @@ export default {
 
 ```typescript
 // middleware/custom-logger.ts
-import { Middleware } from '@webloom/api-core';
+import { Middleware } from '@web-loom/api-core';
 
 export const customLogger: Middleware = async (ctx, next) => {
   const start = Date.now();
@@ -2200,7 +2200,7 @@ export const User = defineModel({
 
 ```typescript
 // generators/custom-docs.ts
-import { Generator } from '@webloom/api-core';
+import { Generator } from '@web-loom/api-core';
 
 export class CustomDocsGenerator implements Generator {
   generate(models: ModelDefinition[], routes: RouteDefinition[]): string {
@@ -2219,8 +2219,8 @@ webloom.registerGenerator('custom-docs', CustomDocsGenerator);
 
 **Packages to implement**:
 
-- `@webloom/api-core` - Core Runtime, Registries, Interfaces
-- `@webloom/api-shared` - Shared types and utilities
+- `@web-loom/api-core` - Core Runtime, Registries, Interfaces
+- `@web-loom/api-shared` - Shared types and utilities
 
 **Deliverables**:
 
@@ -2242,11 +2242,11 @@ webloom.registerGenerator('custom-docs', CustomDocsGenerator);
 
 **Packages to implement**:
 
-- `@webloom/api-adapter-hono` - Hono adapter
-- `@webloom/api-adapter-drizzle` - Drizzle + Neon adapter
-- `@webloom/api-adapter-zod` - Zod adapter
-- `@webloom/api-generator-crud` - CRUD Generator
-- `@webloom/api-middleware-validation` - Validation middleware
+- `@web-loom/api-adapter-hono` - Hono adapter
+- `@web-loom/api-adapter-drizzle` - Drizzle + Neon adapter
+- `@web-loom/api-adapter-zod` - Zod adapter
+- `@web-loom/api-generator-crud` - CRUD Generator
+- `@web-loom/api-middleware-validation` - Validation middleware
 
 **Deliverables**:
 
@@ -2268,10 +2268,10 @@ webloom.registerGenerator('custom-docs', CustomDocsGenerator);
 
 **Packages to implement**:
 
-- `@webloom/api-cli` - CLI tool
-- `@webloom/api-generator-openapi` - OpenAPI generator
-- `@webloom/api-generator-client` - TypeScript client generator
-- `@webloom/api-generator-types` - Type generator
+- `@web-loom/api-cli` - CLI tool
+- `@web-loom/api-generator-openapi` - OpenAPI generator
+- `@web-loom/api-generator-client` - TypeScript client generator
+- `@web-loom/api-generator-types` - Type generator
 
 **Deliverables**:
 
@@ -2293,10 +2293,10 @@ webloom.registerGenerator('custom-docs', CustomDocsGenerator);
 
 **Packages to implement**:
 
-- `@webloom/api-adapter-lucia` - Lucia auth adapter
-- `@webloom/api-middleware-auth` - Authentication middleware
-- `@webloom/api-middleware-rate-limit` - Rate limiting
-- `@webloom/api-middleware-cors` - CORS middleware
+- `@web-loom/api-adapter-lucia` - Lucia auth adapter
+- `@web-loom/api-middleware-auth` - Authentication middleware
+- `@web-loom/api-middleware-rate-limit` - Rate limiting
+- `@web-loom/api-middleware-cors` - CORS middleware
 
 **Deliverables**:
 
@@ -2318,8 +2318,8 @@ webloom.registerGenerator('custom-docs', CustomDocsGenerator);
 
 **Packages to implement**:
 
-- `@webloom/api-middleware-cache` - Caching middleware
-- `@webloom/api-adapter-resend` - Resend email adapter
+- `@web-loom/api-middleware-cache` - Caching middleware
+- `@web-loom/api-adapter-resend` - Resend email adapter
 - Additional feature packages as needed
 
 **Deliverables**:
@@ -2342,9 +2342,9 @@ webloom.registerGenerator('custom-docs', CustomDocsGenerator);
 
 **Packages to implement**:
 
-- `@webloom/api-deployment-vercel` - Vercel adapter
-- `@webloom/api-deployment-cloudflare` - Cloudflare adapter
-- `@webloom/api-deployment-aws` - AWS Lambda adapter
+- `@web-loom/api-deployment-vercel` - Vercel adapter
+- `@web-loom/api-deployment-cloudflare` - Cloudflare adapter
+- `@web-loom/api-deployment-aws` - AWS Lambda adapter
 
 **Deliverables**:
 
@@ -2366,7 +2366,7 @@ webloom.registerGenerator('custom-docs', CustomDocsGenerator);
 
 **Packages to finalize**:
 
-- `@webloom/api-testing` - Testing utilities
+- `@web-loom/api-testing` - Testing utilities
 
 **Deliverables**:
 

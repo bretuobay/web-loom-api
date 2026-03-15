@@ -1,15 +1,15 @@
-# @webloom/api-core
+# @web-loom/api-core
 
 Core runtime and interfaces for Web Loom API Framework.
 
 ## Installation
 
 ```bash
-npm install @webloom/api-core
+npm install @web-loom/api-core
 ```
 
 ## Usage
 
 ```typescript
-import { CoreRuntime, APIFrameworkAdapter } from '@webloom/api-core';
+import { CoreRuntime, APIFrameworkAdapter } from '@web-loom/api-core';
 ```

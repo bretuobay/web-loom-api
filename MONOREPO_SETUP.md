@@ -69,22 +69,22 @@ The Web Loom API Framework monorepo has been successfully configured with Turbor
 
 ### Core Packages
 
-1. **@webloom/api-core** - Core runtime and interfaces
+1. **@web-loom/api-core** - Core runtime and interfaces
    - Adapter interfaces (API framework, database, validation, auth, email)
    - Registry system for models and routes
    - Runtime initialization logic
 
-2. **@webloom/api-shared** - Shared types and utilities
+2. **@web-loom/api-shared** - Shared types and utilities
    - Common types used across packages
    - Utility functions
    - HTTP method types
 
-3. **@webloom/api-cli** - CLI tool
+3. **@web-loom/api-cli** - CLI tool
    - Command-line interface for project management
    - Code generation commands
    - Development server
 
-4. **@webloom/api-testing** - Testing utilities
+4. **@web-loom/api-testing** - Testing utilities
    - Test helpers and utilities
    - Mock implementations
    - Test client for API testing
@@ -151,13 +151,13 @@ npm run clean          # Clean build artifacts
 
 ## Package Naming Convention
 
-All API packages use the `@webloom/api-*` prefix to avoid collision with frontend framework packages:
+All API packages use the `@web-loom/api-*` prefix to avoid collision with frontend framework packages:
 
-- Core packages: `@webloom/api-core`, `@webloom/api-cli`, etc.
-- Adapters: `@webloom/api-adapter-hono`, `@webloom/api-adapter-drizzle`, etc.
-- Generators: `@webloom/api-generator-crud`, `@webloom/api-generator-openapi`, etc.
-- Middleware: `@webloom/api-middleware-auth`, `@webloom/api-middleware-cors`, etc.
-- Deployment: `@webloom/api-deployment-vercel`, etc.
+- Core packages: `@web-loom/api-core`, `@web-loom/api-cli`, etc.
+- Adapters: `@web-loom/api-adapter-hono`, `@web-loom/api-adapter-drizzle`, etc.
+- Generators: `@web-loom/api-generator-crud`, `@web-loom/api-generator-openapi`, etc.
+- Middleware: `@web-loom/api-middleware-auth`, `@web-loom/api-middleware-cors`, etc.
+- Deployment: `@web-loom/api-deployment-vercel`, etc.
 
 ## Workspace Configuration
 

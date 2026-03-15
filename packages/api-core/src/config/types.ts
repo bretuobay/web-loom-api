@@ -24,7 +24,7 @@
  * @example
  * ```typescript
  * const honoAdapter: AdapterConfig = {
- *   package: '@webloom/api-adapter-hono',
+ *   package: '@web-loom/api-adapter-hono',
  *   options: {
  *     compression: true,
  *     poweredBy: false
@@ -33,7 +33,7 @@
  * ```
  */
 export interface AdapterConfig<TOptions = Record<string, unknown>> {
-  /** NPM package name of the adapter (e.g., '@webloom/api-adapter-hono') */
+  /** NPM package name of the adapter (e.g., '@web-loom/api-adapter-hono') */
   package: string;
   
   /** Adapter-specific configuration options */
@@ -827,14 +827,14 @@ export interface DevelopmentConfig {
  * @example
  * ```typescript
  * // webloom.config.ts
- * import { defineConfig } from '@webloom/api-core';
+ * import { defineConfig } from '@web-loom/api-core';
  * 
  * export default defineConfig({
  *   adapters: {
- *     api: { package: '@webloom/api-adapter-hono' },
- *     database: { package: '@webloom/api-adapter-drizzle' },
- *     validation: { package: '@webloom/api-adapter-zod' },
- *     auth: { package: '@webloom/api-adapter-lucia' }
+ *     api: { package: '@web-loom/api-adapter-hono' },
+ *     database: { package: '@web-loom/api-adapter-drizzle' },
+ *     validation: { package: '@web-loom/api-adapter-zod' },
+ *     auth: { package: '@web-loom/api-adapter-lucia' }
  *   },
  *   database: {
  *     url: '${DATABASE_URL}',

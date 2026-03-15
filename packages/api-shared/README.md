@@ -1,11 +1,11 @@
-# @webloom/api-shared
+# @web-loom/api-shared
 
 Shared types and utilities for Web Loom API Framework.
 
 ## Installation
 
 ```bash
-npm install @webloom/api-shared
+npm install @web-loom/api-shared
 ```
 
 ## Features
@@ -20,7 +20,7 @@ npm install @webloom/api-shared
 ### HTTP Types
 
 ```typescript
-import { HTTPMethod, HTTPStatus, HTTPStatusCode } from '@webloom/api-shared';
+import { HTTPMethod, HTTPStatus, HTTPStatusCode } from '@web-loom/api-shared';
 
 // HTTP methods
 const method: HTTPMethod = 'GET';
@@ -46,7 +46,7 @@ import {
   OptionalKeys,
   Nullable,
   Maybe
-} from '@webloom/api-shared';
+} from '@web-loom/api-shared';
 
 // Prettify - Flatten intersection types for better IDE tooltips
 type User = Prettify<{ id: string } & { name: string }>;
@@ -88,7 +88,7 @@ import {
   ConfigurationError,
   type ErrorResponse,
   type ValidationErrorField
-} from '@webloom/api-shared';
+} from '@web-loom/api-shared';
 
 // Validation errors with field-level details
 const validationError = new ValidationError('Validation failed', [
@@ -136,7 +136,7 @@ const errorResponse: ErrorResponse = {
 All error codes are available as an enum:
 
 ```typescript
-import { ErrorCode } from '@webloom/api-shared';
+import { ErrorCode } from '@web-loom/api-shared';
 
 // Validation errors
 ErrorCode.VALIDATION_ERROR
@@ -178,7 +178,7 @@ ErrorCode.INITIALIZATION_ERROR
 ### Utility Functions
 
 ```typescript
-import { isObject, isEmpty } from '@webloom/api-shared';
+import { isObject, isEmpty } from '@web-loom/api-shared';
 
 // Check if value is a plain object
 if (isObject(value)) {

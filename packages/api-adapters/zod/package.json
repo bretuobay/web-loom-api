@@ -1,5 +1,5 @@
 {
-  "name": "@webloom/api-adapter-zod",
+  "name": "@web-loom/api-adapter-zod",
   "version": "0.1.0",
   "description": "Zod adapter for Web Loom API Framework",
   "main": "./dist/index.js",
@@ -24,8 +24,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@webloom/api-core": "*",
-    "@webloom/api-shared": "*"
+    "@web-loom/api-core": "*",
+    "@web-loom/api-shared": "*"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

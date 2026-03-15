@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError, ValidationError } from '@webloom/api-shared';
+import { ConflictError, NotFoundError, ValidationError } from '@web-loom/api-shared';
 import type {
   ModelDefinition,
   ModelMetadata,

@@ -5,9 +5,9 @@ import type { WebLoomConfig } from '../types';
 describe('Configuration Validation', () => {
   const validConfig: WebLoomConfig = {
     adapters: {
-      api: { package: '@webloom/api-adapter-hono' },
-      database: { package: '@webloom/api-adapter-drizzle' },
-      validation: { package: '@webloom/api-adapter-zod' },
+      api: { package: '@web-loom/api-adapter-hono' },
+      database: { package: '@web-loom/api-adapter-drizzle' },
+      validation: { package: '@web-loom/api-adapter-zod' },
     },
     database: {
       url: 'postgresql://localhost:5432/test',
@@ -39,7 +39,7 @@ describe('Configuration Validation', () => {
     it('should reject configuration with missing required fields', () => {
       const invalidConfig = {
         adapters: {
-          api: { package: '@webloom/api-adapter-hono' },
+          api: { package: '@web-loom/api-adapter-hono' },
           // Missing database and validation adapters
         },
       };
@@ -139,7 +139,7 @@ describe('Configuration Validation', () => {
     it('should throw ConfigurationValidationError for invalid input', () => {
       const invalidConfig = {
         adapters: {
-          api: { package: '@webloom/api-adapter-hono' },
+          api: { package: '@web-loom/api-adapter-hono' },
         },
       };
 
@@ -151,7 +151,7 @@ describe('Configuration Validation', () => {
     it('should include detailed error messages', () => {
       const invalidConfig = {
         adapters: {
-          api: { package: '@webloom/api-adapter-hono' },
+          api: { package: '@web-loom/api-adapter-hono' },
         },
       };
 
@@ -174,7 +174,7 @@ describe('Configuration Validation', () => {
         ...validConfig,
         adapters: {
           ...validConfig.adapters,
-          auth: { package: '@webloom/api-adapter-lucia' },
+          auth: { package: '@web-loom/api-adapter-lucia' },
         },
       };
 
@@ -187,7 +187,7 @@ describe('Configuration Validation', () => {
         ...validConfig,
         adapters: {
           ...validConfig.adapters,
-          email: { package: '@webloom/api-adapter-resend' },
+          email: { package: '@web-loom/api-adapter-resend' },
         },
       };
 

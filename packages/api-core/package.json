@@ -1,5 +1,5 @@
 {
-  "name": "@webloom/api-core",
+  "name": "@web-loom/api-core",
   "version": "0.1.0",
   "type": "module",
   "description": "Core runtime and interfaces for Web Loom API Framework",
@@ -32,7 +32,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@webloom/api-shared": "*",
+    "@web-loom/api-shared": "*",
     "dotenv": "^16.0.3",
     "zod": "^4.3.6"
   },

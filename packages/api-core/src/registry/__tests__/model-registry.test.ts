@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ModelRegistry } from '../model-registry';
 import type { ModelDefinition } from '../types';
-import { ConflictError, NotFoundError, ValidationError } from '@webloom/api-shared';
+import { ConflictError, NotFoundError, ValidationError } from '@web-loom/api-shared';
 
 describe('ModelRegistry', () => {
   let registry: ModelRegistry;

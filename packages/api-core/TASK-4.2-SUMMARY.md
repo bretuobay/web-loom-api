@@ -198,7 +198,7 @@ The validation system integrates with:
 ## Usage Example
 
 ```typescript
-import { loadConfig } from '@webloom/api-core';
+import { loadConfig } from '@web-loom/api-core';
 import config from './webloom.config';
 
 async function bootstrap() {
