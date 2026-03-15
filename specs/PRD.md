@@ -13,13 +13,21 @@ _Version 1.0 (Draft)_
 
 ## 2. Problem Statement
 
-Developers today face a paradox of choice when building APIs: there are dozens of excellent libraries for routing, validation, databases, authentication, and email. Assembling them into a coherent, maintainable stack requires significant effort and domain knowledge. Moreover, teams often need to switch providers (e.g., from Neon to Turso, or from Hono to Fastify) as requirements evolve, leading to costly rewrites. **@web-loom/api** solves this by:
+**Serverless APIs need specialized tooling, not traditional framework competition.** The serverless ecosystem has unique constraints:
 
-- Providing a **unified, modular core** that orchestrates pluggable components.
-- Offering **sensible defaults** (Hono, Zod, Drizzle, Neon) that work out‑of‑the‑box for serverless environments.
-- Allowing **easy swapping** of major components via a CLI, without changing application code.
-- Embracing **model‑driven development** and **convention over configuration** to reduce boilerplate.
-- Being **AI‑friendly**: APIs can be generated from high‑level models, and the framework’s structure is designed to be understood and manipulated by LLMs and agentic workflows.
+- **Cold Start Sensitivity** – Traditional frameworks add unnecessary overhead for edge/serverless environments.
+- **Platform Fragmentation** – Code written for Vercel doesn’t easily move to Cloudflare Workers or AWS Lambda.
+- **Component Integration Complexity** – Assembling Hono + Drizzle + Neon + auth requires deep knowledge of each tool’s serverless quirks.
+- **Infrastructure Lock-in** – Switching from Neon to D1 or Hono to Elysia requires significant refactoring.
+- **AI Development Gap** – Existing tools weren’t designed for LLM-assisted development workflows.
+
+**@web-loom/api** solves serverless-specific problems by:
+
+- Providing a **serverless-optimized orchestration layer** that handles the integration complexity.
+- Offering **platform-agnostic deployment** – write once, deploy anywhere in the serverless ecosystem.
+- Enabling **zero-friction component swapping** via CLI, perfect for evolving infrastructure needs.
+- Embracing **AI-assisted development** with machine-readable schemas and generation-friendly conventions.
+- **Complementing existing ecosystems** rather than replacing established traditional frameworks.
 
 ---
 
@@ -38,19 +46,21 @@ Developers today face a paradox of choice when building APIs: there are dozens o
 
 ## 4. Non‑Goals
 
-- Building new validation, ORM, or email libraries – we leverage existing mature tools.
-- Tying the framework to a specific cloud provider – adapters ensure portability.
-- Reinventing the wheel: we are a meta‑framework, not a from‑scratch implementation.
-- Supporting every possible database or API framework out‑of‑the‑box – we focus on a curated set of popular, modern choices (with extensibility for others).
+- **Competing with traditional frameworks** – We don't aim to replace Nest.js, Express, or other established ecosystems.
+- **Building new libraries from scratch** – We leverage existing mature tools (Hono, Drizzle, Zod) rather than reinventing.
+- **Serverless platform lock-in** – Adapters ensure portability across Vercel, Cloudflare, AWS Lambda, etc.
+- **Supporting every possible tool** – We focus on a curated set of serverless-optimized choices with extensibility for others.
+- **Traditional server deployments** – While possible, we optimize specifically for serverless/edge environments.
 
 ---
 
 ## 5. Target Audience
 
-- Developers building full‑stack applications with the Web Loom frontend framework.
-- Teams who want a consistent, scalable backend without vendor lock‑in.
-- Projects that anticipate switching database providers or API frameworks in the future.
-- AI‑driven development workflows where APIs are generated or modified programmatically.
+- **Serverless-first developers** building APIs for edge/serverless platforms (Vercel, Cloudflare Workers, AWS Lambda).
+- **Full‑stack teams** using Web Loom frontend framework who need a backend that shares the same philosophy.
+- **Platform-agnostic projects** that need to deploy across multiple serverless providers without major rewrites.
+- **AI‑assisted development** workflows where APIs are generated, extended, or modified programmatically.
+- **Teams avoiding traditional framework overhead** who need serverless-optimized tooling without the complexity.
 
 ---
 
@@ -206,7 +216,157 @@ These conventions reduce boilerplate while remaining flexible – developers can
 
 ---
 
-## 15. Future Considerations / Open Questions
+## 15. Security & Compliance
+
+Security is paramount for any API framework:
+
+- **Authentication & Authorization** – Built-in support for JWT, API keys, OAuth 2.0/OIDC flows. Role-based access control (RBAC) via middleware.
+- **Input Validation & Sanitization** – Zod schemas provide the first line of defense, with additional XSS and injection protection.
+- **Rate Limiting** – Configurable rate limiting per endpoint with Redis/memory backends.
+- **CORS & Security Headers** – Sensible CORS defaults, security headers (HSTS, CSP, etc.) via Helmet-style middleware.
+- **Audit Logging** – Security events (auth failures, rate limit hits) are logged with structured output.
+- **Secrets Management** – Integration with environment variables and secret management services (AWS Secrets, Vault, etc.).
+- **HTTPS Enforcement** – Automatic HTTPS redirect and secure cookie settings in production.
+
+---
+
+## 16. Performance & Scalability
+
+Performance characteristics and scalability patterns:
+
+- **Cold Start Optimization** – Framework minimizes bundle size and initialization time for serverless environments.
+- **Caching Strategy** – Built-in HTTP caching headers, Redis adapter for application-level caching.
+- **Database Connection Pooling** – Efficient connection management across serverless functions.
+- **Response Compression** – Automatic gzip/brotli compression based on request headers.
+- **Pagination & Limiting** – Standardized pagination patterns for large datasets.
+- **Background Jobs** – Integration with job queues (BullMQ, Inngest) for async processing.
+- **Performance Monitoring** – Built-in request timing and performance metrics collection.
+
+---
+
+## 17. Error Handling & Observability
+
+Comprehensive error handling and monitoring:
+
+- **Structured Error Responses** – Consistent error format with error codes, messages, and context.
+- **Global Error Handling** – Catch-all error handler that prevents crashes and logs errors appropriately.
+- **Logging Strategy** – Structured JSON logging with configurable log levels, compatible with modern log aggregation services.
+- **Health Checks** – Built-in health check endpoints (`/health`, `/ready`) for load balancers and monitoring.
+- **Metrics Collection** – Integration with Prometheus/OpenTelemetry for request metrics, database performance, etc.
+- **Distributed Tracing** – Request correlation IDs and tracing support for microservices architectures.
+- **Error Reporting** – Integration with Sentry, Bugsnag, or similar services for production error tracking.
+
+---
+
+## 18. Testing Strategy
+
+Comprehensive testing approach:
+
+- **Unit Testing** – Generated test suites for models and business logic using Vitest/Jest.
+- **Integration Testing** – Test database interactions with in-memory/test databases.
+- **API Testing** – Automated endpoint testing with request/response validation.
+- **Contract Testing** – OpenAPI spec validation ensures API contracts are maintained.
+- **Load Testing** – Integration with tools like k6 for performance testing.
+- **Test Utilities** – Mock factories, test database seeding, and fixture management.
+- **CI/CD Integration** – Pre-commit hooks and GitHub Actions/CI templates.
+
+---
+
+## 19. Developer Experience & Documentation
+
+Ensuring excellent developer onboarding and productivity:
+
+- **Interactive CLI Wizard** – Guided setup for new projects with technology choices explained.
+- **Live Documentation** – Auto-generated API docs with interactive playground (Swagger UI/Scalar).
+- **IDE Support** – TypeScript definitions, VS Code extensions, and IntelliSense optimization.
+- **Debugging Tools** – Built-in request logging, database query logging, and performance profiling.
+- **Hot Reload** – File watching and automatic restart during development.
+- **Example Projects** – Real-world example applications demonstrating best practices.
+- **Video Tutorials** – Comprehensive video series for visual learners.
+
+---
+
+## 20. Ecosystem & Community
+
+Building a thriving ecosystem:
+
+- **Plugin Architecture** – Well-defined interfaces for third-party extensions.
+- **Adapter Registry** – Community-maintained registry of adapters for different services.
+- **Templates & Starters** – Curated project templates for common use cases (e-commerce, SaaS, etc.).
+- **Contributing Guidelines** – Clear guidelines for community contributions and adapter development.
+- **RFC Process** – Structured process for major feature proposals and community input.
+- **Discord/Community** – Active community spaces for support and collaboration.
+- **Partner Program** – Relationships with service providers (Neon, Vercel, etc.) for better integration.
+
+---
+
+## 21. Deployment & DevOps
+
+Production-ready deployment strategies:
+
+- **Platform Templates** – One-click deployment templates for Vercel, Cloudflare Workers, AWS Lambda, Google Cloud Run.
+- **Docker Support** – Optimized container builds with minimal attack surface.
+- **Environment Management** – Clear separation of dev/staging/prod configurations.
+- **Database Migrations** – Production-safe migration strategies with rollback support.
+- **Secrets Rotation** – Support for automated secret rotation and zero-downtime deployments.
+- **Blue/Green Deployments** – Built-in support for safe production deployments.
+- **Infrastructure as Code** – Terraform/CDK templates for complete infrastructure provisioning.
+
+---
+
+## 22. Market Positioning & Ecosystem Fit
+
+**We don't compete with established frameworks** – instead, we complement the serverless ecosystem:
+
+| Ecosystem Area | Established Players | Web Loom API Role |
+|----------------|-------------------|-------------------|
+| **Traditional APIs** | Nest.js, Express, Fastify | *Not competing* – focused on serverless-native |
+| **Serverless Functions** | Raw Vercel/Netlify functions | Structured framework for complex APIs |
+| **Type-Safe APIs** | tRPC, GraphQL | REST-focused, multi-platform compatibility |
+| **Database ORMs** | Prisma, TypeORM | Orchestrates existing tools (Drizzle, Prisma) |
+| **Serverless Platforms** | Vercel, Cloudflare, AWS | Framework-agnostic deployment layer |
+
+**Our Unique Niche:**
+- **Serverless-Native Architecture** – Built specifically for edge/serverless constraints
+- **Component Orchestration** – Assembles existing tools rather than reinventing them
+- **Cross-Platform Flexibility** – Deploy the same code to Vercel, Cloudflare Workers, AWS Lambda
+- **AI-First Development** – Designed for LLM-assisted API generation and modification
+- **Swappable Infrastructure** – Change databases, API frameworks, or platforms without code rewrites
+
+**Complementary, Not Competitive:**
+- Use **Hono** (our default) but easily swap to **Fastify** for Node.js environments
+- Leverage **Drizzle** (our default) or **Prisma** based on project needs
+- Deploy to **any serverless platform** with the same codebase
+- Integrate with **existing monorepos** and **established CI/CD pipelines**
+
+---
+
+## 23. Versioning & Migration Strategy
+
+Handling evolution and breaking changes:
+
+- **Semantic Versioning** – Strict semver compliance with clear breaking change communication.
+- **Deprecation Policy** – 6-month deprecation period for breaking changes with clear migration paths.
+- **Automated Migrations** – CLI codemods for common breaking changes where possible.
+- **LTS Versions** – Long-term support versions for enterprise users (18-month support cycles).
+- **Adapter Versioning** – Independent versioning for adapters with compatibility matrices.
+- **Migration Guides** – Comprehensive upgrade guides with before/after examples.
+
+---
+
+## 24. Licensing & Legal
+
+Open source strategy and legal considerations:
+
+- **License**: MIT License for maximum adoption and commercial use.
+- **Contributor License Agreement**: Simple CLA for community contributions.
+- **Trademark Policy**: Clear guidelines for using Web Loom branding.
+- **Commercial Support**: Optional paid support tiers for enterprise users.
+- **Patent Protection**: Commitment to open source patent protection.
+
+---
+
+## 25. Future Considerations / Open Questions
 
 - **Multi‑database support** – How to handle scenarios where an application needs both a relational DB (Neon) and a key‑value store (D1)? Possibly via a “composite” database adapter.
 - **Real‑time** – Should the framework include built‑in WebSocket support (e.g., via Hono’s WebSocket helper)? This could be an optional module.
@@ -217,15 +377,39 @@ These conventions reduce boilerplate while remaining flexible – developers can
 
 ---
 
-## 16. Success Metrics
+## 26. Success Metrics
 
-- **Adoption** – Number of downloads, GitHub stars, and community‑contributed adapters.
-- **Time to First API** – How quickly a developer can go from `create` to a deployed API.
-- **Switching Ease** – Success rate of `switch` commands and developer feedback on the experience.
-- **AI Integration** – Use of the CLI’s generation features and integration with AI coding assistants.
+**Adoption Metrics:**
+
+- **Downloads & Usage** – NPM downloads, GitHub stars, and active projects using the framework.
+- **Community Growth** – Number of community-contributed adapters, plugins, and templates.
+- **Enterprise Adoption** – Commercial users and enterprise support subscriptions.
+
+**Developer Experience:**
+
+- **Time to First API** – Target: under 5 minutes from `create` to deployed API.
+- **Onboarding Success** – Percentage of developers completing the tutorial successfully.
+- **Switching Ease** – Success rate of `switch` commands (target: >95% success rate).
+- **Documentation Satisfaction** – Developer feedback scores on docs and tutorials.
+
+**Technical Performance:**
+
+- **Framework Performance** – Cold start times, request throughput benchmarks.
+- **Production Stability** – Uptime metrics from production deployments.
+- **Security Posture** – Time to patch security vulnerabilities, security audit scores.
+
+**AI & Ecosystem:**
+
+- **AI Integration Usage** – Adoption of CLI generation features and AI-assisted development.
+- **Ecosystem Health** – Number of maintained adapters, plugin ecosystem growth.
+- **Migration Success** – Success rate of version upgrades and migrations.
 
 ---
 
-## 17. Conclusion
+## 27. Conclusion
 
-**@web‑loom/api** aims to be the go‑to meta‑framework for building REST APIs in the modern era. By assembling the best existing tools with sensible defaults, embracing modularity and serverless architectures, and being designed from the ground up with AI in mind, it empowers developers to focus on their application logic while retaining the flexibility to adapt as requirements change.
+**@web‑loom/api** carves out a unique niche in the serverless ecosystem by focusing on orchestration rather than competition. Instead of trying to replace established traditional frameworks, we provide the missing infrastructure layer that makes serverless API development as productive and maintainable as traditional development.
+
+By assembling the best serverless-native tools with intelligent defaults, enabling frictionless component swapping, and embracing AI-assisted development from the ground up, we empower developers to build sophisticated APIs that can evolve with their infrastructure needs – whether that's moving from Vercel to Cloudflare Workers, or from Neon to D1.
+
+Our success will be measured not by displacing existing frameworks, but by becoming the essential tooling that makes serverless API development accessible, productive, and future-proof.
