@@ -523,7 +523,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Generate OpenAPI spec to file
     - Support output path option
     - _Requirements: 18.4_
-  - [ ] 25.2 Implement 'webloom generate client' command
+  - [x] 25.2 Implement 'webloom generate client' command
     - Generate TypeScript client to directory
     - Support output path option
     - _Requirements: 18.4_

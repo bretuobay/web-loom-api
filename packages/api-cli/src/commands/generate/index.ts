@@ -9,6 +9,7 @@ import { createGenerateModelCommand } from './model.js';
 import { createGenerateRouteCommand } from './route.js';
 import { createGenerateCRUDCommand } from './crud.js';
 import { createGenerateOpenAPICommand } from './openapi.js';
+import { createGenerateClientCommand } from './client.js';
 
 /**
  * Create generate command with subcommands
@@ -23,6 +24,7 @@ export function createGenerateCommand(): Command {
   generate.addCommand(createGenerateRouteCommand());
   generate.addCommand(createGenerateCRUDCommand());
   generate.addCommand(createGenerateOpenAPICommand());
+  generate.addCommand(createGenerateClientCommand());
 
   return generate;
 }
