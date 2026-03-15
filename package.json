@@ -15,10 +15,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@hono/node-server": "^1.19.11",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",
     "@vitest/coverage-v8": "^2.1.8",
     "eslint": "^9.18.0",
+    "hono": "^4.12.8",
     "prettier": "^3.7.4",
     "tsup": "^8.3.5",
     "turbo": "^2.8.17",
