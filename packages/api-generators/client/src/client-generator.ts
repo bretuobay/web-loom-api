@@ -62,6 +62,7 @@ export class ClientGenerator {
       includeRetry: options.includeRetry ?? true,
       includeCancellation: options.includeCancellation ?? true,
       includeJSDoc: options.includeJSDoc ?? true,
+      generateReactHooks: options.generateReactHooks ?? false,
       exportFormat: options.exportFormat || 'esm',
     };
   }
@@ -108,6 +109,10 @@ export class ClientGenerator {
 
     if (this.options.generateErrors) {
       result.errors = this.generateErrors();
+    }
+
+    if (this.options.generateReactHooks) {
+      result.hooks = this.generateReactHooks();
     }
 
     return result;
@@ -776,6 +781,328 @@ export class ClientGenerator {
   }
 
   /**
+   * Generate React hooks for API endpoints
+   */
+  private generateReactHooks(): string {
+    const lines: string[] = [];
+    
+    lines.push('/**');
+    lines.push(' * Generated React Hooks');
+    lines.push(' * ');
+    lines.push(' * DO NOT EDIT - This file is auto-generated');
+    lines.push(' */');
+    lines.push('');
+    lines.push(`import { useState, useEffect, useCallback, useRef } from 'react';`);
+    lines.push(`import { ${this.options.className} } from './client';`);
+    lines.push(`import type {`);
+    lines.push(`  APIResponse,`);
+    lines.push(`  RequestConfig,`);
+    for (const [name] of this.models) {
+      lines.push(`  ${modelToInterfaceName(name)},`);
+    }
+    lines.push(`  PaginatedResponse,`);
+    lines.push(`} from './types';`);
+    
+    if (this.options.generateErrors) {
+      lines.push(`import type { APIError } from './errors';`);
+    }
+    
+    lines.push('');
+    lines.push('/**');
+    lines.push(' * Hook state for queries');
+    lines.push(' */');
+    lines.push('export interface UseQueryResult<T> {');
+    lines.push('  data: T | null;');
+    lines.push('  isLoading: boolean;');
+    lines.push('  error: Error | null;');
+    lines.push('  refetch: () => Promise<void>;');
+    lines.push('}');
+    lines.push('');
+
+    lines.push('/**');
+    lines.push(' * Hook state for mutations');
+    lines.push(' */');
+    lines.push('export interface UseMutationResult<TData, TVariables> {');
+    lines.push('  data: TData | null;');
+    lines.push('  isLoading: boolean;');
+    lines.push('  error: Error | null;');
+    lines.push('  mutate: (variables: TVariables) => Promise<TData>;');
+    lines.push('  reset: () => void;');
+    lines.push('}');
+    lines.push('');
+
+    lines.push('/**');
+    lines.push(' * Hook options');
+    lines.push(' */');
+    lines.push('export interface UseQueryOptions {');
+    lines.push('  enabled?: boolean;');
+    lines.push('  refetchInterval?: number;');
+    lines.push('  onSuccess?: (data: unknown) => void;');
+    lines.push('  onError?: (error: Error) => void;');
+    lines.push('}');
+    lines.push('');
+
+    lines.push('export interface UseMutationOptions<TData> {');
+    lines.push('  onSuccess?: (data: TData) => void;');
+    lines.push('  onError?: (error: Error) => void;');
+    lines.push('}');
+    lines.push('');
+
+    // Generate hooks for each route
+    const generatedHooks = new Set<string>();
+    
+    for (const route of this.routes) {
+      const methodName = pathToMethodName(route.path, route.method);
+      const hookName = this.getHookName(route.method, methodName);
+      
+      // Skip if we've already generated this hook
+      if (generatedHooks.has(hookName)) {
+        continue;
+      }
+      generatedHooks.add(hookName);
+      
+      const pathParams = extractPathParams(route.path);
+      const modelName = this.inferModelFromPath(route.path);
+      const model = modelName ? this.models.get(modelName) : undefined;
+      
+      if (route.method === 'GET') {
+        lines.push(...this.generateQueryHook(route, hookName, methodName, pathParams, model));
+      } else {
+        lines.push(...this.generateMutationHook(route, hookName, methodName, pathParams, model));
+      }
+      
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Get hook name from method and route
+   */
+  private getHookName(method: HTTPMethod, methodName: string): string {
+    if (method === 'GET') {
+      return `use${capitalize(methodName)}`;
+    }
+    // For mutations, use the method name as-is (createUsers, updateUserById, etc.)
+    return `use${capitalize(methodName)}`;
+  }
+
+  /**
+   * Generate useQuery hook for GET endpoints
+   */
+  private generateQueryHook(
+    route: RouteDefinition,
+    hookName: string,
+    methodName: string,
+    pathParams: Array<{ name: string; type: string }>,
+    model?: ModelDefinition
+  ): string[] {
+    const lines: string[] = [];
+    const returnType = this.getReturnType(route, model);
+    
+    // JSDoc
+    if (this.options.includeJSDoc) {
+      lines.push(`/**`);
+      lines.push(` * ${route.metadata?.description || `Hook for ${methodName}`}`);
+      lines.push(` */`);
+    }
+    
+    // Hook signature
+    const params: string[] = ['client: ' + this.options.className];
+    
+    for (const param of pathParams) {
+      params.push(`${param.name}: ${param.type}`);
+    }
+    
+    if (route.method === 'GET' && !route.path.includes(':')) {
+      params.push(`params?: { page?: number; limit?: number; [key: string]: unknown }`);
+    }
+    
+    params.push(`options?: UseQueryOptions`);
+    
+    lines.push(`export function ${hookName}(`);
+    lines.push(`  ${params.join(',\n  ')}`);
+    lines.push(`): UseQueryResult<${returnType}> {`);
+    
+    // State
+    lines.push(`  const [data, setData] = useState<${returnType} | null>(null);`);
+    lines.push(`  const [isLoading, setIsLoading] = useState(true);`);
+    lines.push(`  const [error, setError] = useState<Error | null>(null);`);
+    lines.push(`  const abortControllerRef = useRef<AbortController | null>(null);`);
+    lines.push('');
+    
+    // Fetch function
+    lines.push(`  const fetchData = useCallback(async () => {`);
+    lines.push(`    try {`);
+    lines.push(`      setIsLoading(true);`);
+    lines.push(`      setError(null);`);
+    lines.push('');
+    lines.push(`      // Cancel previous request`);
+    lines.push(`      if (abortControllerRef.current) {`);
+    lines.push(`        abortControllerRef.current.abort();`);
+    lines.push(`      }`);
+    lines.push('');
+    lines.push(`      abortControllerRef.current = new AbortController();`);
+    lines.push('');
+    
+    // Build method call
+    const callParams: string[] = [];
+    for (const param of pathParams) {
+      callParams.push(param.name);
+    }
+    if (route.method === 'GET' && !route.path.includes(':')) {
+      callParams.push('params');
+    }
+    callParams.push('{ signal: abortControllerRef.current.signal }');
+    
+    lines.push(`      const result = await client.${methodName}(${callParams.join(', ')});`);
+    lines.push(`      setData(result);`);
+    lines.push(`      options?.onSuccess?.(result);`);
+    lines.push(`    } catch (err) {`);
+    lines.push(`      if (err instanceof Error && err.name !== 'AbortError') {`);
+    lines.push(`        setError(err);`);
+    lines.push(`        options?.onError?.(err);`);
+    lines.push(`      }`);
+    lines.push(`    } finally {`);
+    lines.push(`      setIsLoading(false);`);
+    lines.push(`    }`);
+    lines.push(`  }, [client, ${pathParams.map(p => p.name).join(', ')}${pathParams.length > 0 ? ', ' : ''}${route.method === 'GET' && !route.path.includes(':') ? 'params, ' : ''}options]);`);
+    lines.push('');
+    
+    // Effect for auto-fetch
+    lines.push(`  useEffect(() => {`);
+    lines.push(`    if (options?.enabled !== false) {`);
+    lines.push(`      fetchData();`);
+    lines.push(`    }`);
+    lines.push('');
+    lines.push(`    return () => {`);
+    lines.push(`      if (abortControllerRef.current) {`);
+    lines.push(`        abortControllerRef.current.abort();`);
+    lines.push(`      }`);
+    lines.push(`    };`);
+    lines.push(`  }, [fetchData, options?.enabled]);`);
+    lines.push('');
+    
+    // Refetch interval
+    lines.push(`  useEffect(() => {`);
+    lines.push(`    if (options?.refetchInterval) {`);
+    lines.push(`      const interval = setInterval(fetchData, options.refetchInterval);`);
+    lines.push(`      return () => clearInterval(interval);`);
+    lines.push(`    }`);
+    lines.push(`  }, [fetchData, options?.refetchInterval]);`);
+    lines.push('');
+    
+    lines.push(`  return { data, isLoading, error, refetch: fetchData };`);
+    lines.push(`}`);
+    
+    return lines;
+  }
+
+  /**
+   * Generate useMutation hook for POST/PUT/PATCH/DELETE endpoints
+   */
+  private generateMutationHook(
+    route: RouteDefinition,
+    hookName: string,
+    methodName: string,
+    pathParams: Array<{ name: string; type: string }>,
+    model?: ModelDefinition
+  ): string[] {
+    const lines: string[] = [];
+    const returnType = this.getReturnType(route, model);
+    
+    // Determine variables type
+    let variablesType = 'unknown';
+    if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
+      if (model) {
+        variablesType = `Partial<${modelToInterfaceName(model.name)}>`;
+      }
+    }
+    
+    // For routes with path params, include them in variables
+    if (pathParams.length > 0) {
+      const paramTypes = pathParams.map(p => `${p.name}: ${p.type}`).join('; ');
+      if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
+        variablesType = `{ ${paramTypes}; data: ${variablesType} }`;
+      } else {
+        variablesType = `{ ${paramTypes} }`;
+      }
+    } else if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
+      variablesType = `{ data: ${variablesType} }`;
+    }
+    
+    // JSDoc
+    if (this.options.includeJSDoc) {
+      lines.push(`/**`);
+      lines.push(` * ${route.metadata?.description || `Hook for ${methodName}`}`);
+      lines.push(` */`);
+    }
+    
+    // Hook signature
+    lines.push(`export function ${hookName}(`);
+    lines.push(`  client: ${this.options.className},`);
+    lines.push(`  options?: UseMutationOptions<${returnType}>`);
+    lines.push(`): UseMutationResult<${returnType}, ${variablesType}> {`);
+    
+    // State
+    lines.push(`  const [data, setData] = useState<${returnType} | null>(null);`);
+    lines.push(`  const [isLoading, setIsLoading] = useState(false);`);
+    lines.push(`  const [error, setError] = useState<Error | null>(null);`);
+    lines.push('');
+    
+    // Mutate function
+    lines.push(`  const mutate = useCallback(async (variables: ${variablesType}): Promise<${returnType}> => {`);
+    lines.push(`    try {`);
+    lines.push(`      setIsLoading(true);`);
+    lines.push(`      setError(null);`);
+    lines.push('');
+    
+    // Build method call
+    const callParams: string[] = [];
+    
+    if (pathParams.length > 0) {
+      for (const param of pathParams) {
+        callParams.push(`variables.${param.name}`);
+      }
+    }
+    
+    if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
+      callParams.push('variables.data');
+    }
+    
+    callParams.push('{}');
+    
+    lines.push(`      const result = await client.${methodName}(${callParams.join(', ')});`);
+    lines.push(`      setData(result);`);
+    lines.push(`      options?.onSuccess?.(result);`);
+    lines.push(`      return result;`);
+    lines.push(`    } catch (err) {`);
+    lines.push(`      const error = err as Error;`);
+    lines.push(`      setError(error);`);
+    lines.push(`      options?.onError?.(error);`);
+    lines.push(`      throw error;`);
+    lines.push(`    } finally {`);
+    lines.push(`      setIsLoading(false);`);
+    lines.push(`    }`);
+    lines.push(`  }, [client, options]);`);
+    lines.push('');
+    
+    // Reset function
+    lines.push(`  const reset = useCallback(() => {`);
+    lines.push(`    setData(null);`);
+    lines.push(`    setError(null);`);
+    lines.push(`    setIsLoading(false);`);
+    lines.push(`  }, []);`);
+    lines.push('');
+    
+    lines.push(`  return { data, isLoading, error, mutate, reset };`);
+    lines.push(`}`);
+    
+    return lines;
+  }
+
+  /**
    * Generate all files and write to directory
    */
   generateToFiles(): Map<string, string> {
@@ -793,6 +1120,10 @@ export class ClientGenerator {
       files.set('utils.ts', generated.utils);
     }
     
+    if (generated.hooks) {
+      files.set('hooks.ts', generated.hooks);
+    }
+    
     // Generate index file
     const indexLines: string[] = [];
     indexLines.push('/**');
@@ -807,6 +1138,9 @@ export class ClientGenerator {
       indexLines.push(`export * from './errors';`);
     }
     indexLines.push(`export * from './utils';`);
+    if (generated.hooks) {
+      indexLines.push(`export * from './hooks';`);
+    }
     indexLines.push('');
     
     files.set('index.ts', indexLines.join('\n'));

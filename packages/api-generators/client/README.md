@@ -12,6 +12,7 @@ TypeScript client generator for Web Loom API Framework. Generates type-safe API 
 - Request/response interceptors
 - Request cancellation support
 - Automatic serialization/deserialization (Date objects, etc.)
+- Optional React hooks generation (useQuery, useMutation)
 - Pagination support for list endpoints
 - Authentication token management
 - JSDoc comments for better IDE support
@@ -168,6 +169,92 @@ The serialization/deserialization handles:
 - Nested objects and arrays
 - Preserves null and undefined values
 
+### React Hooks (Optional)
+
+Generate React hooks for your API endpoints:
+
+```typescript
+const generator = new ClientGenerator({
+  className: 'APIClient',
+  baseUrl: 'https://api.example.com',
+  generateReactHooks: true, // Enable React hooks
+});
+```
+
+This generates `useQuery` hooks for GET endpoints and `useMutation` hooks for POST/PUT/PATCH/DELETE:
+
+```typescript
+import { APIClient } from './generated';
+import { useGetUsers, useCreateUsers, useUpdateUserById } from './generated/hooks';
+
+const client = new APIClient('https://api.example.com');
+
+function UsersList() {
+  // useQuery hook - auto-fetches on mount
+  const { data, isLoading, error, refetch } = useGetUsers(client, {
+    page: 1,
+    limit: 20,
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return (
+    <div>
+      <button onClick={refetch}>Refresh</button>
+      <ul>
+        {data?.data.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function CreateUserForm() {
+  // useMutation hook - manual trigger
+  const { mutate, isLoading, error } = useCreateUsers(client, {
+    onSuccess: (user) => {
+      console.log('User created:', user);
+    },
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await mutate({
+      data: {
+        email: 'user@example.com',
+        name: 'John Doe',
+      },
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* form fields */}
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Creating...' : 'Create User'}
+      </button>
+      {error && <div>{error.message}</div>}
+    </form>
+  );
+}
+```
+
+Query hooks support:
+- Automatic fetching on mount
+- Loading and error states
+- Manual refetch
+- Auto-refetch intervals
+- Conditional fetching
+- Request cancellation on unmount
+
+Mutation hooks support:
+- Loading and error states
+- Success/error callbacks
+- Manual trigger
+- Reset state
+
 ## Configuration Options
 
 ### ClientGeneratorOptions
@@ -182,6 +269,7 @@ The serialization/deserialization handles:
 | `includeRetry` | `boolean` | `true` | Add automatic retry logic |
 | `includeCancellation` | `boolean` | `true` | Add request cancellation support |
 | `includeJSDoc` | `boolean` | `true` | Include JSDoc comments |
+| `generateReactHooks` | `boolean` | `false` | Generate React hooks (useQuery, useMutation) |
 | `exportFormat` | `'esm' \| 'cjs' \| 'both'` | `'esm'` | Export format |
 
 ## Generated Files
@@ -212,6 +300,13 @@ The generator creates the following files:
 - Utility functions
 - Query string builder
 - Helper methods
+
+### hooks.ts (optional)
+- React hooks for queries and mutations
+- `useQuery` hooks for GET endpoints
+- `useMutation` hooks for POST/PUT/PATCH/DELETE
+- Loading and error states
+- Auto-fetch and manual trigger support
 
 ### index.ts
 - Exports all generated code
@@ -299,6 +394,8 @@ See the [examples](./examples) directory for complete examples:
 - [Basic Usage](./examples/basic-usage.ts)
 - [With Authentication](./examples/with-auth.ts)
 - [With Interceptors](./examples/with-interceptors.ts)
+- [With Serialization](./examples/with-serialization.ts)
+- [With React Hooks](./examples/with-react-hooks.ts)
 
 ## License
 

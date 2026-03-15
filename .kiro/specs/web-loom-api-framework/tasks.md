@@ -449,7 +449,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Implement request cancellation support
     - Add retry logic with exponential backoff
     - _Requirements: 20.3, 20.4_
-  - [ ] 21.3 Add optional React hooks generation
+  - [x] 21.3 Add optional React hooks generation
     - Generate useQuery hooks for GET endpoints
     - Generate useMutation hooks for POST/PUT/PATCH/DELETE
     - Add loading and error states

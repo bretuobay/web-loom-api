@@ -30,6 +30,9 @@ export interface ClientGeneratorOptions {
   /** Include JSDoc comments */
   includeJSDoc?: boolean;
   
+  /** Generate React hooks */
+  generateReactHooks?: boolean;
+  
   /** Export format */
   exportFormat?: 'esm' | 'cjs' | 'both';
 }
@@ -49,6 +52,9 @@ export interface GeneratedClient {
   
   /** Utility functions */
   utils?: string;
+  
+  /** React hooks */
+  hooks?: string;
 }
 
 /**
