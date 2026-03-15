@@ -25,7 +25,9 @@
   "license": "MIT",
   "dependencies": {
     "@web-loom/api-core": "*",
-    "@web-loom/api-shared": "*"
+    "@web-loom/api-shared": "*",
+    "drizzle-orm": "^0.36.4",
+    "@neondatabase/serverless": "^0.10.4"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
