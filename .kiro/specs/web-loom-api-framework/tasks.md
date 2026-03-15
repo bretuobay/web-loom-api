@@ -482,8 +482,8 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test enum generation
     - _Requirements: 4.7_
 
-- [ ] 23. Implement database migration system
-  - [ ] 23.1 Implement migration commands
+- [-] 23. Implement database migration system
+  - [x] 23.1 Implement migration commands
     - Implement 'webloom migrate create' command
     - Implement 'webloom migrate up' command
     - Implement 'webloom migrate down' command
