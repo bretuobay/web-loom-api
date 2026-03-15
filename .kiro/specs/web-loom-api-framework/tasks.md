@@ -465,8 +465,8 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test error handling
     - _Requirements: 20.1, 20.2, 20.3, 20.4_
 
-- [ ] 22. Create @web-loom/api-generator-types package
-  - [ ] 22.1 Implement Type Generator
+- [-] 22. Create @web-loom/api-generator-types package
+  - [x] 22.1 Implement Type Generator
     - Generate TypeScript types from models
     - Generate request/response types
     - Generate enum types
