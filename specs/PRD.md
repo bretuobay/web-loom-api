@@ -148,9 +148,9 @@ Define your data models once, and let the framework do the rest:
 
   ```ts
   // src/models/user.model.ts
-  import { z } from "zod";
-  import { createInsertSchema } from "drizzle-zod";
-  import { users } from "../db/schema";
+  import { z } from 'zod';
+  import { createInsertSchema } from 'drizzle-zod';
+  import { users } from '../db/schema';
 
   export const User = createInsertSchema(users);
   export type User = z.infer<typeof User>;
@@ -318,15 +318,16 @@ Production-ready deployment strategies:
 
 **We don't compete with established frameworks** – instead, we complement the serverless ecosystem:
 
-| Ecosystem Area | Established Players | Web Loom API Role |
-|----------------|-------------------|-------------------|
-| **Traditional APIs** | Nest.js, Express, Fastify | *Not competing* – focused on serverless-native |
-| **Serverless Functions** | Raw Vercel/Netlify functions | Structured framework for complex APIs |
-| **Type-Safe APIs** | tRPC, GraphQL | REST-focused, multi-platform compatibility |
-| **Database ORMs** | Prisma, TypeORM | Orchestrates existing tools (Drizzle, Prisma) |
-| **Serverless Platforms** | Vercel, Cloudflare, AWS | Framework-agnostic deployment layer |
+| Ecosystem Area           | Established Players          | Web Loom API Role                              |
+| ------------------------ | ---------------------------- | ---------------------------------------------- |
+| **Traditional APIs**     | Nest.js, Express, Fastify    | _Not competing_ – focused on serverless-native |
+| **Serverless Functions** | Raw Vercel/Netlify functions | Structured framework for complex APIs          |
+| **Type-Safe APIs**       | tRPC, GraphQL                | REST-focused, multi-platform compatibility     |
+| **Database ORMs**        | Prisma, TypeORM              | Orchestrates existing tools (Drizzle, Prisma)  |
+| **Serverless Platforms** | Vercel, Cloudflare, AWS      | Framework-agnostic deployment layer            |
 
 **Our Unique Niche:**
+
 - **Serverless-Native Architecture** – Built specifically for edge/serverless constraints
 - **Component Orchestration** – Assembles existing tools rather than reinventing them
 - **Cross-Platform Flexibility** – Deploy the same code to Vercel, Cloudflare Workers, AWS Lambda
@@ -334,6 +335,7 @@ Production-ready deployment strategies:
 - **Swappable Infrastructure** – Change databases, API frameworks, or platforms without code rewrites
 
 **Complementary, Not Competitive:**
+
 - Use **Hono** (our default) but easily swap to **Fastify** for Node.js environments
 - Leverage **Drizzle** (our default) or **Prisma** based on project needs
 - Deploy to **any serverless platform** with the same codebase
