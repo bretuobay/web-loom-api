@@ -25,7 +25,8 @@
   "license": "MIT",
   "dependencies": {
     "@web-loom/api-core": "*",
-    "@web-loom/api-shared": "*"
+    "@web-loom/api-shared": "*",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

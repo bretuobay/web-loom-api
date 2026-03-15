@@ -200,13 +200,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Implement transaction() with rollback support
     - Add connection health checks
     - _Requirements: 2.2, 9.1, 9.2, 9.3_
-  - [ ] 11.2 Implement query builder methods
+  - [x] 11.2 Implement query builder methods
     - Implement select() with filtering and pagination
     - Implement insert() with returning clause
     - Implement update() with optimistic locking
     - Implement delete() with cascade handling
     - _Requirements: 9.4, 9.5, 9.6, 9.7_
-  - [ ] 11.3 Implement schema management
+  - [x] 11.3 Implement schema management
     - Implement createTable() from model definitions
     - Implement dropTable() with cascade
     - Implement migrateSchema() for migrations
@@ -219,7 +219,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 2.2, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
 - [ ] 12. Create @web-loom/api-adapter-zod package
-  - [ ] 12.1 Implement Zod ValidationAdapter
+  - [x] 12.1 Implement Zod ValidationAdapter
     - Implement defineSchema() with Zod schema builder
     - Implement validate() with error formatting
     - Implement schema operations (merge, partial, pick)
