@@ -394,7 +394,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Support dynamic segments in path
     - Add validation schema stubs
     - _Requirements: 18.4_
-  - [ ] 19.3 Implement 'webloom generate crud' command
+  - [x] 19.3 Implement 'webloom generate crud' command
     - Generate CRUD routes for specified model
     - Use CRUD Generator from @web-loom/api-generator-crud
     - _Requirements: 18.4_
