@@ -404,7 +404,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test CRUD generation
     - _Requirements: 18.4_
 
-- [-] 20. Create @web-loom/api-generator-openapi package
+- [x] 20. Create @web-loom/api-generator-openapi package
   - [x] 20.1 Implement OpenAPI Generator
     - Create OpenAPIGenerator class
     - Generate OpenAPI 3.1 specification structure
@@ -419,7 +419,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Include authentication requirements
     - Document rate limits and caching
     - _Requirements: 19.3, 19.4, 19.5_
-  - [ ] 20.3 Add metadata and examples
+  - [x] 20.3 Add metadata and examples
     - Include route descriptions and tags
     - Generate request/response examples
     - Add deprecation warnings
