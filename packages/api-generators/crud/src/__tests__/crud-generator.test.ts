@@ -1,0 +1,357 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { CRUDGenerator } from '../crud-generator';
+import type {
+  ModelDefinition,
+  DatabaseAdapter,
+  RequestContext,
+  QueryBuilder,
+} from '@web-loom/api-core';
+
+// Mock database adapter
+class MockDatabaseAdapter implements Partial<DatabaseAdapter> {
+  selectFn = vi.fn();
+  insertFn = vi.fn();
+  updateFn = vi.fn();
+  deleteFn = vi.fn();
+
+  select<T>(model: ModelDefinition): QueryBuilder<T> {
+    const mockQueryBuilder = {
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      offset: vi.fn().mockReturnThis(),
+      execute: this.selectFn,
+    };
+    return mockQueryBuilder as unknown as QueryBuilder<T>;
+  }
+
+  async insert<T>(_model: ModelDefinition, data: T): Promise<T> {
+    return this.insertFn(data);
+  }
+
+  async update<T>(_model: ModelDefinition, id: string, data: Partial<T>): Promise<T> {
+    return this.updateFn(id, data);
+  }
+
+  async delete(_model: ModelDefinition, id: string): Promise<void> {
+    return this.deleteFn(id);
+  }
+}
+
+// Mock validation adapter (not used in basic CRUD yet)
+class MockValidationAdapter implements Partial<ValidationAdapter> {}
+
+describe('CRUDGenerator', () => {
+  let generator: CRUDGenerator;
+  let database: MockDatabaseAdapter;
+  let model: ModelDefinition;
+
+  beforeEach(() => {
+    database = new MockDatabaseAdapter();
+    generator = new CRUDGenerator(database as DatabaseAdapter);
+
+    model = {
+      name: 'User',
+      tableName: 'users',
+      fields: [
+        { name: 'id', type: 'uuid', database: { primaryKey: true } },
+        { name: 'name', type: 'string', required: true },
+        { name: 'email', type: 'string', required: true },
+      ],
+    };
+  });
+
+  describe('generate', () => {
+    it('should generate all 6 CRUD endpoints', () => {
+      const routes = generator.generate(model, { basePath: '/users' });
+
+      expect(routes).toHaveLength(6);
+      
+      const methods = routes.map(r => r.method);
+      expect(methods).toContain('GET');
+      expect(methods).toContain('POST');
+      expect(methods).toContain('PUT');
+      expect(methods).toContain('PATCH');
+      expect(methods).toContain('DELETE');
+      
+      // GET appears twice (list and get by id)
+      expect(methods.filter(m => m === 'GET')).toHaveLength(2);
+    });
+
+    it('should generate routes with correct paths', () => {
+      const routes = generator.generate(model, { basePath: '/users' });
+
+      const paths = routes.map(r => r.path);
+      expect(paths).toContain('/users');
+      expect(paths).toContain('/users/:id');
+    });
+
+    it('should generate routes with handler functions', () => {
+      const routes = generator.generate(model, { basePath: '/users' });
+
+      routes.forEach(route => {
+        expect(route.handler).toBeTypeOf('function');
+      });
+    });
+  });
+
+  describe('List endpoint (GET /resource)', () => {
+    it('should return paginated results', async () => {
+      const mockUsers = [
+        { id: '1', name: 'John', email: 'john@example.com' },
+        { id: '2', name: 'Jane', email: 'jane@example.com' },
+      ];
+      database.selectFn.mockResolvedValue(mockUsers);
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users?page=1&limit=20'),
+        params: {},
+        query: { page: '1', limit: '20' },
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await listRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.data).toEqual(mockUsers);
+      expect(body.pagination).toEqual({
+        page: 1,
+        limit: 20,
+        total: 2,
+      });
+    });
+
+    it('should use default page size', async () => {
+      database.selectFn.mockResolvedValue([]);
+
+      const routes = generator.generate(model, {
+        basePath: '/users',
+        defaultPageSize: 10,
+      });
+      const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users'),
+        params: {},
+        query: {},
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await listRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(body.pagination.limit).toBe(10);
+    });
+
+    it('should enforce max page size', async () => {
+      database.selectFn.mockResolvedValue([]);
+
+      const routes = generator.generate(model, {
+        basePath: '/users',
+        maxPageSize: 50,
+      });
+      const listRoute = routes.find(r => r.method === 'GET' && r.path === '/users');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users?limit=1000'),
+        params: {},
+        query: { limit: '1000' },
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await listRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(body.pagination.limit).toBe(50);
+    });
+  });
+
+  describe('Create endpoint (POST /resource)', () => {
+    it('should create a new record', async () => {
+      const newUser = { name: 'John', email: 'john@example.com' };
+      const createdUser = { id: '1', ...newUser };
+      database.insertFn.mockResolvedValue(createdUser);
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const createRoute = routes.find(r => r.method === 'POST');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users', { method: 'POST' }),
+        params: {},
+        query: {},
+        body: newUser,
+        metadata: new Map(),
+      };
+
+      const response = await createRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(201);
+      expect(body).toEqual(createdUser);
+      expect(database.insertFn).toHaveBeenCalledWith(newUser);
+    });
+  });
+
+  describe('Get endpoint (GET /resource/:id)', () => {
+    it('should return a single record', async () => {
+      const user = { id: '1', name: 'John', email: 'john@example.com' };
+      database.selectFn.mockResolvedValue([user]);
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const getRoute = routes.find(r => r.method === 'GET' && r.path === '/users/:id');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1'),
+        params: { id: '1' },
+        query: {},
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await getRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body).toEqual(user);
+    });
+
+    it('should return 404 when record not found', async () => {
+      database.selectFn.mockResolvedValue([]);
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const getRoute = routes.find(r => r.method === 'GET' && r.path === '/users/:id');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/999'),
+        params: { id: '999' },
+        query: {},
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await getRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(body.error).toBe('Not Found');
+    });
+  });
+
+  describe('Update endpoints (PUT/PATCH /resource/:id)', () => {
+    it('should update a record with PUT', async () => {
+      const updatedUser = { id: '1', name: 'Jane', email: 'jane@example.com' };
+      database.updateFn.mockResolvedValue(updatedUser);
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const updateRoute = routes.find(r => r.method === 'PUT');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'PUT' }),
+        params: { id: '1' },
+        query: {},
+        body: { name: 'Jane' },
+        metadata: new Map(),
+      };
+
+      const response = await updateRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body).toEqual(updatedUser);
+      expect(database.updateFn).toHaveBeenCalledWith('1', { name: 'Jane' });
+    });
+
+    it('should update a record with PATCH', async () => {
+      const updatedUser = { id: '1', name: 'Jane', email: 'john@example.com' };
+      database.updateFn.mockResolvedValue(updatedUser);
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const patchRoute = routes.find(r => r.method === 'PATCH');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'PATCH' }),
+        params: { id: '1' },
+        query: {},
+        body: { name: 'Jane' },
+        metadata: new Map(),
+      };
+
+      const response = await patchRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body).toEqual(updatedUser);
+    });
+
+    it('should return 404 when updating non-existent record', async () => {
+      database.updateFn.mockRejectedValue(new Error('Record with id 999 not found'));
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const updateRoute = routes.find(r => r.method === 'PUT');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/999', { method: 'PUT' }),
+        params: { id: '999' },
+        query: {},
+        body: { name: 'Jane' },
+        metadata: new Map(),
+      };
+
+      const response = await updateRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(body.error).toBe('Not Found');
+    });
+  });
+
+  describe('Delete endpoint (DELETE /resource/:id)', () => {
+    it('should delete a record', async () => {
+      database.deleteFn.mockResolvedValue(undefined);
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const deleteRoute = routes.find(r => r.method === 'DELETE');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/1', { method: 'DELETE' }),
+        params: { id: '1' },
+        query: {},
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await deleteRoute!.handler(ctx, vi.fn());
+
+      expect(response.status).toBe(204);
+      expect(database.deleteFn).toHaveBeenCalledWith('1');
+    });
+
+    it('should return 404 when deleting non-existent record', async () => {
+      database.deleteFn.mockRejectedValue(new Error('Record with id 999 not found'));
+
+      const routes = generator.generate(model, { basePath: '/users' });
+      const deleteRoute = routes.find(r => r.method === 'DELETE');
+
+      const ctx: RequestContext = {
+        request: new Request('http://localhost/users/999', { method: 'DELETE' }),
+        params: { id: '999' },
+        query: {},
+        body: null,
+        metadata: new Map(),
+      };
+
+      const response = await deleteRoute!.handler(ctx, vi.fn());
+      const body = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(body.error).toBe('Not Found');
+    });
+  });
+});

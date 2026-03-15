@@ -270,7 +270,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 7.2, 7.3, 7.4_
 
 - [ ] 14. Create @web-loom/api-generator-crud package
-  - [ ] 14.1 Implement CRUD Generator core
+  - [x] 14.1 Implement CRUD Generator core
     - Create CRUDGenerator class with generate() method
     - Implement route generation for all 6 endpoints
     - Add customization support via CRUDOptions
