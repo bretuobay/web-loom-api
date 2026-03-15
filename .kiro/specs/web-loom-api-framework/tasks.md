@@ -351,7 +351,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
 ## Phase 3: CLI and Code Generation (Weeks 9-12)
 
 - [ ] 17. Create @web-loom/api-cli package structure
-  - [ ] 17.1 Set up CLI framework with Commander.js
+  - [x] 17.1 Set up CLI framework with Commander.js
     - Initialize CLI with version and description
     - Set up command structure
     - Add global options (--debug, --config)
