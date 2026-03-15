@@ -1,5 +1,8 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
+import { cors } from 'hono/cors';
+import { compress } from 'hono/compress';
+import { logger } from 'hono/logger';
 import type {
   APIFrameworkAdapter,
   RouteHandler,
@@ -8,6 +11,58 @@ import type {
   RequestContext,
 } from '@web-loom/api-core';
 import type { HTTPMethod } from '@web-loom/api-shared';
+
+/**
+ * Configuration options for CORS middleware
+ */
+export interface CORSOptions {
+  /** Enable/disable CORS middleware */
+  enabled?: boolean;
+  /** Allowed origins (string, array, or function) */
+  origin?: string | string[] | ((origin: string) => boolean);
+  /** Allow credentials (cookies, authorization headers) */
+  credentials?: boolean;
+  /** Allowed HTTP methods */
+  allowMethods?: string[];
+  /** Allowed request headers */
+  allowHeaders?: string[];
+  /** Exposed response headers */
+  exposeHeaders?: string[];
+  /** Preflight cache duration in seconds */
+  maxAge?: number;
+}
+
+/**
+ * Configuration options for compression middleware
+ */
+export interface CompressionOptions {
+  /** Enable/disable compression middleware */
+  enabled?: boolean;
+  /** Minimum response size to compress (in bytes) */
+  threshold?: number;
+}
+
+/**
+ * Configuration options for logging middleware
+ */
+export interface LoggingOptions {
+  /** Enable/disable logging middleware */
+  enabled?: boolean;
+  /** Custom log function */
+  fn?: (message: string, ...rest: string[]) => void;
+}
+
+/**
+ * Configuration options for HonoAdapter
+ */
+export interface HonoAdapterOptions {
+  /** CORS middleware configuration */
+  cors?: CORSOptions;
+  /** Compression middleware configuration */
+  compression?: CompressionOptions;
+  /** Logging middleware configuration */
+  logging?: LoggingOptions;
+}
 
 /**
  * Hono API Framework Adapter
@@ -19,11 +74,15 @@ import type { HTTPMethod } from '@web-loom/api-shared';
  * - Fast routing with radix tree
  * - Native Web Standards API (Request/Response)
  * - Excellent edge runtime support (Cloudflare Workers, Vercel Edge, etc.)
- * - Built-in middleware support
+ * - Built-in middleware support (CORS, compression, logging)
  * 
  * @example
  * ```typescript
- * const adapter = new HonoAdapter();
+ * const adapter = new HonoAdapter({
+ *   cors: { enabled: true, origin: '*' },
+ *   compression: { enabled: true },
+ *   logging: { enabled: true }
+ * });
  * adapter.registerRoute('GET', '/users/:id', async (ctx) => {
  *   return new Response(JSON.stringify({ id: ctx.params.id }));
  * });
@@ -33,9 +92,65 @@ import type { HTTPMethod } from '@web-loom/api-shared';
 export class HonoAdapter implements APIFrameworkAdapter {
   private app: Hono;
   private server: any = null; // Use any to handle different server types from @hono/node-server
+  private options: HonoAdapterOptions;
 
-  constructor() {
+  constructor(options: HonoAdapterOptions = {}) {
     this.app = new Hono();
+    this.options = options;
+    this.setupBuiltInMiddleware();
+  }
+
+  /**
+   * Setup built-in middleware (CORS, logging, compression)
+   * Middleware is applied in the correct order: CORS → logging → compression → routes
+   */
+  private setupBuiltInMiddleware(): void {
+    // 1. CORS middleware (must be first to handle preflight requests)
+    // Only apply if explicitly enabled or if cors options are provided
+    if (this.options.cors && this.options.cors.enabled !== false) {
+      const corsOptions = this.options.cors;
+      
+      // Build CORS configuration
+      const corsConfig: any = {};
+      
+      if (corsOptions.origin !== undefined) {
+        corsConfig.origin = corsOptions.origin;
+      }
+      if (corsOptions.credentials !== undefined) {
+        corsConfig.credentials = corsOptions.credentials;
+      }
+      if (corsOptions.allowMethods !== undefined) {
+        corsConfig.allowMethods = corsOptions.allowMethods;
+      }
+      if (corsOptions.allowHeaders !== undefined) {
+        corsConfig.allowHeaders = corsOptions.allowHeaders;
+      }
+      if (corsOptions.exposeHeaders !== undefined) {
+        corsConfig.exposeHeaders = corsOptions.exposeHeaders;
+      }
+      if (corsOptions.maxAge !== undefined) {
+        corsConfig.maxAge = corsOptions.maxAge;
+      }
+      
+      this.app.use('*', cors(corsConfig));
+    }
+
+    // 2. Logging middleware (logs all requests)
+    // Only apply if explicitly enabled or if logging options are provided
+    if (this.options.logging && this.options.logging.enabled !== false) {
+      const loggingOptions = this.options.logging;
+      if (loggingOptions.fn) {
+        this.app.use('*', logger(loggingOptions.fn));
+      } else {
+        this.app.use('*', logger());
+      }
+    }
+
+    // 3. Compression middleware (compresses responses)
+    // Only apply if explicitly enabled or if compression options are provided
+    if (this.options.compression && this.options.compression.enabled !== false) {
+      this.app.use('*', compress());
+    }
   }
 
   /**

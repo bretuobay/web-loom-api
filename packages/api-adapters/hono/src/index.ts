@@ -17,5 +17,11 @@
  * ```
  */
 
-export { HonoAdapter } from './hono-adapter';
+export { 
+  HonoAdapter,
+  type HonoAdapterOptions,
+  type CORSOptions,
+  type CompressionOptions,
+  type LoggingOptions,
+} from './hono-adapter';
 export const ADAPTER_NAME = 'hono';

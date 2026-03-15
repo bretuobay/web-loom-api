@@ -13,6 +13,7 @@ This package provides the default API framework adapter for Web Loom using [Hono
 - **Web Standards**: Native Request/Response API support
 - **Edge Runtime Support**: Works on Cloudflare Workers, Vercel Edge, Deno, Bun
 - **Middleware System**: Composable middleware pipeline
+- **Built-in Middleware**: CORS, compression, and logging support
 - **Type Safe**: Full TypeScript support
 
 ## Installation
@@ -40,6 +41,45 @@ adapter.registerRoute('GET', '/hello', async (ctx) => {
 // Start server
 await adapter.listen(3000);
 console.log('Server listening on port 3000');
+```
+
+### Configuration with Built-in Middleware
+
+```typescript
+import { HonoAdapter } from '@web-loom/api-adapter-hono';
+
+const adapter = new HonoAdapter({
+  // CORS middleware
+  cors: {
+    enabled: true,
+    origin: '*', // or specific origins: ['https://example.com']
+    credentials: true,
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    exposeHeaders: ['X-Request-Id'],
+    maxAge: 3600,
+  },
+  
+  // Compression middleware
+  compression: {
+    enabled: true,
+  },
+  
+  // Logging middleware
+  logging: {
+    enabled: true,
+    fn: (message) => console.log(`[API] ${message}`), // Custom log function
+  },
+});
+
+// Register routes
+adapter.registerRoute('GET', '/api/data', async (ctx) => {
+  return new Response(JSON.stringify({ data: 'example' }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+});
+
+await adapter.listen(3000);
 ```
 
 ### Route Registration
@@ -159,6 +199,94 @@ adapter.registerMiddleware(
 );
 ```
 
+### Built-in Middleware
+
+The adapter includes three built-in middleware options that can be configured during initialization:
+
+#### CORS Middleware
+
+Handles Cross-Origin Resource Sharing (CORS) headers and preflight requests:
+
+```typescript
+const adapter = new HonoAdapter({
+  cors: {
+    enabled: true,
+    origin: '*', // Allow all origins
+    // or specific origins:
+    // origin: 'https://example.com',
+    // origin: ['https://example.com', 'https://api.example.com'],
+    // or dynamic origin validation:
+    // origin: (origin) => origin.endsWith('.example.com'),
+    
+    credentials: true, // Allow credentials (cookies, authorization headers)
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    exposeHeaders: ['X-Request-Id', 'X-Total-Count'],
+    maxAge: 3600, // Preflight cache duration in seconds
+  },
+});
+```
+
+#### Compression Middleware
+
+Compresses response bodies using gzip, deflate, or brotli:
+
+```typescript
+const adapter = new HonoAdapter({
+  compression: {
+    enabled: true,
+  },
+});
+```
+
+The compression middleware automatically:
+- Detects client support via `Accept-Encoding` header
+- Compresses responses when appropriate
+- Adds `Content-Encoding` header to compressed responses
+
+#### Logging Middleware
+
+Logs all incoming requests and their responses:
+
+```typescript
+const adapter = new HonoAdapter({
+  logging: {
+    enabled: true,
+    // Optional: custom log function
+    fn: (message) => {
+      console.log(`[${new Date().toISOString()}] ${message}`);
+    },
+  },
+});
+```
+
+Default log format includes:
+- HTTP method
+- Request path
+- Response status code
+- Response time
+
+#### Disabling Built-in Middleware
+
+To disable any built-in middleware, set `enabled: false`:
+
+```typescript
+const adapter = new HonoAdapter({
+  cors: { enabled: false },
+  compression: { enabled: false },
+  logging: { enabled: false },
+});
+```
+
+#### Middleware Execution Order
+
+Built-in middleware is applied in the following order:
+1. **CORS** - Handles preflight requests and adds CORS headers
+2. **Logging** - Logs request details
+3. **Compression** - Compresses responses
+4. **Custom Middleware** - Your registered middleware
+5. **Route Handlers** - Your route handlers
+
 ### Request Context
 
 The `RequestContext` object passed to handlers contains:
@@ -215,7 +343,19 @@ export default defineConfig({
   adapters: {
     api: {
       adapter: HonoAdapter,
-      config: {},
+      config: {
+        cors: {
+          enabled: true,
+          origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+          credentials: true,
+        },
+        compression: {
+          enabled: true,
+        },
+        logging: {
+          enabled: process.env.NODE_ENV !== 'production',
+        },
+      },
     },
     // ... other adapters
   },
@@ -225,6 +365,27 @@ export default defineConfig({
 ## API Reference
 
 ### `HonoAdapter`
+
+#### Constructor
+
+##### `new HonoAdapter(options?)`
+
+Create a new Hono adapter instance with optional configuration.
+
+- **options**: `HonoAdapterOptions` (optional)
+  - `cors`: `CORSOptions` - CORS middleware configuration
+    - `enabled`: `boolean` - Enable/disable CORS middleware
+    - `origin`: `string | string[] | ((origin: string) => boolean)` - Allowed origins
+    - `credentials`: `boolean` - Allow credentials
+    - `allowMethods`: `string[]` - Allowed HTTP methods
+    - `allowHeaders`: `string[]` - Allowed request headers
+    - `exposeHeaders`: `string[]` - Exposed response headers
+    - `maxAge`: `number` - Preflight cache duration in seconds
+  - `compression`: `CompressionOptions` - Compression middleware configuration
+    - `enabled`: `boolean` - Enable/disable compression middleware
+  - `logging`: `LoggingOptions` - Logging middleware configuration
+    - `enabled`: `boolean` - Enable/disable logging middleware
+    - `fn`: `(message: string, ...rest: string[]) => void` - Custom log function
 
 #### Methods
 
