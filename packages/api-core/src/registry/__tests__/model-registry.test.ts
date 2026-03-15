@@ -263,8 +263,8 @@ describe('ModelRegistry', () => {
       registry.register(model);
       const relationships = registry.getRelationships('User');
       expect(relationships).toHaveLength(2);
-      expect(relationships[0].type).toBe('hasMany');
-      expect(relationships[1].type).toBe('belongsTo');
+      expect(relationships[0]?.type).toBe('hasMany');
+      expect(relationships[1]?.type).toBe('belongsTo');
     });
 
     it('should return empty array for model without relationships', () => {

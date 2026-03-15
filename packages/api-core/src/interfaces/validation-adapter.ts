@@ -243,7 +243,7 @@ export interface ValidationResult<T> {
   data?: T;
   
   /** Validation errors (only present if success is false) */
-  errors?: ValidationError[];
+  errors?: ValidationFieldError[];
 }
 
 /**
@@ -252,7 +252,7 @@ export interface ValidationResult<T> {
  * Provides detailed information about why validation failed,
  * including the field path and error message.
  */
-export interface ValidationError {
+export interface ValidationFieldError {
   /** 
    * Field path as array of keys
    * 

@@ -460,7 +460,7 @@ describe('CoreRuntime', () => {
   describe('Initialization Sequence', () => {
     it('should initialize adapters in correct order', async () => {
       const config = createMockConfig();
-      const initOrder: string[] = [];
+      // const initOrder: string[] = [];
 
       // We can't easily test the actual order without mocking the adapter loading
       // But we can verify that all critical adapters are initialized
