@@ -348,11 +348,151 @@ export class ModelRegistry {
     }
 
     // Validate enum fields have enum values
-    if (field.type === 'enum' && (!field.validation?.enum || field.validation.enum.length === 0)) {
+    if (field.type === 'enum') {
+      if (!field.validation?.enum || field.validation.enum.length === 0) {
+        errors.push({
+          path: [...fieldPath, 'validation', 'enum'],
+          message: 'Enum fields must specify allowed values in validation.enum',
+          code: 'MISSING_FIELD',
+        });
+      } else {
+        // Validate enum values are strings
+        const invalidEnumValues = field.validation.enum.filter(
+          (val) => typeof val !== 'string' || val.length === 0
+        );
+        if (invalidEnumValues.length > 0) {
+          errors.push({
+            path: [...fieldPath, 'validation', 'enum'],
+            message: 'Enum values must be non-empty strings',
+            code: 'INVALID_INPUT',
+          });
+        }
+
+        // Check for duplicate enum values
+        const uniqueEnumValues = new Set(field.validation.enum);
+        if (uniqueEnumValues.size !== field.validation.enum.length) {
+          errors.push({
+            path: [...fieldPath, 'validation', 'enum'],
+            message: 'Enum values must be unique',
+            code: 'DUPLICATE_RESOURCE',
+          });
+        }
+      }
+    }
+
+    // Validate field constraints
+    if (field.validation) {
+      this.validateFieldConstraints(field, fieldPath, errors);
+    }
+  }
+
+  /**
+   * Validate field constraints (min, max, pattern, etc.)
+   */
+  private validateFieldConstraints(
+    field: FieldDefinition,
+    fieldPath: string[],
+    errors: Array<{ path: string[]; message: string; code: string }>
+  ): void {
+    // Safe to assert non-null here because this method is only called when validation exists
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const validation = field.validation!;
+
+    // Validate min/max for numeric and string types
+    if (validation.min !== undefined) {
+      if (typeof validation.min !== 'number' || validation.min < 0) {
+        errors.push({
+          path: [...fieldPath, 'validation', 'min'],
+          message: 'Min constraint must be a non-negative number',
+          code: 'INVALID_INPUT',
+        });
+      }
+    }
+
+    if (validation.max !== undefined) {
+      if (typeof validation.max !== 'number' || validation.max < 0) {
+        errors.push({
+          path: [...fieldPath, 'validation', 'max'],
+          message: 'Max constraint must be a non-negative number',
+          code: 'INVALID_INPUT',
+        });
+      }
+    }
+
+    // Validate min <= max
+    if (
+      validation.min !== undefined &&
+      validation.max !== undefined &&
+      validation.min > validation.max
+    ) {
       errors.push({
-        path: [...fieldPath, 'validation', 'enum'],
-        message: 'Enum fields must specify allowed values in validation.enum',
-        code: 'MISSING_FIELD',
+        path: [...fieldPath, 'validation'],
+        message: 'Min constraint must be less than or equal to max constraint',
+        code: 'INVALID_INPUT',
+      });
+    }
+
+    // Validate pattern is a valid regex
+    if (validation.pattern !== undefined) {
+      if (typeof validation.pattern !== 'string') {
+        errors.push({
+          path: [...fieldPath, 'validation', 'pattern'],
+          message: 'Pattern must be a string',
+          code: 'INVALID_INPUT',
+        });
+      } else {
+        try {
+          new RegExp(validation.pattern);
+        } catch {
+          errors.push({
+            path: [...fieldPath, 'validation', 'pattern'],
+            message: 'Pattern must be a valid regular expression',
+            code: 'INVALID_INPUT',
+          });
+        }
+      }
+    }
+
+    // Validate email/url flags are only used with string type
+    if (validation.email && field.type !== 'string') {
+      errors.push({
+        path: [...fieldPath, 'validation', 'email'],
+        message: 'Email validation can only be used with string fields',
+        code: 'INVALID_INPUT',
+      });
+    }
+
+    if (validation.url && field.type !== 'string') {
+      errors.push({
+        path: [...fieldPath, 'validation', 'url'],
+        message: 'URL validation can only be used with string fields',
+        code: 'INVALID_INPUT',
+      });
+    }
+
+    // Validate integer/positive flags are only used with number type
+    if (validation.integer && field.type !== 'number' && field.type !== 'decimal') {
+      errors.push({
+        path: [...fieldPath, 'validation', 'integer'],
+        message: 'Integer validation can only be used with number or decimal fields',
+        code: 'INVALID_INPUT',
+      });
+    }
+
+    if (validation.positive && field.type !== 'number' && field.type !== 'decimal') {
+      errors.push({
+        path: [...fieldPath, 'validation', 'positive'],
+        message: 'Positive validation can only be used with number or decimal fields',
+        code: 'INVALID_INPUT',
+      });
+    }
+
+    // Validate uuid flag is only used with uuid or string type
+    if (validation.uuid && field.type !== 'uuid' && field.type !== 'string') {
+      errors.push({
+        path: [...fieldPath, 'validation', 'uuid'],
+        message: 'UUID validation can only be used with uuid or string fields',
+        code: 'INVALID_INPUT',
       });
     }
   }
@@ -384,15 +524,86 @@ export class ModelRegistry {
         message: 'Relationship must reference a model name',
         code: 'MISSING_FIELD',
       });
+    } else if (!/^[A-Z][a-zA-Z0-9]*$/.test(rel.model)) {
+      errors.push({
+        path: [...relPath, 'model'],
+        message: 'Referenced model name must be PascalCase',
+        code: 'INVALID_FORMAT',
+      });
     }
 
     // Validate manyToMany has through table
-    if (rel.type === 'manyToMany' && !rel.through) {
-      errors.push({
-        path: [...relPath, 'through'],
-        message: 'manyToMany relationships must specify a "through" table',
-        code: 'MISSING_FIELD',
-      });
+    if (rel.type === 'manyToMany') {
+      if (rel.through === undefined || rel.through === null) {
+        errors.push({
+          path: [...relPath, 'through'],
+          message: 'manyToMany relationships must specify a "through" table',
+          code: 'MISSING_FIELD',
+        });
+      } else if (typeof rel.through !== 'string' || rel.through.length === 0) {
+        errors.push({
+          path: [...relPath, 'through'],
+          message: 'Through table must be a non-empty string',
+          code: 'INVALID_INPUT',
+        });
+      } else if (!/^[a-z][a-z0-9_]*$/.test(rel.through)) {
+        errors.push({
+          path: [...relPath, 'through'],
+          message: 'Through table name must be snake_case',
+          code: 'INVALID_FORMAT',
+        });
+      }
+    }
+
+    // Validate foreignKey format if provided
+    if (rel.foreignKey !== undefined) {
+      if (typeof rel.foreignKey !== 'string' || rel.foreignKey.length === 0) {
+        errors.push({
+          path: [...relPath, 'foreignKey'],
+          message: 'Foreign key must be a non-empty string',
+          code: 'INVALID_INPUT',
+        });
+      } else if (!/^[a-z][a-zA-Z0-9]*$/.test(rel.foreignKey)) {
+        errors.push({
+          path: [...relPath, 'foreignKey'],
+          message: 'Foreign key must be camelCase',
+          code: 'INVALID_FORMAT',
+        });
+      }
+    }
+
+    // Validate localKey format if provided
+    if (rel.localKey !== undefined) {
+      if (typeof rel.localKey !== 'string' || rel.localKey.length === 0) {
+        errors.push({
+          path: [...relPath, 'localKey'],
+          message: 'Local key must be a non-empty string',
+          code: 'INVALID_INPUT',
+        });
+      } else if (!/^[a-z][a-zA-Z0-9]*$/.test(rel.localKey)) {
+        errors.push({
+          path: [...relPath, 'localKey'],
+          message: 'Local key must be camelCase',
+          code: 'INVALID_FORMAT',
+        });
+      }
+    }
+
+    // Validate alias format if provided
+    if (rel.as !== undefined) {
+      if (typeof rel.as !== 'string' || rel.as.length === 0) {
+        errors.push({
+          path: [...relPath, 'as'],
+          message: 'Relationship alias must be a non-empty string',
+          code: 'INVALID_INPUT',
+        });
+      } else if (!/^[a-z][a-zA-Z0-9]*$/.test(rel.as)) {
+        errors.push({
+          path: [...relPath, 'as'],
+          message: 'Relationship alias must be camelCase',
+          code: 'INVALID_FORMAT',
+        });
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 {
   "name": "@webloom/api-core",
   "version": "0.1.0",
+  "type": "module",
   "description": "Core runtime and interfaces for Web Loom API Framework",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

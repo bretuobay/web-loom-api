@@ -130,7 +130,7 @@ export function loadConfig(
 
   // Step 3: Interpolate environment variables
   if (interpolate) {
-    config = interpolateConfig(config);
+    config = interpolateConfig(config as unknown as Record<string, unknown>) as unknown as WebLoomConfig;
   }
 
   // Step 4: Validate configuration
@@ -170,7 +170,7 @@ export function loadConfigSync(
 ): WebLoomConfig {
   const result = loadConfig({
     config,
-    envOptions,
+    ...(envOptions ? { envOptions } : {}),
   });
 
   return result.config;

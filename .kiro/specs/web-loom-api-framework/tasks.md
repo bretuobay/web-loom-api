@@ -77,7 +77,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Add thread-safe registration for concurrent access
     - Implement relationship tracking and dependency resolution
     - _Requirements: 4.1, 4.2, 4.3_
-  - [~] 5.2 Implement model definition validation
+  - [x] 5.2 Implement model definition validation
     - Validate field types and constraints
     - Check relationship consistency
     - Detect circular dependencies
@@ -94,12 +94,12 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 4.1, 4.2, 4.3_
 
 - [ ] 6. Implement Route Registry
-  - [~] 6.1 Create RouteRegistry class with registration methods
+  - [ ] 6.1 Create RouteRegistry class with registration methods
     - Implement register(), unregister(), get(), match() methods
     - Add route matching with parameter extraction
     - Implement conflict detection for duplicate routes
     - _Requirements: 6.5, 6.6_
-  - [~] 6.2 Implement file-based route discovery
+  - [ ] 6.2 Implement file-based route discovery
     - Scan src/routes directory recursively
     - Map file paths to URL paths ([id] → :id, [...path] → \*)
     - Support dynamic segments and catch-all routes
@@ -131,13 +131,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 6.5, 6.6, 6.7_
 
 - [ ] 7. Implement Core Runtime
-  - [~] 7.1 Create CoreRuntime class with initialization sequence
+  - [ ] 7.1 Create CoreRuntime class with initialization sequence
     - Implement initialize() with configuration loading
     - Add adapter initialization in dependency order
     - Implement route and model discovery
     - Add lifecycle management (start, shutdown)
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
-  - [~] 7.2 Implement lazy adapter loading for non-critical components
+  - [ ] 7.2 Implement lazy adapter loading for non-critical components
     - Defer email and caching adapter initialization
     - Load adapters on first use
     - Optimize cold start performance (<100ms target)
@@ -159,7 +159,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
 - [ ] 8. Implement request/response handling
-  - [~] 8.1 Create RequestContext and response utilities
+  - [ ] 8.1 Create RequestContext and response utilities
     - Define RequestContext interface with request, params, query, body
     - Implement response serialization with JSON support
     - Add compression support for responses
@@ -170,19 +170,19 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test compression
     - _Requirements: 8.1, 8.2_
 
-- [~] 9. Checkpoint - Core foundation complete
+- [ ] 9. Checkpoint - Core foundation complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 2: Adapters and CRUD (Weeks 5-8)
 
 - [ ] 10. Create @webloom/api-adapter-hono package
-  - [~] 10.1 Implement Hono APIFrameworkAdapter
+  - [ ] 10.1 Implement Hono APIFrameworkAdapter
     - Implement registerRoute() with Hono routing
     - Implement registerMiddleware() with Hono middleware
     - Implement handleRequest() with Web Standards Request/Response
     - Add listen() and close() for server lifecycle
     - _Requirements: 2.1, 8.3, 8.4_
-  - [~] 10.2 Integrate Hono built-in middleware
+  - [ ] 10.2 Integrate Hono built-in middleware
     - Add CORS middleware support
     - Add compression middleware
     - Add logging middleware
@@ -194,19 +194,19 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 2.1, 8.3, 8.4_
 
 - [ ] 11. Create @webloom/api-adapter-drizzle package
-  - [~] 11.1 Implement Drizzle DatabaseAdapter
+  - [ ] 11.1 Implement Drizzle DatabaseAdapter
     - Implement connect() with Neon connection pooling
     - Implement query() and execute() with prepared statements
     - Implement transaction() with rollback support
     - Add connection health checks
     - _Requirements: 2.2, 9.1, 9.2, 9.3_
-  - [~] 11.2 Implement query builder methods
+  - [ ] 11.2 Implement query builder methods
     - Implement select() with filtering and pagination
     - Implement insert() with returning clause
     - Implement update() with optimistic locking
     - Implement delete() with cascade handling
     - _Requirements: 9.4, 9.5, 9.6, 9.7_
-  - [~] 11.3 Implement schema management
+  - [ ] 11.3 Implement schema management
     - Implement createTable() from model definitions
     - Implement dropTable() with cascade
     - Implement migrateSchema() for migrations
@@ -219,7 +219,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 2.2, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
 - [ ] 12. Create @webloom/api-adapter-zod package
-  - [~] 12.1 Implement Zod ValidationAdapter
+  - [ ] 12.1 Implement Zod ValidationAdapter
     - Implement defineSchema() with Zod schema builder
     - Implement validate() with error formatting
     - Implement schema operations (merge, partial, pick)
@@ -247,7 +247,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 2.3, 7.1, 7.5, 7.6, 7.7_
 
 - [ ] 13. Create @webloom/api-middleware-validation package
-  - [~] 13.1 Implement validation middleware
+  - [ ] 13.1 Implement validation middleware
     - Create middleware for body validation
     - Create middleware for query parameter validation
     - Create middleware for path parameter validation
@@ -270,12 +270,12 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 7.2, 7.3, 7.4_
 
 - [ ] 14. Create @webloom/api-generator-crud package
-  - [~] 14.1 Implement CRUD Generator core
+  - [ ] 14.1 Implement CRUD Generator core
     - Create CRUDGenerator class with generate() method
     - Implement route generation for all 6 endpoints
     - Add customization support via CRUDOptions
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
-  - [~] 14.2 Implement List endpoint (GET /resource)
+  - [ ] 14.2 Implement List endpoint (GET /resource)
     - Add page-based pagination support
     - Add cursor-based pagination support
     - Implement filtering with operators (eq, gte, lte, etc.)
@@ -284,27 +284,27 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Add search functionality
     - Add relationship loading (include parameter)
     - _Requirements: 5.2, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
-  - [~] 14.3 Implement Create endpoint (POST /resource)
+  - [ ] 14.3 Implement Create endpoint (POST /resource)
     - Add request body validation
     - Implement nested relationship creation
     - Apply default values
     - Generate timestamps automatically
     - Wrap in transaction
     - _Requirements: 5.1, 12.1, 12.2_
-  - [~] 14.4 Implement Get endpoint (GET /resource/:id)
+  - [ ] 14.4 Implement Get endpoint (GET /resource/:id)
     - Add ID validation
     - Implement 404 handling
     - Add relationship eager loading
     - Support field selection
     - Calculate computed fields
     - _Requirements: 5.3_
-  - [~] 14.5 Implement Update endpoints (PUT/PATCH /resource/:id)
+  - [ ] 14.5 Implement Update endpoints (PUT/PATCH /resource/:id)
     - Implement full update (PUT) semantics
     - Implement partial update (PATCH) semantics
     - Add optimistic locking support
     - Handle relationship updates
     - _Requirements: 5.4, 5.5, 12.3_
-  - [~] 14.6 Implement Delete endpoint (DELETE /resource/:id)
+  - [ ] 14.6 Implement Delete endpoint (DELETE /resource/:id)
     - Add soft delete support
     - Implement cascade delete handling
     - Add constraint checking
@@ -322,19 +322,19 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
 
 - [ ] 15. Implement error handling system
-  - [~] 15.1 Create error classification and response formatting
+  - [ ] 15.1 Create error classification and response formatting
     - Define error types (ValidationError, AuthError, NotFoundError, etc.)
     - Implement consistent ErrorResponse format
     - Add request ID generation for tracing
     - Create error middleware for global handling
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
-  - [~] 15.2 Implement database error mapping
+  - [ ] 15.2 Implement database error mapping
     - Map database errors to HTTP status codes
     - Handle unique constraint violations (409)
     - Handle foreign key violations (409)
     - Handle connection errors (503)
     - _Requirements: 13.5_
-  - [~] 15.3 Add development vs production error handling
+  - [ ] 15.3 Add development vs production error handling
     - Include stack traces in development
     - Sanitize error messages in production
     - Log all errors with context
@@ -345,13 +345,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test database error mapping
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [~] 16. Checkpoint - Adapters and CRUD complete
+- [ ] 16. Checkpoint - Adapters and CRUD complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 3: CLI and Code Generation (Weeks 9-12)
 
 - [ ] 17. Create @webloom/api-cli package structure
-  - [~] 17.1 Set up CLI framework with Commander.js
+  - [ ] 17.1 Set up CLI framework with Commander.js
     - Initialize CLI with version and description
     - Set up command structure
     - Add global options (--debug, --config)
@@ -363,7 +363,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 18.1_
 
 - [ ] 18. Implement project initialization command
-  - [~] 18.1 Implement 'webloom init' command
+  - [ ] 18.1 Implement 'webloom init' command
     - Create interactive prompts for project setup
     - Support template selection
     - Generate project structure with src/models, src/routes
@@ -371,7 +371,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Generate package.json with @webloom/\* dependencies
     - Create .env.example file
     - _Requirements: 18.2, 18.3_
-  - [~] 18.2 Create project templates
+  - [ ] 18.2 Create project templates
     - Create minimal template (basic setup)
     - Create full-stack template (with auth, email)
     - Create serverless template (optimized for edge)
@@ -383,18 +383,18 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 18.2, 18.3_
 
 - [ ] 19. Implement code generation commands
-  - [~] 19.1 Implement 'webloom generate model' command
+  - [ ] 19.1 Implement 'webloom generate model' command
     - Parse field definitions from CLI arguments
     - Generate model definition file
     - Register model in Model Registry
     - Support relationships and options
     - _Requirements: 18.4_
-  - [~] 19.2 Implement 'webloom generate route' command
+  - [ ] 19.2 Implement 'webloom generate route' command
     - Generate route file with HTTP method handlers
     - Support dynamic segments in path
     - Add validation schema stubs
     - _Requirements: 18.4_
-  - [~] 19.3 Implement 'webloom generate crud' command
+  - [ ] 19.3 Implement 'webloom generate crud' command
     - Generate CRUD routes for specified model
     - Use CRUD Generator from @webloom/api-generator-crud
     - _Requirements: 18.4_
@@ -405,21 +405,21 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 18.4_
 
 - [ ] 20. Create @webloom/api-generator-openapi package
-  - [~] 20.1 Implement OpenAPI Generator
+  - [ ] 20.1 Implement OpenAPI Generator
     - Create OpenAPIGenerator class
     - Generate OpenAPI 3.1 specification structure
     - Extract schemas from model definitions
     - Map field types to OpenAPI types
     - Include validation constraints
     - _Requirements: 19.1, 19.2_
-  - [~] 20.2 Generate path items from routes
+  - [ ] 20.2 Generate path items from routes
     - Convert routes to OpenAPI paths
     - Generate request body schemas
     - Generate response schemas
     - Include authentication requirements
     - Document rate limits and caching
     - _Requirements: 19.3, 19.4, 19.5_
-  - [~] 20.3 Add metadata and examples
+  - [ ] 20.3 Add metadata and examples
     - Include route descriptions and tags
     - Generate request/response examples
     - Add deprecation warnings
@@ -437,19 +437,19 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6_
 
 - [ ] 21. Create @webloom/api-generator-client package
-  - [~] 21.1 Implement TypeScript Client Generator
+  - [ ] 21.1 Implement TypeScript Client Generator
     - Create ClientGenerator class
     - Generate TypeScript interfaces from models
     - Generate API client class with typed methods
     - Add request/response type definitions
     - _Requirements: 20.1, 20.2_
-  - [~] 21.2 Add client features
+  - [ ] 21.2 Add client features
     - Implement automatic serialization/deserialization
     - Add error handling with typed errors
     - Implement request cancellation support
     - Add retry logic with exponential backoff
     - _Requirements: 20.3, 20.4_
-  - [~] 21.3 Add optional React hooks generation
+  - [ ] 21.3 Add optional React hooks generation
     - Generate useQuery hooks for GET endpoints
     - Generate useMutation hooks for POST/PUT/PATCH/DELETE
     - Add loading and error states
@@ -466,7 +466,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 20.1, 20.2, 20.3, 20.4_
 
 - [ ] 22. Create @webloom/api-generator-types package
-  - [~] 22.1 Implement Type Generator
+  - [ ] 22.1 Implement Type Generator
     - Generate TypeScript types from models
     - Generate request/response types
     - Generate enum types
@@ -483,13 +483,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 4.7_
 
 - [ ] 23. Implement database migration system
-  - [~] 23.1 Implement migration commands
+  - [ ] 23.1 Implement migration commands
     - Implement 'webloom migrate create' command
     - Implement 'webloom migrate up' command
     - Implement 'webloom migrate down' command
     - Implement 'webloom migrate status' command
     - _Requirements: 10.4, 10.5, 10.6_
-  - [~] 23.2 Implement migration tracking
+  - [ ] 23.2 Implement migration tracking
     - Create migrations table in database
     - Track applied migrations
     - Support rollback with down migrations
@@ -501,14 +501,14 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 10.4, 10.5, 10.6, 10.7_
 
 - [ ] 24. Implement development server
-  - [~] 24.1 Implement 'webloom dev' command
+  - [ ] 24.1 Implement 'webloom dev' command
     - Start development server with hot reload
     - Watch for file changes in src/
     - Reload routes and models on change
     - Add detailed error messages
     - Enable SQL query logging
     - _Requirements: 18.5, 18.6_
-  - [~] 24.2 Add interactive API documentation
+  - [ ] 24.2 Add interactive API documentation
     - Serve OpenAPI spec at /docs
     - Integrate Swagger UI or Scalar
     - Auto-update on route changes
@@ -519,15 +519,15 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 18.5, 18.6_
 
 - [ ] 25. Implement CLI utility commands
-  - [~] 25.1 Implement 'webloom generate openapi' command
+  - [ ] 25.1 Implement 'webloom generate openapi' command
     - Generate OpenAPI spec to file
     - Support output path option
     - _Requirements: 18.4_
-  - [~] 25.2 Implement 'webloom generate client' command
+  - [ ] 25.2 Implement 'webloom generate client' command
     - Generate TypeScript client to directory
     - Support output path option
     - _Requirements: 18.4_
-  - [~] 25.3 Implement 'webloom seed' command
+  - [ ] 25.3 Implement 'webloom seed' command
     - Load and execute seed files
     - Support custom seed file path
     - _Requirements: 10.8_
@@ -537,30 +537,30 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test seeding
     - _Requirements: 18.4, 10.8_
 
-- [~] 26. Checkpoint - CLI and code generation complete
+- [ ] 26. Checkpoint - CLI and code generation complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 4: Security and Auth (Weeks 13-16)
 
 - [ ] 27. Create @webloom/api-adapter-lucia package
-  - [~] 27.1 Implement Lucia AuthAdapter
+  - [ ] 27.1 Implement Lucia AuthAdapter
     - Implement createSession() with database storage
     - Implement validateSession() with expiration checking
     - Implement invalidateSession() for logout
     - Add automatic session cleanup
     - _Requirements: 2.4, 14.1, 14.2_
-  - [~] 27.2 Implement user management
+  - [ ] 27.2 Implement user management
     - Implement createUser() with validation
     - Implement getUser() and updateUser()
     - Implement hashPassword() with bcrypt
     - Implement verifyPassword() with timing-safe comparison
     - _Requirements: 14.3, 14.4_
-  - [~] 27.3 Implement OAuth integration
+  - [ ] 27.3 Implement OAuth integration
     - Implement getOAuthAuthorizationUrl() for providers
     - Implement handleOAuthCallback() with token exchange
     - Support Google, GitHub, and generic OAuth2
     - _Requirements: 14.5_
-  - [~] 27.4 Implement API key management
+  - [ ] 27.4 Implement API key management
     - Implement createApiKey() with scopes
     - Implement validateApiKey() with scope checking
     - Implement revokeApiKey()
@@ -573,13 +573,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 2.4, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
 
 - [ ] 28. Create @webloom/api-middleware-auth package
-  - [~] 28.1 Implement authentication middleware
+  - [ ] 28.1 Implement authentication middleware
     - Create session authentication middleware
     - Create API key authentication middleware
     - Add user context to RequestContext
     - Support optional vs required authentication
     - _Requirements: 15.1, 15.2_
-  - [~] 28.2 Implement authorization middleware
+  - [ ] 28.2 Implement authorization middleware
     - Create role-based access control (RBAC) middleware
     - Support hierarchical roles
     - Add field-level permission checking
@@ -592,14 +592,14 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 15.1, 15.2, 15.3, 15.4_
 
 - [ ] 29. Create @webloom/api-middleware-rate-limit package
-  - [~] 29.1 Implement rate limiting middleware
+  - [ ] 29.1 Implement rate limiting middleware
     - Create token bucket rate limiter
     - Support per-IP rate limiting
     - Support per-user rate limiting
     - Add configurable time windows
     - Return 429 with Retry-After header
     - _Requirements: 16.1, 16.2_
-  - [~] 29.2 Add rate limit storage backends
+  - [ ] 29.2 Add rate limit storage backends
     - Implement in-memory storage (development)
     - Implement Redis storage (production)
     - Support distributed rate limiting
@@ -611,7 +611,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 16.1, 16.2, 16.3_
 
 - [ ] 30. Create @webloom/api-middleware-cors package
-  - [~] 30.1 Implement CORS middleware
+  - [ ] 30.1 Implement CORS middleware
     - Handle preflight OPTIONS requests
     - Add CORS headers to responses
     - Support configurable origins (whitelist, regex)
@@ -624,20 +624,20 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 17.1, 17.2_
 
 - [ ] 31. Implement security features
-  - [~] 31.1 Add security headers middleware
+  - [ ] 31.1 Add security headers middleware
     - Add X-Content-Type-Options: nosniff
     - Add X-Frame-Options: DENY
     - Add X-XSS-Protection header
     - Add Strict-Transport-Security header
     - Add configurable Content-Security-Policy
     - _Requirements: 17.3_
-  - [~] 31.2 Implement input sanitization
+  - [ ] 31.2 Implement input sanitization
     - Add HTML escaping in validation adapter
     - Implement SQL injection prevention via parameterized queries
     - Add path traversal prevention in route matching
     - Implement request size limits
     - _Requirements: 17.4, 17.5_
-  - [~] 31.3 Implement audit logging
+  - [ ] 31.3 Implement audit logging
     - Log authentication attempts
     - Log authorization failures
     - Log data modifications (create/update/delete)
@@ -650,25 +650,25 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test audit logging
     - _Requirements: 17.3, 17.4, 17.5, 17.6_
 
-- [~] 32. Checkpoint - Security and auth complete
+- [ ] 32. Checkpoint - Security and auth complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 5: Advanced Features (Weeks 17-20)
 
 - [ ] 33. Implement caching system
-  - [~] 33.1 Create caching middleware
+  - [ ] 33.1 Create caching middleware
     - Implement response caching for GET requests
     - Support configurable TTL
     - Add cache key generation
     - Implement cache invalidation on mutations
     - _Requirements: 21.1, 21.2_
-  - [~] 33.2 Implement multi-level caching
+  - [ ] 33.2 Implement multi-level caching
     - Add query result caching
     - Add prepared statement caching
     - Add configuration caching
     - Add schema caching
     - _Requirements: 21.3_
-  - [~] 33.3 Add cache storage backends
+  - [ ] 33.3 Add cache storage backends
     - Implement in-memory cache (development)
     - Implement Redis cache (production)
     - Support cache warming
@@ -680,7 +680,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 21.1, 21.2, 21.3, 21.4_
 
 - [ ] 34. Create @webloom/api-adapter-resend package
-  - [~] 34.1 Implement Resend EmailAdapter
+  - [ ] 34.1 Implement Resend EmailAdapter
     - Implement send() with Resend API
     - Implement sendBatch() for bulk emails
     - Implement sendTemplate() with variables
@@ -693,13 +693,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 2.5, 22.1, 22.2_
 
 - [ ] 35. Implement background jobs system
-  - [~] 35.1 Create job queue infrastructure
+  - [ ] 35.1 Create job queue infrastructure
     - Define Job interface with execute method
     - Implement job queue with priority support
     - Add job scheduling with cron expressions
     - Implement retry logic with exponential backoff
     - _Requirements: 23.1, 23.2_
-  - [~] 35.2 Add job storage backends
+  - [ ] 35.2 Add job storage backends
     - Implement in-memory queue (development)
     - Implement Redis queue (production)
     - Support distributed job processing
@@ -711,13 +711,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 23.1, 23.2, 23.3_
 
 - [ ] 36. Implement file upload system
-  - [~] 36.1 Create file upload middleware
+  - [ ] 36.1 Create file upload middleware
     - Support multipart/form-data parsing
     - Add file size limits
     - Add file type validation
     - Implement streaming for large files
     - _Requirements: 24.1, 24.2_
-  - [~] 36.2 Add file storage backends
+  - [ ] 36.2 Add file storage backends
     - Implement local file storage (development)
     - Implement S3 storage (production)
     - Implement Cloudflare R2 storage
@@ -730,13 +730,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 24.1, 24.2, 24.3, 24.4_
 
 - [ ] 37. Implement webhook system
-  - [~] 37.1 Create webhook infrastructure
+  - [ ] 37.1 Create webhook infrastructure
     - Define webhook event types
     - Implement webhook registration
     - Add webhook delivery with retries
     - Implement signature verification
     - _Requirements: 25.1, 25.2_
-  - [~] 37.2 Add webhook management
+  - [ ] 37.2 Add webhook management
     - Create webhook CRUD endpoints
     - Add webhook event logging
     - Implement webhook testing endpoint
@@ -748,13 +748,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 25.1, 25.2, 25.3_
 
 - [ ] 38. Implement plugin system
-  - [~] 38.1 Create plugin infrastructure
+  - [ ] 38.1 Create plugin infrastructure
     - Define Plugin interface with lifecycle hooks
     - Implement plugin discovery and loading
     - Add plugin registration in configuration
     - Support local and npm plugins
     - _Requirements: 26.1, 26.2_
-  - [~] 38.2 Add plugin extension points
+  - [ ] 38.2 Add plugin extension points
     - Support middleware registration
     - Support route registration
     - Support model registration
@@ -766,19 +766,19 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test extension points
     - _Requirements: 26.1, 26.2, 26.3_
 
-- [~] 39. Checkpoint - Advanced features complete
+- [ ] 39. Checkpoint - Advanced features complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 6: Observability and Deployment (Weeks 21-24)
 
 - [ ] 40. Implement structured logging
-  - [~] 40.1 Create logging infrastructure
+  - [ ] 40.1 Create logging infrastructure
     - Implement JSON-formatted logger
     - Support log levels (debug, info, warn, error)
     - Add request ID generation and propagation
     - Include context metadata in logs
     - _Requirements: 27.1, 27.2_
-  - [~] 40.2 Implement sensitive data sanitization
+  - [ ] 40.2 Implement sensitive data sanitization
     - Redact passwords from logs
     - Mask API keys
     - Remove credit card numbers
@@ -791,14 +791,14 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 27.1, 27.2, 27.3_
 
 - [ ] 41. Implement metrics collection
-  - [~] 41.1 Create metrics infrastructure
+  - [ ] 41.1 Create metrics infrastructure
     - Implement Prometheus-compatible metrics
     - Add request metrics (count, duration, size)
     - Add database metrics (queries, connections)
     - Add cache metrics (hits, misses, hit rate)
     - Add application metrics (cold starts, errors)
     - _Requirements: 28.1, 28.2, 28.3_
-  - [~] 41.2 Expose metrics endpoint
+  - [ ] 41.2 Expose metrics endpoint
     - Create /metrics endpoint
     - Format metrics in Prometheus format
     - Add metric labels for filtering
@@ -809,14 +809,14 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 28.1, 28.2, 28.3, 28.4_
 
 - [ ] 42. Implement distributed tracing
-  - [~] 42.1 Create tracing infrastructure
+  - [ ] 42.1 Create tracing infrastructure
     - Implement OpenTelemetry-based tracing
     - Add trace context propagation (W3C Trace Context)
     - Create spans for request lifecycle
     - Add spans for database queries
     - Add spans for external API calls
     - _Requirements: 29.1, 29.2_
-  - [~] 42.2 Implement trace sampling
+  - [ ] 42.2 Implement trace sampling
     - Always sample errors
     - Sample percentage of successful requests
     - Always sample slow requests (>1s)
@@ -829,13 +829,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 29.1, 29.2, 29.3_
 
 - [ ] 43. Implement health checks
-  - [~] 43.1 Create health check endpoints
+  - [ ] 43.1 Create health check endpoints
     - Implement /health/live for liveness probe
     - Implement /health/ready for readiness probe
     - Check database connectivity
     - Check critical adapter initialization
     - _Requirements: 30.1, 30.2_
-  - [~] 43.2 Add health check response format
+  - [ ] 43.2 Add health check response format
     - Include status (healthy/unhealthy)
     - Include individual check results
     - Include latency for each check
@@ -848,13 +848,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 30.1, 30.2, 30.3_
 
 - [ ] 44. Create @webloom/api-deployment-vercel package
-  - [~] 44.1 Implement Vercel deployment adapter
+  - [ ] 44.1 Implement Vercel deployment adapter
     - Create createVercelHandler() function
     - Support Edge Runtime compatibility
     - Implement streaming responses
     - Add environment variable integration
     - _Requirements: 31.1_
-  - [~] 44.2 Add Vercel-specific optimizations
+  - [ ] 44.2 Add Vercel-specific optimizations
     - Optimize for edge deployment
     - Support automatic region selection
     - Add Vercel KV integration for caching
@@ -865,13 +865,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 31.1, 31.2_
 
 - [ ] 45. Create @webloom/api-deployment-cloudflare package
-  - [~] 45.1 Implement Cloudflare deployment adapter
+  - [ ] 45.1 Implement Cloudflare deployment adapter
     - Create createCloudflareHandler() function
     - Support Workers runtime
     - Add KV storage integration
     - Add D1 database integration
     - _Requirements: 32.1_
-  - [~] 45.2 Add Cloudflare-specific optimizations
+  - [ ] 45.2 Add Cloudflare-specific optimizations
     - Support Durable Objects for WebSocket
     - Add Workers AI integration
     - Optimize for edge deployment
@@ -883,13 +883,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 32.1, 32.2_
 
 - [ ] 46. Create @webloom/api-deployment-aws package
-  - [~] 46.1 Implement AWS Lambda deployment adapter
+  - [ ] 46.1 Implement AWS Lambda deployment adapter
     - Create createLambdaHandler() function
     - Support Lambda function URLs
     - Add API Gateway integration
     - Add RDS Proxy support for database connections
     - _Requirements: 33.1_
-  - [~] 46.2 Add AWS-specific optimizations
+  - [ ] 46.2 Add AWS-specific optimizations
     - Optimize cold start performance
     - Add CloudWatch Logs integration
     - Support Lambda layers for dependencies
@@ -900,12 +900,12 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 33.1, 33.2_
 
 - [ ] 47. Add Docker deployment support
-  - [~] 47.1 Create Dockerfile template
+  - [ ] 47.1 Create Dockerfile template
     - Create multi-stage build Dockerfile
     - Optimize for minimal image size
     - Add health check support
     - _Requirements: 34.1_
-  - [~] 47.2 Add Docker Compose configuration
+  - [ ] 47.2 Add Docker Compose configuration
     - Create docker-compose.yml for local development
     - Include database service
     - Include Redis service
@@ -915,25 +915,25 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test container startup
     - _Requirements: 34.1, 34.2_
 
-- [~] 48. Checkpoint - Observability and deployment complete
+- [ ] 48. Checkpoint - Observability and deployment complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 7: Testing and Documentation (Weeks 25-28)
 
 - [ ] 49. Create @webloom/api-testing package
-  - [~] 49.1 Implement test client
+  - [ ] 49.1 Implement test client
     - Create TestClient class with HTTP methods
     - Support authentication (session, API key)
     - Add response assertions (status, headers, body, schema)
     - Support request/response interception
     - _Requirements: 35.1, 35.2_
-  - [~] 49.2 Implement database seeding utilities
+  - [ ] 49.2 Implement database seeding utilities
     - Create defineFactory() for factory functions
     - Implement seed() for bulk data creation
     - Support relationships in factories
     - Add faker integration for realistic data
     - _Requirements: 35.3_
-  - [~] 49.3 Implement mock adapters
+  - [ ] 49.3 Implement mock adapters
     - Create createMockDatabase() for isolated testing
     - Create createMockAuth() for auth testing
     - Create createMockEmail() for email testing
@@ -946,7 +946,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 35.1, 35.2, 35.3, 35.4_
 
 - [ ] 50. Implement contract testing
-  - [~] 50.1 Create contract testing utilities
+  - [ ] 50.1 Create contract testing utilities
     - Implement testContract() function
     - Validate API against OpenAPI spec
     - Check response schemas
@@ -959,7 +959,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 36.1, 36.2_
 
 - [ ] 51. Implement performance testing
-  - [~] 51.1 Create benchmarking utilities
+  - [ ] 51.1 Create benchmarking utilities
     - Implement benchmark() function
     - Measure cold start time
     - Measure request latency
@@ -972,7 +972,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 37.1, 37.2_
 
 - [ ] 52. Complete property-based test suite
-  - [~] 52.1 Implement remaining property tests
+  - [ ] 52.1 Implement remaining property tests
     - **Property 2: Model Serialization Round-Trip** (Requirements 46.1, 46.2)
     - **Property 3: Special Type Round-Trip Handling** (Requirements 46.4)
     - **Property 22: Deserialized Data Validation** (Requirements 46.3)
@@ -994,7 +994,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 46.3_
 
 - [ ] 53. Create integration test suite
-  - [~] 53.1 Write cross-package integration tests
+  - [ ] 53.1 Write cross-package integration tests
     - Test full CRUD workflow (model → routes → database)
     - Test authentication flow (login → session → protected route)
     - Test code generation workflow (model → OpenAPI → client)
@@ -1006,48 +1006,48 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: E2E testing_
 
 - [ ] 54. Create example projects
-  - [~] 54.1 Create minimal example
+  - [ ] 54.1 Create minimal example
     - Simple CRUD API with one model
     - Basic authentication
     - Demonstrate core features
     - _Requirements: 38.1_
-  - [~] 54.2 Create full-stack example
+  - [ ] 54.2 Create full-stack example
     - Multiple models with relationships
     - Authentication and authorization
     - File uploads and background jobs
     - Webhooks and caching
     - _Requirements: 38.2_
-  - [~] 54.3 Create serverless example
+  - [ ] 54.3 Create serverless example
     - Optimized for edge deployment
     - Demonstrate Vercel/Cloudflare deployment
     - Show cold start optimization
     - _Requirements: 38.3_
 
 - [ ] 55. Write comprehensive documentation
-  - [~] 55.1 Create getting started guide
+  - [ ] 55.1 Create getting started guide
     - Installation instructions
     - Quick start tutorial
     - First API in 5 minutes
     - _Requirements: 39.1_
-  - [~] 55.2 Create core concepts documentation
+  - [ ] 55.2 Create core concepts documentation
     - Adapter system explanation
     - Model-driven development guide
     - Configuration reference
     - Routing guide
     - _Requirements: 39.2_
-  - [~] 55.3 Create API reference documentation
+  - [ ] 55.3 Create API reference documentation
     - Document all public APIs
     - Include TypeScript signatures
     - Add code examples
     - Generate from TSDoc comments
     - _Requirements: 39.3_
-  - [~] 55.4 Create deployment guides
+  - [ ] 55.4 Create deployment guides
     - Vercel deployment guide
     - Cloudflare deployment guide
     - AWS Lambda deployment guide
     - Docker deployment guide
     - _Requirements: 39.4_
-  - [~] 55.5 Create advanced guides
+  - [ ] 55.5 Create advanced guides
     - Custom adapter development
     - Plugin development
     - Performance optimization
@@ -1056,26 +1056,26 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 39.5_
 
 - [ ] 56. Set up CI/CD pipeline
-  - [~] 56.1 Configure GitHub Actions
+  - [ ] 56.1 Configure GitHub Actions
     - Run tests on all PRs
     - Run linting and type checking
     - Generate test coverage reports
     - Run property-based tests with multiple seeds
     - _Requirements: 40.1_
-  - [~] 56.2 Configure automated releases
+  - [ ] 56.2 Configure automated releases
     - Semantic versioning with changesets
     - Automated npm publishing
     - Generate changelogs
     - Create GitHub releases
     - _Requirements: 40.2_
-  - [~] 56.3 Add quality gates
+  - [ ] 56.3 Add quality gates
     - Require 90% test coverage
     - Require all tests passing
     - Require no TypeScript errors
     - Require no linting errors
     - _Requirements: 40.3_
 
-- [~] 57. Final checkpoint - All phases complete
+- [ ] 57. Final checkpoint - All phases complete
   - Ensure all 22 property tests pass
   - Ensure 100+ unit tests pass
   - Verify documentation is complete

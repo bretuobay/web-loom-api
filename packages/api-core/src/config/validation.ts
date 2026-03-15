@@ -42,8 +42,8 @@ export interface ValidationResult<T> {
  * Schema for adapter configuration
  */
 const adapterConfigSchema = z.object({
-  package: z.string().min(1, 'Adapter package name is required'),
-  options: z.record(z.unknown()).optional(),
+  package: z.string().min(1, { message: 'Adapter package name is required' }),
+  options: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -61,9 +61,9 @@ const adaptersConfigSchema = z.object({
  * Schema for database configuration
  */
 const databaseConfigSchema = z.object({
-  url: z.string().min(1, 'Database URL is required'),
-  poolSize: z.number().int().positive().optional(),
-  connectionTimeout: z.number().int().positive().optional(),
+  url: z.string().min(1, { message: 'Database URL is required' }),
+  poolSize: z.number().int({ message: 'Pool size must be an integer' }).positive({ message: 'Pool size must be positive' }).optional(),
+  connectionTimeout: z.number().int({ message: 'Connection timeout must be an integer' }).positive({ message: 'Connection timeout must be positive' }).optional(),
   readReplicas: z.array(z.string()).optional(),
   ssl: z.boolean().optional(),
 });
@@ -77,15 +77,15 @@ const corsConfigSchema = z.object({
   methods: z.array(z.string()).optional(),
   headers: z.array(z.string()).optional(),
   exposedHeaders: z.array(z.string()).optional(),
-  maxAge: z.number().int().positive().optional(),
+  maxAge: z.number().int({ message: 'Max age must be an integer' }).positive({ message: 'Max age must be positive' }).optional(),
 });
 
 /**
  * Schema for rate limit configuration
  */
 const rateLimitConfigSchema = z.object({
-  limit: z.number().int().positive('Rate limit must be a positive integer'),
-  window: z.string().regex(/^\d+[smhd]$/, 'Window must be in format: 30s, 1m, 1h, 1d'),
+  limit: z.number().int({ message: 'Rate limit must be an integer' }).positive({ message: 'Rate limit must be a positive integer' }),
+  window: z.string().regex(/^\d+[smhd]$/, { message: 'Window must be in format: 30s, 1m, 1h, 1d' }),
   keyGenerator: z.function().optional(),
   skipSuccessfulRequests: z.boolean().optional(),
   skipFailedRequests: z.boolean().optional(),
@@ -96,11 +96,11 @@ const rateLimitConfigSchema = z.object({
  */
 const securityHeadersConfigSchema = z.object({
   contentSecurityPolicy: z.object({
-    directives: z.record(z.array(z.string())),
+    directives: z.record(z.string(), z.array(z.string())),
     reportUri: z.string().optional(),
   }).optional(),
   hsts: z.object({
-    maxAge: z.number().int().positive(),
+    maxAge: z.number().int({ message: 'HSTS max age must be an integer' }).positive({ message: 'HSTS max age must be positive' }),
     includeSubDomains: z.boolean().optional(),
     preload: z.boolean().optional(),
   }).optional(),
@@ -116,7 +116,7 @@ const securityHeadersConfigSchema = z.object({
 const securityConfigSchema = z.object({
   cors: corsConfigSchema,
   rateLimit: rateLimitConfigSchema.optional(),
-  requestSizeLimit: z.number().int().positive().optional(),
+  requestSizeLimit: z.number().int({ message: 'Request size limit must be an integer' }).positive({ message: 'Request size limit must be positive' }).optional(),
   securityHeaders: securityHeadersConfigSchema.optional(),
 });
 
@@ -151,7 +151,7 @@ const metricsConfigSchema = z.object({
   endpoint: z.string().optional(),
   collectDefault: z.boolean().optional(),
   prefix: z.string().optional(),
-  labels: z.record(z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
 });
 
 /**
@@ -160,8 +160,8 @@ const metricsConfigSchema = z.object({
 const tracingConfigSchema = z.object({
   enabled: z.boolean(),
   exporter: z.enum(['otlp', 'jaeger', 'zipkin']),
-  endpoint: z.string().url('Tracing endpoint must be a valid URL'),
-  serviceName: z.string().min(1, 'Service name is required'),
+  endpoint: z.string().url({ message: 'Tracing endpoint must be a valid URL' }),
+  serviceName: z.string().min(1, { message: 'Service name is required' }),
   sampleRate: z.number().min(0).max(1).optional(),
 });
 
@@ -285,6 +285,8 @@ export function validateConfigOrThrow(config: unknown): WebLoomConfig {
     throw new ConfigurationValidationError(result.errors || []);
   }
 
+  // Safe to assert non-null here because we checked result.success above
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return result.data!;
 }
 

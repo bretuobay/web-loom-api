@@ -87,7 +87,7 @@ export function loadEnvFiles(
   const {
     cwd = process.cwd(),
     environment = process.env.NODE_ENV || 'development',
-    override = false,
+    override: _override = false,
     debug = false,
   } = options;
 
