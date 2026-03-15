@@ -527,7 +527,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Generate TypeScript client to directory
     - Support output path option
     - _Requirements: 18.4_
-  - [ ] 25.3 Implement 'webloom seed' command
+  - [x] 25.3 Implement 'webloom seed' command
     - Load and execute seed files
     - Support custom seed file path
     - _Requirements: 10.8_
@@ -537,7 +537,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test seeding
     - _Requirements: 18.4, 10.8_
 
-- [ ] 26. Checkpoint - CLI and code generation complete
+- [x] 26. Checkpoint - CLI and code generation complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 4: Security and Auth (Weeks 13-16)
