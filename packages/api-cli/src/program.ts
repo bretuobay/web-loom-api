@@ -7,6 +7,7 @@
 
 import { Command } from 'commander';
 import { CLI_VERSION } from './version.js';
+import { createInitCommand } from './commands/index.js';
 
 /**
  * Create and configure the CLI program
@@ -26,12 +27,12 @@ export function createProgram(): Command {
     .option('--config <path>', 'Path to configuration file', 'webloom.config.ts')
     .option('--no-color', 'Disable colored output');
 
-  // Add commands (will be implemented in subsequent tasks)
-  // program.addCommand(initCommand);
-  // program.addCommand(generateCommand);
-  // program.addCommand(migrateCommand);
-  // program.addCommand(devCommand);
-  // program.addCommand(seedCommand);
+  // Add commands
+  program.addCommand(createInitCommand());
+  // program.addCommand(createGenerateCommand());
+  // program.addCommand(createMigrateCommand());
+  // program.addCommand(createDevCommand());
+  // program.addCommand(createSeedCommand());
 
   // Show help if no command provided
   if (process.argv.length === 2) {
