@@ -383,7 +383,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 18.2, 18.3_
 
 - [ ] 19. Implement code generation commands
-  - [ ] 19.1 Implement 'webloom generate model' command
+  - [x] 19.1 Implement 'webloom generate model' command
     - Parse field definitions from CLI arguments
     - Generate model definition file
     - Register model in Model Registry
