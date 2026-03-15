@@ -436,14 +436,14 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test metadata inclusion
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6_
 
-- [ ] 21. Create @web-loom/api-generator-client package
-  - [ ] 21.1 Implement TypeScript Client Generator
+- [-] 21. Create @web-loom/api-generator-client package
+  - [x] 21.1 Implement TypeScript Client Generator
     - Create ClientGenerator class
     - Generate TypeScript interfaces from models
     - Generate API client class with typed methods
     - Add request/response type definitions
     - _Requirements: 20.1, 20.2_
-  - [ ] 21.2 Add client features
+  - [x] 21.2 Add client features
     - Implement automatic serialization/deserialization
     - Add error handling with typed errors
     - Implement request cancellation support
