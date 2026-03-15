@@ -501,7 +501,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 10.4, 10.5, 10.6, 10.7_
 
 - [ ] 24. Implement development server
-  - [ ] 24.1 Implement 'webloom dev' command
+  - [x] 24.1 Implement 'webloom dev' command
     - Start development server with hot reload
     - Watch for file changes in src/
     - Reload routes and models on change

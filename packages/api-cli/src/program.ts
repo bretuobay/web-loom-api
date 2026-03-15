@@ -7,7 +7,7 @@
 
 import { Command } from 'commander';
 import { CLI_VERSION } from './version.js';
-import { createInitCommand, createGenerateCommand, migrateCommand } from './commands/index.js';
+import { createInitCommand, createGenerateCommand, migrateCommand, createDevCommand } from './commands/index.js';
 
 /**
  * Create and configure the CLI program
@@ -31,7 +31,7 @@ export function createProgram(): Command {
   program.addCommand(createInitCommand());
   program.addCommand(createGenerateCommand());
   program.addCommand(migrateCommand);
-  // program.addCommand(createDevCommand());
+  program.addCommand(createDevCommand());
   // program.addCommand(createSeedCommand());
 
   // Show help if no command provided
