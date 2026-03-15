@@ -247,6 +247,24 @@ export class OpenAPIGenerator {
       operation.security = this.generateSecurityRequirements(route);
     }
 
+    // Add rate limiting as OpenAPI extension
+    if (route.rateLimit) {
+      (operation as unknown as Record<string, unknown>)['x-rate-limit'] = {
+        limit: route.rateLimit.limit,
+        window: route.rateLimit.window,
+        windowUnit: 'milliseconds',
+      };
+    }
+
+    // Add caching configuration as OpenAPI extension
+    if (route.cache) {
+      (operation as unknown as Record<string, unknown>)['x-cache'] = {
+        ttl: route.cache.ttl,
+        ttlUnit: 'seconds',
+        perUser: route.cache.perUser || false,
+      };
+    }
+
     return operation;
   }
 
@@ -274,20 +292,40 @@ export class OpenAPIGenerator {
     if (pathParams) {
       for (const param of pathParams) {
         const paramName = param.substring(1);
+        
+        // Check if there's a validation schema for this parameter
+        let schema: OpenAPISchema = { type: 'string' };
+        if (route.validation?.params && typeof route.validation.params === 'object') {
+          const paramsSchema = route.validation.params as Record<string, unknown>;
+          if (paramName in paramsSchema) {
+            schema = this.convertValidationSchemaToOpenAPI(paramsSchema[paramName]);
+          }
+        }
+
         parameters.push({
           name: paramName,
           in: 'path',
           required: true,
-          schema: { type: 'string' },
+          schema,
           description: `${paramName} parameter`,
         });
       }
     }
 
-    // Add query parameters for GET requests
-    if (route.method === 'GET' && route.validation?.query) {
-      // TODO: Parse query validation schema
-      // For now, add common pagination parameters
+    // Add query parameters from validation schema
+    if (route.validation?.query && typeof route.validation.query === 'object') {
+      const querySchema = route.validation.query as Record<string, unknown>;
+      for (const [name, schema] of Object.entries(querySchema)) {
+        parameters.push({
+          name,
+          in: 'query',
+          required: false,
+          schema: this.convertValidationSchemaToOpenAPI(schema),
+          description: `${name} query parameter`,
+        });
+      }
+    } else if (route.method === 'GET') {
+      // Add common pagination parameters for GET requests if no validation schema
       parameters.push(
         {
           name: 'page',
@@ -306,6 +344,20 @@ export class OpenAPIGenerator {
       );
     }
 
+    // Add header parameters from validation schema
+    if (route.validation?.headers && typeof route.validation.headers === 'object') {
+      const headersSchema = route.validation.headers as Record<string, unknown>;
+      for (const [name, schema] of Object.entries(headersSchema)) {
+        parameters.push({
+          name,
+          in: 'header',
+          required: false,
+          schema: this.convertValidationSchemaToOpenAPI(schema),
+          description: `${name} header`,
+        });
+      }
+    }
+
     return parameters;
   }
 
@@ -313,26 +365,59 @@ export class OpenAPIGenerator {
    * Generate request body from route
    */
   private generateRequestBody(route: RouteDefinition): OpenAPIRequestBody | undefined {
+    // If route has validation schema for body, use it
+    if (route.validation?.body) {
+      return {
+        description: 'Request body',
+        required: true,
+        content: {
+          'application/json': {
+            schema: this.convertValidationSchemaToOpenAPI(route.validation.body),
+          },
+        },
+      };
+    }
+
     // Try to infer schema from route path (e.g., /users -> User model)
     const modelName = this.inferModelFromPath(route.path);
     const model = modelName ? this.models.get(modelName) : undefined;
 
-    let schema: OpenAPISchema;
     if (model) {
-      schema = { $ref: `#/components/schemas/${model.name}` };
-    } else {
-      schema = { type: 'object' };
+      return {
+        description: `${model.name} object`,
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: `#/components/schemas/${model.name}` },
+          },
+        },
+      };
     }
 
+    // Default generic object schema
     return {
       description: 'Request body',
       required: true,
       content: {
         'application/json': {
-          schema,
+          schema: { type: 'object' },
         },
       },
     };
+  }
+
+  /**
+   * Convert validation schema to OpenAPI schema
+   * This is a simplified converter - in production, you'd want to handle Zod schemas properly
+   */
+  private convertValidationSchemaToOpenAPI(schema: unknown): OpenAPISchema {
+    // If it's already an OpenAPI schema, return it
+    if (typeof schema === 'object' && schema !== null && 'type' in schema) {
+      return schema as OpenAPISchema;
+    }
+
+    // Default to object type
+    return { type: 'object' };
   }
 
   /**
@@ -342,7 +427,7 @@ export class OpenAPIGenerator {
     const responses: Record<string, OpenAPIResponse> = {};
 
     // Use metadata responses if available
-    if (route.metadata?.responses) {
+    if (route.metadata?.responses && route.metadata.responses.length > 0) {
       for (const response of route.metadata.responses) {
         const responseObj: OpenAPIResponse = {
           description: response.description,
@@ -376,6 +461,9 @@ export class OpenAPIGenerator {
             getResponse.content = {
               'application/json': {
                 schema: { $ref: `#/components/schemas/${model.name}` },
+                ...(this.options.includeExamples && {
+                  example: this.generateModelExample(model),
+                }),
               },
             };
           }
@@ -383,7 +471,7 @@ export class OpenAPIGenerator {
         } else {
           // List of resources
           const listResponse: OpenAPIResponse = {
-            description: 'Successful response',
+            description: 'Successful response with pagination',
           };
           if (model) {
             listResponse.content = {
@@ -398,14 +486,27 @@ export class OpenAPIGenerator {
                     pagination: {
                       type: 'object',
                       properties: {
-                        page: { type: 'integer' },
-                        limit: { type: 'integer' },
-                        total: { type: 'integer' },
-                        totalPages: { type: 'integer' },
+                        page: { type: 'integer', description: 'Current page number' },
+                        limit: { type: 'integer', description: 'Items per page' },
+                        total: { type: 'integer', description: 'Total number of items' },
+                        totalPages: { type: 'integer', description: 'Total number of pages' },
                       },
+                      required: ['page', 'limit', 'total', 'totalPages'],
                     },
                   },
+                  required: ['data', 'pagination'],
                 },
+                ...(this.options.includeExamples && {
+                  example: {
+                    data: [this.generateModelExample(model)],
+                    pagination: {
+                      page: 1,
+                      limit: 20,
+                      total: 100,
+                      totalPages: 5,
+                    },
+                  },
+                }),
               },
             };
           }
@@ -413,6 +514,24 @@ export class OpenAPIGenerator {
         }
         responses['404'] = {
           description: 'Resource not found',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'object',
+                    properties: {
+                      code: { type: 'string', example: 'NOT_FOUND' },
+                      message: { type: 'string', example: 'Resource not found' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      requestId: { type: 'string', format: 'uuid' },
+                    },
+                  },
+                },
+              },
+            },
+          },
         };
         break;
 
@@ -424,12 +543,49 @@ export class OpenAPIGenerator {
           postResponse.content = {
             'application/json': {
               schema: { $ref: `#/components/schemas/${model.name}` },
+              ...(this.options.includeExamples && {
+                example: this.generateModelExample(model),
+              }),
             },
           };
         }
         responses['201'] = postResponse;
         responses['400'] = {
           description: 'Invalid request body',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'object',
+                    properties: {
+                      code: { type: 'string', example: 'VALIDATION_ERROR' },
+                      message: { type: 'string', example: 'Validation failed' },
+                      details: {
+                        type: 'object',
+                        properties: {
+                          fields: {
+                            type: 'array',
+                            items: {
+                              type: 'object',
+                              properties: {
+                                path: { type: 'array', items: { type: 'string' } },
+                                message: { type: 'string' },
+                                code: { type: 'string' },
+                              },
+                            },
+                          },
+                        },
+                      },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      requestId: { type: 'string', format: 'uuid' },
+                    },
+                  },
+                },
+              },
+            },
+          },
         };
         break;
 
@@ -442,24 +598,91 @@ export class OpenAPIGenerator {
           updateResponse.content = {
             'application/json': {
               schema: { $ref: `#/components/schemas/${model.name}` },
+              ...(this.options.includeExamples && {
+                example: this.generateModelExample(model),
+              }),
             },
           };
         }
         responses['200'] = updateResponse;
         responses['400'] = {
           description: 'Invalid request body',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'object',
+                    properties: {
+                      code: { type: 'string', example: 'VALIDATION_ERROR' },
+                      message: { type: 'string' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      requestId: { type: 'string', format: 'uuid' },
+                    },
+                  },
+                },
+              },
+            },
+          },
         };
         responses['404'] = {
           description: 'Resource not found',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'object',
+                    properties: {
+                      code: { type: 'string', example: 'NOT_FOUND' },
+                      message: { type: 'string' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      requestId: { type: 'string', format: 'uuid' },
+                    },
+                  },
+                },
+              },
+            },
+          },
         };
         break;
 
       case 'DELETE':
         responses['200'] = {
           description: 'Resource deleted successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Resource deleted successfully' },
+                },
+              },
+            },
+          },
         };
         responses['404'] = {
           description: 'Resource not found',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'object',
+                    properties: {
+                      code: { type: 'string', example: 'NOT_FOUND' },
+                      message: { type: 'string' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      requestId: { type: 'string', format: 'uuid' },
+                    },
+                  },
+                },
+              },
+            },
+          },
         };
         break;
 
@@ -470,11 +693,104 @@ export class OpenAPIGenerator {
     }
 
     // Add common error responses
-    responses['401'] = {
-      description: 'Unauthorized',
-    };
+    if (route.auth?.required) {
+      responses['401'] = {
+        description: 'Unauthorized - Authentication required',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                error: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'string', example: 'UNAUTHORIZED' },
+                    message: { type: 'string', example: 'Authentication required' },
+                    timestamp: { type: 'string', format: 'date-time' },
+                    requestId: { type: 'string', format: 'uuid' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      if (route.auth.roles && route.auth.roles.length > 0) {
+        responses['403'] = {
+          description: 'Forbidden - Insufficient permissions',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'object',
+                    properties: {
+                      code: { type: 'string', example: 'FORBIDDEN' },
+                      message: { type: 'string', example: 'Insufficient permissions' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                      requestId: { type: 'string', format: 'uuid' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        };
+      }
+    }
+
+    if (route.rateLimit) {
+      responses['429'] = {
+        description: 'Too Many Requests - Rate limit exceeded',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                error: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'string', example: 'RATE_LIMIT_EXCEEDED' },
+                    message: { type: 'string', example: 'Rate limit exceeded' },
+                    details: {
+                      type: 'object',
+                      properties: {
+                        retryAfter: { type: 'integer', description: 'Seconds until retry is allowed' },
+                      },
+                    },
+                    timestamp: { type: 'string', format: 'date-time' },
+                    requestId: { type: 'string', format: 'uuid' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+    }
+
     responses['500'] = {
-      description: 'Internal server error',
+      description: 'Internal Server Error',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  code: { type: 'string', example: 'INTERNAL_ERROR' },
+                  message: { type: 'string', example: 'An unexpected error occurred' },
+                  timestamp: { type: 'string', format: 'date-time' },
+                  requestId: { type: 'string', format: 'uuid' },
+                },
+              },
+            },
+          },
+        },
+      },
     };
 
     return responses;

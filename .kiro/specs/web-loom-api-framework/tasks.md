@@ -412,7 +412,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Map field types to OpenAPI types
     - Include validation constraints
     - _Requirements: 19.1, 19.2_
-  - [ ] 20.2 Generate path items from routes
+  - [x] 20.2 Generate path items from routes
     - Convert routes to OpenAPI paths
     - Generate request body schemas
     - Generate response schemas

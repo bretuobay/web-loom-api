@@ -8,9 +8,13 @@ OpenAPI 3.1 specification generator for Web Loom API Framework.
 - Automatic schema generation from model fields with validation constraints
 - Support for all HTTP methods (GET, POST, PUT, PATCH, DELETE, etc.)
 - Path parameter extraction and documentation
-- Request/response schema generation
-- Security scheme integration
-- Example generation
+- Request/response schema generation with proper status codes
+- Validation schema integration (body, query, params, headers)
+- Security scheme integration with per-route authentication
+- Rate limiting documentation via OpenAPI extensions
+- Caching configuration via OpenAPI extensions
+- Comprehensive error response schemas (400, 401, 403, 404, 429, 500)
+- Example generation for requests and responses
 - Export to JSON or YAML format
 
 ## Installation
@@ -99,6 +103,61 @@ const generator = new OpenAPIGenerator({
 });
 ```
 
+### With Route Validation Schemas
+
+```typescript
+import type { RouteDefinition } from '@web-loom/api-core';
+
+const routes: RouteDefinition[] = [
+  {
+    path: '/users/:id',
+    method: 'GET',
+    handler: async () => new Response(),
+    validation: {
+      params: {
+        id: { type: 'string', format: 'uuid' },
+      },
+      query: {
+        include: { type: 'string', enum: ['posts', 'comments'] },
+      },
+    },
+    metadata: {
+      description: 'Get user by ID with optional related data',
+      tags: ['Users'],
+    },
+  },
+];
+
+generator.registerRoutes(routes);
+```
+
+### With Rate Limiting and Caching
+
+```typescript
+const routes: RouteDefinition[] = [
+  {
+    path: '/users',
+    method: 'GET',
+    handler: async () => new Response(),
+    rateLimit: {
+      limit: 100,
+      window: 60000, // 1 minute in milliseconds
+    },
+    cache: {
+      ttl: 300, // 5 minutes in seconds
+      perUser: false,
+    },
+    metadata: {
+      description: 'List all users with rate limiting and caching',
+      tags: ['Users'],
+    },
+  },
+];
+
+generator.registerRoutes(routes);
+// The generated spec will include x-rate-limit and x-cache extensions
+```
+
 ## Configuration Options
 
 ### OpenAPIGeneratorOptions
@@ -146,6 +205,58 @@ Validation rules from model fields are automatically converted to OpenAPI constr
 - `url` → `format: 'uri'`
 - `uuid` → `format: 'uuid'`
 - `enum` → `enum` array
+
+## Response Schemas
+
+The generator automatically creates comprehensive response schemas for each endpoint:
+
+### Success Responses
+
+- **GET (single)**: Returns the model schema with example
+- **GET (list)**: Returns paginated response with data array and pagination object
+- **POST**: Returns created resource with 201 status
+- **PUT/PATCH**: Returns updated resource with 200 status
+- **DELETE**: Returns success message with 200 status
+
+### Error Responses
+
+All endpoints include standardized error responses:
+
+- **400 Bad Request**: Validation errors with field-level details
+- **401 Unauthorized**: Authentication required (if route has auth)
+- **403 Forbidden**: Insufficient permissions (if route has roles)
+- **404 Not Found**: Resource not found (for single resource endpoints)
+- **429 Too Many Requests**: Rate limit exceeded (if route has rate limiting)
+- **500 Internal Server Error**: Unexpected server errors
+
+Each error response includes:
+- `code`: Machine-readable error code
+- `message`: Human-readable error message
+- `details`: Additional context (e.g., validation field errors)
+- `timestamp`: ISO 8601 timestamp
+- `requestId`: UUID for request tracing
+
+## OpenAPI Extensions
+
+The generator supports custom OpenAPI extensions for framework-specific features:
+
+### Rate Limiting Extension
+
+```yaml
+x-rate-limit:
+  limit: 100
+  window: 60000
+  windowUnit: milliseconds
+```
+
+### Caching Extension
+
+```yaml
+x-cache:
+  ttl: 300
+  ttlUnit: seconds
+  perUser: false
+```
 
 ## API Reference
 
