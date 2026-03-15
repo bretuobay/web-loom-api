@@ -24,7 +24,7 @@ export interface RouteDefinition {
   auth?: AuthRequirement;
   
   /** Rate limiting configuration */
-  rateLimit?: RateLimitConfig;
+  rateLimit?: RouteRateLimitConfig;
   
   /** Caching configuration */
   cache?: CacheConfig;
@@ -65,9 +65,9 @@ export interface AuthRequirement {
 }
 
 /**
- * Rate limiting configuration
+ * Rate limiting configuration for a specific route
  */
-export interface RateLimitConfig {
+export interface RouteRateLimitConfig {
   /** Maximum requests per window */
   limit: number;
   

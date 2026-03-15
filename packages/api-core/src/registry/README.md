@@ -823,3 +823,459 @@ registry.register({
 ## Requirements
 
 - Requirements: 5.1, 5.2, 5.3, 6.5, 6.6
+
+
+---
+
+# Route Discovery
+
+The Route Discovery component automatically discovers and registers routes from the file system using file-based routing conventions. It scans a routes directory recursively and maps file paths to URL paths, following Next.js-style conventions.
+
+## Features
+
+- **Automatic Route Discovery**: Scan directories recursively for route files
+- **File-Based Routing**: Map file paths to URL paths using conventions
+- **Dynamic Segments**: Support `[param]` syntax for dynamic route parameters
+- **Catch-All Routes**: Support `[...path]` syntax for catch-all routes
+- **Nested Routes**: Automatically create nested paths from directory structure
+- **HTTP Method Handlers**: Discover exported GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD functions
+- **Error Handling**: Graceful error handling with detailed error messages
+
+## File-Based Routing Conventions
+
+### Basic Mapping
+
+| File Path | URL Path |
+|-----------|----------|
+| `index.ts` | `/` |
+| `users.ts` | `/users` |
+| `about.ts` | `/about` |
+| `users/index.ts` | `/users` |
+| `users/posts.ts` | `/users/posts` |
+
+### Dynamic Segments
+
+Use `[param]` syntax for dynamic route parameters:
+
+| File Path | URL Path |
+|-----------|----------|
+| `[id].ts` | `/:id` |
+| `users/[id].ts` | `/users/:id` |
+| `users/[id]/posts.ts` | `/users/:id/posts` |
+| `users/[id]/posts/[postId].ts` | `/users/:id/posts/:postId` |
+
+### Catch-All Routes
+
+Use `[...path]` syntax for catch-all routes:
+
+| File Path | URL Path |
+|-----------|----------|
+| `[...path].ts` | `/*` |
+| `docs/[...path].ts` | `/docs/*` |
+
+## Usage
+
+### Basic Discovery
+
+```typescript
+import { RouteDiscovery, RouteRegistry } from '@web-loom/api-core';
+
+const registry = new RouteRegistry();
+const discovery = new RouteDiscovery(registry);
+
+// Discover all routes in the src/routes directory
+await discovery.discover('./src/routes');
+
+// Routes are now registered in the registry
+console.log(`Discovered ${registry.size()} routes`);
+```
+
+### Route File Structure
+
+Route files export functions named after HTTP methods:
+
+```typescript
+// src/routes/users.ts
+
+// GET /users - List all users
+export async function GET(ctx) {
+  const users = await db.users.findMany();
+  return new Response(JSON.stringify(users));
+}
+
+// POST /users - Create a new user
+export async function POST(ctx) {
+  const data = await ctx.request.json();
+  const user = await db.users.create(data);
+  return new Response(JSON.stringify(user), { status: 201 });
+}
+```
+
+### Dynamic Route Parameters
+
+```typescript
+// src/routes/users/[id].ts
+
+// GET /users/:id - Get user by ID
+export async function GET(ctx) {
+  const { id } = ctx.params;
+  const user = await db.users.findUnique({ where: { id } });
+  
+  if (!user) {
+    return new Response('Not found', { status: 404 });
+  }
+  
+  return new Response(JSON.stringify(user));
+}
+
+// PUT /users/:id - Update user
+export async function PUT(ctx) {
+  const { id } = ctx.params;
+  const data = await ctx.request.json();
+  const user = await db.users.update({ where: { id }, data });
+  return new Response(JSON.stringify(user));
+}
+
+// DELETE /users/:id - Delete user
+export async function DELETE(ctx) {
+  const { id } = ctx.params;
+  await db.users.delete({ where: { id } });
+  return new Response(null, { status: 204 });
+}
+```
+
+### Nested Routes
+
+```typescript
+// src/routes/users/[id]/posts/[postId].ts
+
+// GET /users/:id/posts/:postId - Get a specific post for a user
+export async function GET(ctx) {
+  const { id, postId } = ctx.params;
+  const post = await db.posts.findFirst({
+    where: { id: postId, userId: id },
+  });
+  
+  if (!post) {
+    return new Response('Not found', { status: 404 });
+  }
+  
+  return new Response(JSON.stringify(post));
+}
+```
+
+### Catch-All Routes
+
+```typescript
+// src/routes/docs/[...path].ts
+
+// GET /docs/* - Serve documentation pages
+export async function GET(ctx) {
+  // The path parameter contains the full path after /docs/
+  const docPath = ctx.params.path || 'index';
+  const content = await loadDocumentation(docPath);
+  return new Response(content, {
+    headers: { 'Content-Type': 'text/html' },
+  });
+}
+```
+
+## Example Project Structure
+
+```
+src/routes/
+├── index.ts              # GET /
+├── about.ts              # GET /about
+├── users.ts              # GET /users, POST /users
+├── users/
+│   ├── [id].ts          # GET /users/:id, PUT /users/:id, DELETE /users/:id
+│   └── [id]/
+│       └── posts.ts     # GET /users/:id/posts, POST /users/:id/posts
+├── posts/
+│   ├── index.ts         # GET /posts, POST /posts
+│   └── [id].ts          # GET /posts/:id, PUT /posts/:id, DELETE /posts/:id
+├── admin/
+│   ├── dashboard.ts     # GET /admin/dashboard
+│   └── settings.ts      # GET /admin/settings, PUT /admin/settings
+└── [...path].ts         # GET /* (catch-all for 404 handling)
+```
+
+## Supported HTTP Methods
+
+The RouteDiscovery looks for exported functions with these names:
+
+- `GET` - Handle GET requests
+- `POST` - Handle POST requests
+- `PUT` - Handle PUT requests
+- `PATCH` - Handle PATCH requests
+- `DELETE` - Handle DELETE requests
+- `OPTIONS` - Handle OPTIONS requests
+- `HEAD` - Handle HEAD requests
+
+```typescript
+// src/routes/api.ts
+
+export async function GET() {
+  return new Response('GET');
+}
+
+export async function POST() {
+  return new Response('POST');
+}
+
+export async function PUT() {
+  return new Response('PUT');
+}
+
+export async function PATCH() {
+  return new Response('PATCH');
+}
+
+export async function DELETE() {
+  return new Response('DELETE');
+}
+
+export async function OPTIONS() {
+  return new Response('OPTIONS');
+}
+
+export async function HEAD() {
+  return new Response(null);
+}
+```
+
+## File Filtering
+
+The RouteDiscovery automatically filters out:
+
+- **Test files**: `*.test.ts`, `*.spec.ts`
+- **Type definitions**: `*.d.ts`
+- **Non-code files**: Files without `.ts` or `.js` extension
+
+```
+src/routes/
+├── users.ts              # ✓ Discovered
+├── users.test.ts         # ✗ Ignored (test file)
+├── users.spec.ts         # ✗ Ignored (spec file)
+├── types.d.ts            # ✗ Ignored (type definition)
+├── README.md             # ✗ Ignored (not a code file)
+└── utils.ts              # ✓ Scanned (but no routes if no HTTP methods exported)
+```
+
+## Statistics
+
+Get statistics about discovered routes:
+
+```typescript
+await discovery.discover('./src/routes');
+
+const stats = discovery.getStats();
+
+console.log(`Total routes: ${stats.totalRoutes}`);
+console.log(`GET routes: ${stats.routesByMethod.GET}`);
+console.log(`POST routes: ${stats.routesByMethod.POST}`);
+console.log(`PUT routes: ${stats.routesByMethod.PUT}`);
+console.log(`PATCH routes: ${stats.routesByMethod.PATCH}`);
+console.log(`DELETE routes: ${stats.routesByMethod.DELETE}`);
+console.log(`OPTIONS routes: ${stats.routesByMethod.OPTIONS}`);
+console.log(`HEAD routes: ${stats.routesByMethod.HEAD}`);
+```
+
+## Error Handling
+
+### Directory Not Found
+
+```typescript
+try {
+  await discovery.discover('./non-existent-dir');
+} catch (error) {
+  console.error(error.message);
+  // "Routes directory not found: ./non-existent-dir"
+}
+```
+
+### Invalid Route File
+
+```typescript
+// src/routes/invalid.ts (syntax error)
+export async function GET() { invalid syntax
+
+// Discovery will throw with context
+try {
+  await discovery.discover('./src/routes');
+} catch (error) {
+  console.error(error.message);
+  // "Failed to process route file /path/to/invalid.ts: <error details>"
+}
+```
+
+### No HTTP Method Handlers
+
+If a route file doesn't export any HTTP method handlers, a warning is logged:
+
+```typescript
+// src/routes/utils.ts
+export function helper() {
+  return 'helper';
+}
+
+// Warning: No HTTP method handlers found in route file for path: /utils
+```
+
+## Integration with Core Runtime
+
+The RouteDiscovery is typically used during application initialization:
+
+```typescript
+import { CoreRuntime, RouteRegistry, RouteDiscovery } from '@web-loom/api-core';
+
+class CoreRuntime {
+  private routeRegistry: RouteRegistry;
+  private routeDiscovery: RouteDiscovery;
+
+  async initialize() {
+    // Initialize registries
+    this.routeRegistry = new RouteRegistry();
+    this.routeDiscovery = new RouteDiscovery(this.routeRegistry);
+
+    // Discover routes from file system
+    await this.routeDiscovery.discover('./src/routes');
+
+    // Routes are now registered and ready to use
+    console.log(`Initialized with ${this.routeRegistry.size()} routes`);
+  }
+}
+```
+
+## API Reference
+
+### Constructor
+
+#### `new RouteDiscovery(registry: RouteRegistry)`
+
+Create a new RouteDiscovery instance.
+
+- **Parameters**:
+  - `registry` - RouteRegistry instance to register discovered routes
+
+### Methods
+
+#### `discover(routesDir: string): Promise<void>`
+
+Discover and register all routes from a directory.
+
+- **Parameters**:
+  - `routesDir` - Path to the routes directory (relative or absolute)
+- **Throws**: Error if directory doesn't exist or route files are invalid
+- **Returns**: Promise that resolves when all routes are discovered
+
+#### `getStats(): { totalRoutes: number; routesByMethod: Record<HTTPMethod, number> }`
+
+Get statistics about discovered routes.
+
+- **Returns**: Object with total route count and breakdown by HTTP method
+
+## Best Practices
+
+### 1. Organize by Resource
+
+Group related routes in directories:
+
+```
+src/routes/
+├── users/
+│   ├── index.ts         # List/create users
+│   ├── [id].ts          # Get/update/delete user
+│   └── [id]/
+│       └── posts.ts     # User's posts
+└── posts/
+    ├── index.ts         # List/create posts
+    └── [id].ts          # Get/update/delete post
+```
+
+### 2. Use Index Files for Collections
+
+Use `index.ts` for collection endpoints:
+
+```typescript
+// src/routes/users/index.ts
+export async function GET() { /* List users */ }
+export async function POST() { /* Create user */ }
+
+// src/routes/users/[id].ts
+export async function GET() { /* Get user */ }
+export async function PUT() { /* Update user */ }
+export async function DELETE() { /* Delete user */ }
+```
+
+### 3. Keep Route Files Focused
+
+Each route file should handle a single resource or endpoint:
+
+```typescript
+// ✓ Good - focused on user resource
+// src/routes/users/[id].ts
+export async function GET(ctx) { /* Get user */ }
+export async function PUT(ctx) { /* Update user */ }
+export async function DELETE(ctx) { /* Delete user */ }
+
+// ✗ Bad - mixing multiple resources
+// src/routes/api.ts
+export async function GET(ctx) {
+  if (ctx.path.includes('users')) { /* ... */ }
+  if (ctx.path.includes('posts')) { /* ... */ }
+}
+```
+
+### 4. Use Descriptive Directory Names
+
+Use clear, descriptive names for directories:
+
+```
+✓ Good:
+src/routes/
+├── users/
+├── posts/
+├── comments/
+└── admin/
+
+✗ Bad:
+src/routes/
+├── u/
+├── p/
+├── c/
+└── a/
+```
+
+### 5. Handle Errors Gracefully
+
+Always handle errors in route handlers:
+
+```typescript
+// src/routes/users/[id].ts
+export async function GET(ctx) {
+  try {
+    const { id } = ctx.params;
+    const user = await db.users.findUnique({ where: { id } });
+    
+    if (!user) {
+      return new Response('User not found', { status: 404 });
+    }
+    
+    return new Response(JSON.stringify(user));
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return new Response('Internal server error', { status: 500 });
+  }
+}
+```
+
+## Related
+
+- [Route Registry](./route-registry.ts) - Central registry for route handlers
+- [Route Types](./route-types.ts) - TypeScript types for route definitions
+- [Core Runtime](../runtime/) - Application initialization and lifecycle
+
+## Requirements
+
+- Requirements: 6.1, 6.2, 6.3, 6.4, 1.3

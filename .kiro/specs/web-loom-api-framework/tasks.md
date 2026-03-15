@@ -99,7 +99,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Add route matching with parameter extraction
     - Implement conflict detection for duplicate routes
     - _Requirements: 6.5, 6.6_
-  - [ ] 6.2 Implement file-based route discovery
+  - [x] 6.2 Implement file-based route discovery
     - Scan src/routes directory recursively
     - Map file paths to URL paths ([id] → :id, [...path] → \*)
     - Support dynamic segments and catch-all routes

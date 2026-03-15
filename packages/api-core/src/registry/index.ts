@@ -1,6 +1,7 @@
 // Registry exports
 export { ModelRegistry } from './model-registry';
 export { RouteRegistry } from './route-registry';
+export { RouteDiscovery } from './route-discovery';
 
 // Model Registry types
 export type {
@@ -18,7 +19,7 @@ export type {
   RouteDefinition,
   RouteValidation,
   AuthRequirement,
-  RateLimitConfig,
+  RouteRateLimitConfig,
   CacheConfig,
   RouteMetadata,
   ResponseDefinition,
