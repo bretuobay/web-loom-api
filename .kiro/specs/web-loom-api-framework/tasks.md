@@ -519,7 +519,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - _Requirements: 18.5, 18.6_
 
 - [ ] 25. Implement CLI utility commands
-  - [ ] 25.1 Implement 'webloom generate openapi' command
+  - [x] 25.1 Implement 'webloom generate openapi' command
     - Generate OpenAPI spec to file
     - Support output path option
     - _Requirements: 18.4_

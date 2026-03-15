@@ -5,25 +5,7 @@
  */
 
 import * as http from 'http';
-import * as fs from 'fs';
-import * as path from 'path';
-import { OpenAPIGenerator } from '@web-loom/api-generator-openapi';
-import type { ModelDefinition } from '@web-loom/api-generator-openapi';
-
-interface RouteDefinition {
-  path: string;
-  method: string;
-  handler: string;
-  validation?: {
-    body?: any;
-    params?: any;
-    query?: any;
-  };
-  auth?: {
-    required: boolean;
-    roles?: string[];
-  };
-}
+import { generateOpenAPISpec, type SpecGeneratorConfig } from './spec-generator.js';
 
 /**
  * Documentation Server
@@ -31,121 +13,20 @@ interface RouteDefinition {
  */
 export class DocsServer {
   private server: http.Server | null = null;
-  private generator: OpenAPIGenerator;
   private spec: any = null;
 
   constructor(
     private projectRoot: string,
-    private config: {
-      title?: string;
-      version?: string;
-      description?: string;
-    } = {}
+    private config: SpecGeneratorConfig = {}
   ) {
-    this.generator = new OpenAPIGenerator({
-      title: config.title || 'Web Loom API',
-      version: config.version || '1.0.0',
-      description: config.description || 'API documentation',
-    });
-  }
-
-  /**
-   * Discover routes from src/routes directory
-   */
-  private discoverRoutes(): RouteDefinition[] {
-    const routes: RouteDefinition[] = [];
-    const routesDir = path.join(this.projectRoot, 'src', 'routes');
-
-    if (!fs.existsSync(routesDir)) {
-      return routes;
-    }
-
-    const scanDirectory = (dir: string, basePath: string = '') => {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        const relativePath = path.relative(routesDir, fullPath);
-
-        if (entry.isDirectory()) {
-          scanDirectory(fullPath, basePath + '/' + entry.name);
-        } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))) {
-          // Convert file path to URL path
-          let urlPath = relativePath
-            .replace(/\.(ts|js)$/, '')
-            .replace(/\\/g, '/')
-            .replace(/\[([^\]]+)\]/g, ':$1')
-            .replace(/index$/, '');
-
-          if (!urlPath.startsWith('/')) {
-            urlPath = '/' + urlPath;
-          }
-
-          // Remove trailing slash except for root
-          if (urlPath !== '/' && urlPath.endsWith('/')) {
-            urlPath = urlPath.slice(0, -1);
-          }
-
-          // Add route for each HTTP method (we'll discover actual methods later)
-          const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
-          for (const method of methods) {
-            routes.push({
-              path: urlPath,
-              method,
-              handler: relativePath,
-            });
-          }
-        }
-      }
-    };
-
-    scanDirectory(routesDir);
-    return routes;
-  }
-
-  /**
-   * Discover models from src/models directory
-   */
-  private discoverModels(): ModelDefinition[] {
-    const models: ModelDefinition[] = [];
-    const modelsDir = path.join(this.projectRoot, 'src', 'models');
-
-    if (!fs.existsSync(modelsDir)) {
-      return models;
-    }
-
-    // For now, return empty array
-    // In a real implementation, we would parse model files
-    return models;
+    this.config.projectRoot = projectRoot;
   }
 
   /**
    * Generate OpenAPI specification
    */
   private generateSpec(): any {
-    // Discover routes and models
-    const routes = this.discoverRoutes();
-    const models = this.discoverModels();
-
-    // Register models
-    for (const model of models) {
-      this.generator.registerModel(model);
-    }
-
-    // Register routes
-    for (const route of routes) {
-      this.generator.registerRoute({
-        path: route.path,
-        method: route.method.toLowerCase() as any,
-        summary: `${route.method} ${route.path}`,
-        description: `Handler: ${route.handler}`,
-        tags: [route.path.split('/')[1] || 'default'],
-        validation: route.validation,
-        auth: route.auth,
-      });
-    }
-
-    return this.generator.toJSON();
+    return generateOpenAPISpec(this.config);
   }
 
   /**
