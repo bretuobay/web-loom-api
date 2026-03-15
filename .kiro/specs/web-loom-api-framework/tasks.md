@@ -328,13 +328,13 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Add request ID generation for tracing
     - Create error middleware for global handling
     - _Requirements: 13.1, 13.2, 13.3, 13.4_
-  - [ ] 15.2 Implement database error mapping
+  - [x] 15.2 Implement database error mapping
     - Map database errors to HTTP status codes
     - Handle unique constraint violations (409)
     - Handle foreign key violations (409)
     - Handle connection errors (503)
     - _Requirements: 13.5_
-  - [ ] 15.3 Add development vs production error handling
+  - [x] 15.3 Add development vs production error handling
     - Include stack traces in development
     - Sanitize error messages in production
     - Log all errors with context
