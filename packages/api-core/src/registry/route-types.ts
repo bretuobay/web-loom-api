@@ -1,0 +1,138 @@
+import type { HTTPMethod } from '@web-loom/api-shared';
+import type { RouteHandler, Middleware } from '../interfaces/api-framework-adapter';
+
+/**
+ * Route definition for the route registry
+ */
+export interface RouteDefinition {
+  /** URL path pattern (e.g., /users/:id) */
+  path: string;
+  
+  /** HTTP method */
+  method: HTTPMethod;
+  
+  /** Route handler function */
+  handler: RouteHandler;
+  
+  /** Optional validation schemas */
+  validation?: RouteValidation;
+  
+  /** Route-specific middleware */
+  middleware?: Middleware[];
+  
+  /** Authentication requirements */
+  auth?: AuthRequirement;
+  
+  /** Rate limiting configuration */
+  rateLimit?: RateLimitConfig;
+  
+  /** Caching configuration */
+  cache?: CacheConfig;
+  
+  /** Route metadata for documentation */
+  metadata?: RouteMetadata;
+}
+
+/**
+ * Validation schemas for different parts of the request
+ */
+export interface RouteValidation {
+  /** Request body validation schema */
+  body?: unknown;
+  
+  /** Query parameters validation schema */
+  query?: unknown;
+  
+  /** Path parameters validation schema */
+  params?: unknown;
+  
+  /** Request headers validation schema */
+  headers?: unknown;
+}
+
+/**
+ * Authentication requirements for a route
+ */
+export interface AuthRequirement {
+  /** Whether authentication is required */
+  required: boolean;
+  
+  /** Required roles/permissions */
+  roles?: string[];
+  
+  /** Required scopes */
+  scopes?: string[];
+}
+
+/**
+ * Rate limiting configuration
+ */
+export interface RateLimitConfig {
+  /** Maximum requests per window */
+  limit: number;
+  
+  /** Time window in milliseconds */
+  window: number;
+  
+  /** Custom identifier function */
+  keyGenerator?: (context: unknown) => string;
+}
+
+/**
+ * Caching configuration
+ */
+export interface CacheConfig {
+  /** Cache TTL in seconds */
+  ttl: number;
+  
+  /** Cache key generator */
+  keyGenerator?: (context: unknown) => string;
+  
+  /** Whether to cache per user */
+  perUser?: boolean;
+}
+
+/**
+ * Route metadata for documentation and introspection
+ */
+export interface RouteMetadata {
+  /** Human-readable description */
+  description?: string;
+  
+  /** Tags for grouping routes */
+  tags?: string[];
+  
+  /** Whether route is deprecated */
+  deprecated?: boolean;
+  
+  /** API version */
+  version?: string;
+  
+  /** Response definitions */
+  responses?: ResponseDefinition[];
+}
+
+/**
+ * Response definition for documentation
+ */
+export interface ResponseDefinition {
+  /** HTTP status code */
+  status: number;
+  
+  /** Response description */
+  description: string;
+  
+  /** Response schema */
+  schema?: unknown;
+}
+
+/**
+ * Result of matching a route
+ */
+export interface RouteMatch {
+  /** Matched route definition */
+  route: RouteDefinition;
+  
+  /** Extracted path parameters */
+  params: Record<string, string>;
+}

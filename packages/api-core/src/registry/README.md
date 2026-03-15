@@ -365,3 +365,461 @@ See `examples/model-registry-example.ts` for a complete working example demonstr
 - [Model Definition Types](./types.ts) - TypeScript types for model definitions
 - [CRUD Generator](../../api-generator-crud/) - Uses the registry to generate CRUD routes
 - [Type Generator](../../api-generator-types/) - Uses the registry to generate TypeScript types
+
+
+---
+
+# Route Registry
+
+The Route Registry is a central component that tracks all route handlers in the Web Loom API Framework. It provides route registration, matching with parameter extraction, and conflict detection for building REST APIs.
+
+## Features
+
+- **Route Registration**: Register and unregister route handlers with HTTP methods and paths
+- **Dynamic Parameters**: Support for route parameters (e.g., `/users/:id`)
+- **Route Matching**: Match incoming requests to registered routes and extract parameters
+- **Conflict Detection**: Prevent duplicate route registration
+- **Metadata Management**: Store route metadata for documentation and introspection
+- **Path Normalization**: Automatic handling of trailing slashes
+
+## Usage
+
+### Basic Registration
+
+```typescript
+import { RouteRegistry } from '@web-loom/api-core';
+import type { RouteDefinition } from '@web-loom/api-core';
+
+const registry = new RouteRegistry();
+
+const route: RouteDefinition = {
+  path: '/users/:id',
+  method: 'GET',
+  handler: async (ctx) => {
+    const user = await db.getUser(ctx.params.id);
+    return new Response(JSON.stringify(user));
+  },
+  metadata: {
+    description: 'Get user by ID',
+    tags: ['users'],
+  },
+};
+
+registry.register(route);
+```
+
+### Route Matching
+
+```typescript
+// Match a route and extract parameters
+const match = registry.match('/users/123', 'GET');
+
+if (match) {
+  console.log(match.params.id); // '123'
+  const response = await match.route.handler(context);
+}
+```
+
+### Multiple Parameters
+
+```typescript
+registry.register({
+  path: '/users/:userId/posts/:postId',
+  method: 'GET',
+  handler: async (ctx) => {
+    const { userId, postId } = ctx.params;
+    const post = await db.getPost(userId, postId);
+    return new Response(JSON.stringify(post));
+  },
+});
+
+const match = registry.match('/users/123/posts/456', 'GET');
+// match.params = { userId: '123', postId: '456' }
+```
+
+### Route Metadata
+
+```typescript
+registry.register({
+  path: '/users',
+  method: 'GET',
+  handler: listUsers,
+  metadata: {
+    description: 'List all users with pagination',
+    tags: ['users', 'public'],
+    deprecated: false,
+    version: 'v1',
+    responses: [
+      {
+        status: 200,
+        description: 'List of users',
+        schema: UserListSchema,
+      },
+    ],
+  },
+});
+
+// Retrieve metadata
+const metadata = registry.getMetadata('/users', 'GET');
+console.log(metadata.description); // 'List all users with pagination'
+```
+
+### Checking Registration
+
+```typescript
+// Check if a route exists
+if (registry.has('/users/:id', 'GET')) {
+  console.log('Route exists');
+}
+
+// Get a specific route
+const route = registry.get('/users/:id', 'GET');
+
+// Get all routes for a path
+const userRoutes = registry.getByPath('/users/:id');
+// Returns routes for GET, PUT, PATCH, DELETE, etc.
+
+// Get all registered routes
+const allRoutes = registry.getAll();
+```
+
+## Route Matching
+
+The RouteRegistry supports dynamic route parameters using the `:param` syntax:
+
+### Static Routes
+
+```typescript
+registry.register({ path: '/users', method: 'GET', handler: getUsers });
+
+const match = registry.match('/users', 'GET');
+// match.params = {}
+```
+
+### Single Parameter
+
+```typescript
+registry.register({ path: '/users/:id', method: 'GET', handler: getUser });
+
+const match = registry.match('/users/123', 'GET');
+// match.params = { id: '123' }
+```
+
+### Multiple Parameters
+
+```typescript
+registry.register({
+  path: '/users/:id/posts/:postId',
+  method: 'GET',
+  handler: getPost,
+});
+
+const match = registry.match('/users/123/posts/456', 'GET');
+// match.params = { id: '123', postId: '456' }
+```
+
+### URL Decoding
+
+Parameters are automatically URL-decoded:
+
+```typescript
+registry.register({ path: '/posts/:slug', method: 'GET', handler: getPost });
+
+const match = registry.match('/posts/hello%20world', 'GET');
+// match.params = { slug: 'hello world' }
+```
+
+### Path Normalization
+
+Trailing slashes are automatically removed (except for root `/`):
+
+```typescript
+registry.register({ path: '/users/', method: 'GET', handler: getUsers });
+
+// Both match the same route
+registry.match('/users', 'GET');   // ✓ Matches
+registry.match('/users/', 'GET');  // ✓ Matches
+```
+
+## Conflict Detection
+
+The RouteRegistry prevents duplicate route registration:
+
+```typescript
+// First registration succeeds
+registry.register({ path: '/users', method: 'GET', handler: getUsers });
+
+// Second registration with same path and method throws ConflictError
+try {
+  registry.register({ path: '/users', method: 'GET', handler: otherHandler });
+} catch (error) {
+  console.log(error.message); // "Route already registered: GET /users"
+}
+
+// Different method is allowed
+registry.register({ path: '/users', method: 'POST', handler: createUser });
+// ✓ Success - different HTTP method
+```
+
+## Advanced Features
+
+### Route Validation
+
+```typescript
+registry.register({
+  path: '/users',
+  method: 'POST',
+  handler: createUser,
+  validation: {
+    body: UserCreateSchema,
+    query: PaginationSchema,
+    params: IdParamSchema,
+  },
+});
+```
+
+### Middleware
+
+```typescript
+registry.register({
+  path: '/admin/users',
+  method: 'GET',
+  handler: listUsers,
+  middleware: [authMiddleware, adminMiddleware],
+});
+```
+
+### Authentication
+
+```typescript
+registry.register({
+  path: '/profile',
+  method: 'GET',
+  handler: getProfile,
+  auth: {
+    required: true,
+    roles: ['user', 'admin'],
+    scopes: ['profile:read'],
+  },
+});
+```
+
+### Rate Limiting
+
+```typescript
+registry.register({
+  path: '/api/search',
+  method: 'GET',
+  handler: search,
+  rateLimit: {
+    limit: 100,
+    window: 60000, // 1 minute
+  },
+});
+```
+
+### Caching
+
+```typescript
+registry.register({
+  path: '/api/posts',
+  method: 'GET',
+  handler: listPosts,
+  cache: {
+    ttl: 300, // 5 minutes
+    perUser: false,
+  },
+});
+```
+
+## Error Handling
+
+### ConflictError
+
+Thrown when attempting to register a duplicate route:
+
+```typescript
+try {
+  registry.register({ path: '/users', method: 'GET', handler: getUsers });
+  registry.register({ path: '/users', method: 'GET', handler: otherHandler });
+} catch (error) {
+  if (error instanceof ConflictError) {
+    console.log(error.message); // "Route already registered: GET /users"
+  }
+}
+```
+
+### NotFoundError
+
+Thrown when attempting to unregister a non-existent route:
+
+```typescript
+try {
+  registry.unregister('/nonexistent', 'GET');
+} catch (error) {
+  if (error instanceof NotFoundError) {
+    console.log(error.message); // "Route not found: GET /nonexistent"
+  }
+}
+```
+
+## API Reference
+
+### Methods
+
+#### `register(route: RouteDefinition): void`
+
+Register a new route in the registry.
+
+- **Throws**: `ConflictError` if a route with the same method and path already exists
+
+#### `unregister(path: string, method: HTTPMethod): void`
+
+Unregister a route from the registry.
+
+- **Throws**: `NotFoundError` if the route doesn't exist
+
+#### `get(path: string, method: HTTPMethod): RouteDefinition | undefined`
+
+Get a route by exact path and method.
+
+- **Returns**: The route definition, or `undefined` if not found
+
+#### `getAll(): RouteDefinition[]`
+
+Get all registered routes.
+
+- **Returns**: Array of all route definitions
+
+#### `getByPath(path: string): RouteDefinition[]`
+
+Get all routes for a specific path (all methods).
+
+- **Returns**: Array of route definitions for the path
+
+#### `match(path: string, method: HTTPMethod): RouteMatch | undefined`
+
+Match a URL path against registered routes and extract parameters.
+
+- **Returns**: Route match with extracted parameters, or `undefined` if no match
+
+#### `getMetadata(path: string, method: HTTPMethod): RouteMetadata`
+
+Get metadata for a specific route.
+
+- **Returns**: Route metadata, or empty object if not found
+
+#### `has(path: string, method: HTTPMethod): boolean`
+
+Check if a route exists.
+
+- **Returns**: `true` if route exists, `false` otherwise
+
+#### `clear(): void`
+
+Clear all routes from the registry. Useful for testing or hot reload scenarios.
+
+#### `size(): number`
+
+Get the total number of registered routes.
+
+- **Returns**: Number of routes
+
+## Types
+
+### RouteDefinition
+
+```typescript
+interface RouteDefinition {
+  path: string;
+  method: HTTPMethod;
+  handler: RouteHandler;
+  validation?: RouteValidation;
+  middleware?: Middleware[];
+  auth?: AuthRequirement;
+  rateLimit?: RateLimitConfig;
+  cache?: CacheConfig;
+  metadata?: RouteMetadata;
+}
+```
+
+### RouteMatch
+
+```typescript
+interface RouteMatch {
+  route: RouteDefinition;
+  params: Record<string, string>;
+}
+```
+
+### RouteMetadata
+
+```typescript
+interface RouteMetadata {
+  description?: string;
+  tags?: string[];
+  deprecated?: boolean;
+  version?: string;
+  responses?: ResponseDefinition[];
+}
+```
+
+## Examples
+
+### Complete REST API
+
+```typescript
+const registry = new RouteRegistry();
+
+// List users
+registry.register({
+  path: '/users',
+  method: 'GET',
+  handler: listUsers,
+  metadata: { description: 'List all users' },
+});
+
+// Get user
+registry.register({
+  path: '/users/:id',
+  method: 'GET',
+  handler: getUser,
+  metadata: { description: 'Get user by ID' },
+});
+
+// Create user
+registry.register({
+  path: '/users',
+  method: 'POST',
+  handler: createUser,
+  validation: { body: UserCreateSchema },
+  metadata: { description: 'Create a new user' },
+});
+
+// Update user
+registry.register({
+  path: '/users/:id',
+  method: 'PUT',
+  handler: updateUser,
+  validation: { body: UserUpdateSchema },
+  metadata: { description: 'Update user' },
+});
+
+// Delete user
+registry.register({
+  path: '/users/:id',
+  method: 'DELETE',
+  handler: deleteUser,
+  metadata: { description: 'Delete user' },
+});
+```
+
+## Related
+
+- [Route Types](./route-types.ts) - TypeScript types for route definitions
+- [API Framework Adapter](../interfaces/api-framework-adapter.ts) - Route handler interface
+- [CRUD Generator](../../api-generator-crud/) - Uses the registry to generate CRUD routes
+
+## Requirements
+
+- Requirements: 5.1, 5.2, 5.3, 6.5, 6.6

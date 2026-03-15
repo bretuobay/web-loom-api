@@ -1,5 +1,8 @@
 // Registry exports
 export { ModelRegistry } from './model-registry';
+export { RouteRegistry } from './route-registry';
+
+// Model Registry types
 export type {
   FieldType,
   RelationType,
@@ -10,6 +13,18 @@ export type {
   ModelMetadata,
 } from './types';
 
+// Route Registry types
+export type {
+  RouteDefinition,
+  RouteValidation,
+  AuthRequirement,
+  RateLimitConfig,
+  CacheConfig,
+  RouteMetadata,
+  ResponseDefinition,
+  RouteMatch,
+} from './route-types';
+
 // Re-export shared types from interfaces to avoid duplication
 export type {
   DatabaseFieldConfig,
@@ -18,8 +33,3 @@ export type {
   ModelOptions,
   Relationship,
 } from '../interfaces/database-adapter';
-
-// Placeholder for RouteRegistry
-export class RouteRegistry {
-  // Implementation will be added in later tasks
-}
