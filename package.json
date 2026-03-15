@@ -34,7 +34,10 @@
   "packageManager": "npm@11.6.2",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "packages/api-adapters/*",
+    "packages/api-generators/*",
+    "packages/api-middleware/*"
   ],
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

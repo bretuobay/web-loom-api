@@ -508,7 +508,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Add detailed error messages
     - Enable SQL query logging
     - _Requirements: 18.5, 18.6_
-  - [ ] 24.2 Add interactive API documentation
+  - [x] 24.2 Add interactive API documentation
     - Serve OpenAPI spec at /docs
     - Integrate Swagger UI or Scalar
     - Auto-update on route changes
