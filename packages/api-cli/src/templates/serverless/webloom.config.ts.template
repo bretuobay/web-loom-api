@@ -1,0 +1,28 @@
+import { defineConfig } from '@web-loom/api-core';
+
+export default defineConfig({
+  server: {
+    port: 3000,
+    host: '0.0.0.0',
+  },
+  database: {
+    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/mydb',
+    poolSize: 5, // Smaller pool for serverless
+    connectionTimeout: 3000, // Faster timeout for edge
+  },
+  security: {
+    cors: {
+      enabled: true,
+      origins: process.env.ALLOWED_ORIGINS?.split(',') || ['*'],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    },
+  },
+  observability: {
+    logging: {
+      level: process.env.LOG_LEVEL || 'info',
+      format: 'json', // Structured logging for serverless
+    },
+  },
+});

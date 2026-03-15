@@ -371,7 +371,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Generate package.json with @web-loom/\* dependencies
     - Create .env.example file
     - _Requirements: 18.2, 18.3_
-  - [ ] 18.2 Create project templates
+  - [x] 18.2 Create project templates
     - Create minimal template (basic setup)
     - Create full-stack template (with auth, email)
     - Create serverless template (optimized for edge)

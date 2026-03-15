@@ -1,0 +1,40 @@
+import { defineConfig } from '@web-loom/api-core';
+
+export default defineConfig({
+  server: {
+    port: 3000,
+    host: '0.0.0.0',
+  },
+  database: {
+    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/mydb',
+    poolSize: 10,
+  },
+  security: {
+    cors: {
+      enabled: true,
+      origins: ['http://localhost:3000'],
+      credentials: true,
+    },
+  },
+  auth: {
+    sessionDuration: 7 * 24 * 60 * 60, // 7 days
+    providers: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      },
+      github: {
+        clientId: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      },
+    },
+  },
+  email: {
+    from: process.env.EMAIL_FROM || 'noreply@example.com',
+    apiKey: process.env.RESEND_API_KEY,
+  },
+  rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxRequests: 100,
+  },
+});

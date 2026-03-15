@@ -11,11 +11,12 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { success, info, withSpinner } from '../utils/logger.js';
 import { CLIError, wrapCommand } from '../utils/error-handler.js';
+import { copyTemplate, type TemplateType as LoaderTemplateType } from '../utils/template-loader.js';
 
 /**
  * Project template types
  */
-export type TemplateType = 'minimal' | 'serverless' | 'full-stack';
+export type TemplateType = LoaderTemplateType;
 
 /**
  * Project initialization options
@@ -138,326 +139,31 @@ async function checkDirectory(directory: string): Promise<void> {
 }
 
 /**
- * Create project directory structure
+ * Create project using templates
  */
-async function createDirectoryStructure(config: ProjectConfig): Promise<void> {
-  const { directory } = config;
+async function createProjectFromTemplate(config: ProjectConfig): Promise<void> {
+  const { directory, name, packageManager, template } = config;
 
+  // Ensure base directory exists
   await fs.mkdir(directory, { recursive: true });
-  await fs.mkdir(path.join(directory, 'src'), { recursive: true });
-  await fs.mkdir(path.join(directory, 'src', 'models'), { recursive: true });
-  await fs.mkdir(path.join(directory, 'src', 'routes'), { recursive: true });
-}
 
-/**
- * Generate package.json
- */
-async function generatePackageJson(config: ProjectConfig): Promise<void> {
-  const { directory, name, template } = config;
-
-  const dependencies: Record<string, string> = {
-    '@web-loom/api-core': '^0.1.0',
-    '@web-loom/api-shared': '^0.1.0',
-    '@web-loom/api-adapter-hono': '^0.1.0',
-    '@web-loom/api-adapter-drizzle': '^0.1.0',
-    '@web-loom/api-adapter-zod': '^0.1.0',
-  };
-
-  if (template === 'full-stack') {
-    dependencies['@web-loom/api-adapter-lucia'] = '^0.1.0';
-    dependencies['@web-loom/api-adapter-resend'] = '^0.1.0';
-    dependencies['@web-loom/api-middleware-auth'] = '^0.1.0';
-    dependencies['@web-loom/api-middleware-rate-limit'] = '^0.1.0';
-  }
-
-  if (template === 'serverless' || template === 'full-stack') {
-    dependencies['@web-loom/api-middleware-cors'] = '^0.1.0';
-  }
-
-  const packageJson = {
-    name,
-    version: '0.1.0',
-    description: 'Web Loom API project',
-    type: 'module',
-    scripts: {
-      dev: 'webloom dev',
-      build: 'tsc',
-      start: 'node dist/index.js',
-      'migrate:create': 'webloom migrate create',
-      'migrate:up': 'webloom migrate up',
-      'migrate:down': 'webloom migrate down',
-      seed: 'webloom seed',
-      test: 'vitest',
-    },
-    dependencies,
-    devDependencies: {
-      '@web-loom/api-cli': '^0.1.0',
-      typescript: '^5.9.2',
-      vitest: '^2.1.8',
-      '@types/node': '^22.10.5',
-    },
-  };
-
-  await fs.writeFile(
-    path.join(directory, 'package.json'),
-    JSON.stringify(packageJson, null, 2)
-  );
-}
-
-/**
- * Generate webloom.config.ts
- */
-async function generateConfig(config: ProjectConfig): Promise<void> {
-  const { directory, template } = config;
-
-  let configContent = `import { defineConfig } from '@web-loom/api-core';
-
-export default defineConfig({
-  server: {
-    port: 3000,
-    host: '0.0.0.0',
-  },
-  database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/mydb',
-    poolSize: 10,
-  },
-  security: {
-    cors: {
-      enabled: true,
-      origins: ['http://localhost:3000'],
-    },
-  },
-`;
-
-  if (template === 'full-stack') {
-    configContent += `  auth: {
-    sessionDuration: 7 * 24 * 60 * 60, // 7 days
-    providers: {
-      google: {
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      },
-    },
-  },
-  email: {
-    from: process.env.EMAIL_FROM || 'noreply@example.com',
-    apiKey: process.env.RESEND_API_KEY,
-  },
-`;
-  }
-
-  configContent += `});
-`;
-
-  await fs.writeFile(
-    path.join(directory, 'webloom.config.ts'),
-    configContent
-  );
-}
-
-/**
- * Generate .env.example
- */
-async function generateEnvExample(config: ProjectConfig): Promise<void> {
-  const { directory, template } = config;
-
-  let envContent = `# Database
-DATABASE_URL=postgresql://localhost:5432/mydb
-
-# Server
-PORT=3000
-NODE_ENV=development
-`;
-
-  if (template === 'full-stack') {
-    envContent += `
-# Authentication
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Email
-RESEND_API_KEY=your_resend_api_key
-EMAIL_FROM=noreply@example.com
-`;
-  }
-
-  await fs.writeFile(path.join(directory, '.env.example'), envContent);
-}
-
-/**
- * Generate tsconfig.json
- */
-async function generateTsConfig(config: ProjectConfig): Promise<void> {
-  const { directory } = config;
-
-  const tsConfig = {
-    compilerOptions: {
-      target: 'ES2022',
-      module: 'ESNext',
-      moduleResolution: 'bundler',
-      lib: ['ES2022'],
-      outDir: './dist',
-      rootDir: './src',
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      forceConsistentCasingInFileNames: true,
-      resolveJsonModule: true,
-      declaration: true,
-      declarationMap: true,
-      sourceMap: true,
-    },
-    include: ['src/**/*'],
-    exclude: ['node_modules', 'dist'],
-  };
-
-  await fs.writeFile(
-    path.join(directory, 'tsconfig.json'),
-    JSON.stringify(tsConfig, null, 2)
-  );
-}
-
-/**
- * Generate .gitignore
- */
-async function generateGitignore(config: ProjectConfig): Promise<void> {
-  const { directory } = config;
-
-  const gitignore = `# Dependencies
-node_modules/
-
-# Build output
-dist/
-*.tsbuildinfo
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-`;
-
-  await fs.writeFile(path.join(directory, '.gitignore'), gitignore);
-}
-
-/**
- * Generate example route
- */
-async function generateExampleRoute(config: ProjectConfig): Promise<void> {
-  const { directory } = config;
-
-  const routeContent = `import type { RequestContext, NextFunction } from '@web-loom/api-core';
-
-/**
- * GET /health
- * Health check endpoint
- */
-export async function GET(ctx: RequestContext, next: NextFunction): Promise<Response> {
-  return new Response(
-    JSON.stringify({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    }),
-    {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
-}
-`;
-
-  await fs.writeFile(
-    path.join(directory, 'src', 'routes', 'health.ts'),
-    routeContent
-  );
-}
-
-/**
- * Generate README.md
- */
-async function generateReadme(config: ProjectConfig): Promise<void> {
-  const { directory, name, packageManager } = config;
-
+  // Prepare template variables
   const installCmd = packageManager === 'npm' ? 'npm install' : 
                      packageManager === 'yarn' ? 'yarn' : 'pnpm install';
   const runCmd = packageManager === 'npm' ? 'npm run' :
                  packageManager === 'yarn' ? 'yarn' : 'pnpm';
 
-  const readme = `# ${name}
+  const variables = {
+    PROJECT_NAME: name,
+    INSTALL_CMD: installCmd,
+    RUN_CMD: runCmd,
+  };
 
-Web Loom API project
+  // Copy template files
+  await copyTemplate(template, directory, variables);
 
-## Getting Started
-
-1. Install dependencies:
-
-\`\`\`bash
-${installCmd}
-\`\`\`
-
-2. Copy \`.env.example\` to \`.env\` and configure:
-
-\`\`\`bash
-cp .env.example .env
-\`\`\`
-
-3. Run database migrations:
-
-\`\`\`bash
-${runCmd} migrate:up
-\`\`\`
-
-4. Start development server:
-
-\`\`\`bash
-${runCmd} dev
-\`\`\`
-
-## Available Scripts
-
-- \`${runCmd} dev\` - Start development server with hot reload
-- \`${runCmd} build\` - Build for production
-- \`${runCmd} start\` - Start production server
-- \`${runCmd} migrate:create\` - Create a new migration
-- \`${runCmd} migrate:up\` - Run pending migrations
-- \`${runCmd} migrate:down\` - Rollback last migration
-- \`${runCmd} seed\` - Seed database with test data
-- \`${runCmd} test\` - Run tests
-
-## Project Structure
-
-\`\`\`
-src/
-├── models/     # Data models
-├── routes/     # API routes
-└── index.ts    # Application entry point
-\`\`\`
-
-## Documentation
-
-- [Web Loom Documentation](https://webloom.dev/docs)
-- [API Reference](https://webloom.dev/api)
-
-## License
-
-MIT
-`;
-
-  await fs.writeFile(path.join(directory, 'README.md'), readme);
+  // Create empty models directory (not in templates)
+  await fs.mkdir(path.join(directory, 'src', 'models'), { recursive: true });
 }
 
 /**
@@ -502,14 +208,7 @@ async function initCommand(options: InitOptions): Promise<void> {
 
   // Create project
   await withSpinner('Creating project structure', async () => {
-    await createDirectoryStructure(config);
-    await generatePackageJson(config);
-    await generateConfig(config);
-    await generateEnvExample(config);
-    await generateTsConfig(config);
-    await generateGitignore(config);
-    await generateExampleRoute(config);
-    await generateReadme(config);
+    await createProjectFromTemplate(config);
   });
 
   // Install dependencies

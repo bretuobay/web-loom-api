@@ -1,0 +1,34 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "version": "0.1.0",
+  "description": "Web Loom API project - Full-stack with auth and email",
+  "type": "module",
+  "scripts": {
+    "dev": "webloom dev",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate:create": "webloom migrate create",
+    "migrate:up": "webloom migrate up",
+    "migrate:down": "webloom migrate down",
+    "seed": "webloom seed",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@web-loom/api-core": "^0.1.0",
+    "@web-loom/api-shared": "^0.1.0",
+    "@web-loom/api-adapter-hono": "^0.1.0",
+    "@web-loom/api-adapter-drizzle": "^0.1.0",
+    "@web-loom/api-adapter-zod": "^0.1.0",
+    "@web-loom/api-adapter-lucia": "^0.1.0",
+    "@web-loom/api-adapter-resend": "^0.1.0",
+    "@web-loom/api-middleware-auth": "^0.1.0",
+    "@web-loom/api-middleware-rate-limit": "^0.1.0",
+    "@web-loom/api-middleware-cors": "^0.1.0"
+  },
+  "devDependencies": {
+    "@web-loom/api-cli": "^0.1.0",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.8",
+    "@types/node": "^22.10.5"
+  }
+}
