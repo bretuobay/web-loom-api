@@ -130,8 +130,8 @@ async function checkDirectory(directory: string): Promise<void> {
         );
       }
     }
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') {
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && err.code !== 'ENOENT') {
       throw err;
     }
   }
