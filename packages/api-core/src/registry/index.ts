@@ -1,8 +1,8 @@
-// Placeholder for registries
-export class ModelRegistry {
-  // Implementation will be added in later tasks
-}
+// Registry exports
+export { ModelRegistry } from './model-registry';
+export * from './types';
 
+// Placeholder for RouteRegistry
 export class RouteRegistry {
   // Implementation will be added in later tasks
 }
