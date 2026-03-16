@@ -5,7 +5,14 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+let __dirname = dirname(__filename);
+// Normalize WSL UNC paths for ESLint parser compatibility
+if (__dirname.startsWith('\\\\wsl.localhost\\') || __dirname.startsWith('\\\\wsl$\\')) {
+  const match = __dirname.match(/\\\\wsl(?:\$|\.localhost)\\[^\\]+(.+)/);
+  if (match) {
+    __dirname = match[1].replace(/\\/g, '/');
+  }
+}
 
 export default [
   js.configs.recommended,

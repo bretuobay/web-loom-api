@@ -610,8 +610,8 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test storage backends
     - _Requirements: 16.1, 16.2, 16.3_
 
-- [ ] 30. Create @web-loom/api-middleware-cors package
-  - [ ] 30.1 Implement CORS middleware
+- [x] 30. Create @web-loom/api-middleware-cors package
+  - [x] 30.1 Implement CORS middleware
     - Handle preflight OPTIONS requests
     - Add CORS headers to responses
     - Support configurable origins (whitelist, regex)
@@ -623,21 +623,21 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test header configuration
     - _Requirements: 17.1, 17.2_
 
-- [ ] 31. Implement security features
-  - [ ] 31.1 Add security headers middleware
+- [x] 31. Implement security features
+  - [x] 31.1 Add security headers middleware
     - Add X-Content-Type-Options: nosniff
     - Add X-Frame-Options: DENY
     - Add X-XSS-Protection header
     - Add Strict-Transport-Security header
     - Add configurable Content-Security-Policy
     - _Requirements: 17.3_
-  - [ ] 31.2 Implement input sanitization
+  - [x] 31.2 Implement input sanitization
     - Add HTML escaping in validation adapter
     - Implement SQL injection prevention via parameterized queries
     - Add path traversal prevention in route matching
     - Implement request size limits
     - _Requirements: 17.4, 17.5_
-  - [ ] 31.3 Implement audit logging
+  - [x] 31.3 Implement audit logging
     - Log authentication attempts
     - Log authorization failures
     - Log data modifications (create/update/delete)
@@ -650,7 +650,7 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test audit logging
     - _Requirements: 17.3, 17.4, 17.5, 17.6_
 
-- [ ] 32. Checkpoint - Security and auth complete
+- [x] 32. Checkpoint - Security and auth complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 5: Advanced Features (Weeks 17-20)
