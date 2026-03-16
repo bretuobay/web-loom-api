@@ -572,14 +572,14 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test API key management
     - _Requirements: 2.4, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
 
-- [ ] 28. Create @web-loom/api-middleware-auth package
-  - [ ] 28.1 Implement authentication middleware
+- [x] 28. Create @web-loom/api-middleware-auth package
+  - [x] 28.1 Implement authentication middleware
     - Create session authentication middleware
     - Create API key authentication middleware
     - Add user context to RequestContext
     - Support optional vs required authentication
     - _Requirements: 15.1, 15.2_
-  - [ ] 28.2 Implement authorization middleware
+  - [x] 28.2 Implement authorization middleware
     - Create role-based access control (RBAC) middleware
     - Support hierarchical roles
     - Add field-level permission checking
@@ -591,15 +591,15 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
     - Test permission checking
     - _Requirements: 15.1, 15.2, 15.3, 15.4_
 
-- [ ] 29. Create @web-loom/api-middleware-rate-limit package
-  - [ ] 29.1 Implement rate limiting middleware
+- [x] 29. Create @web-loom/api-middleware-rate-limit package
+  - [x] 29.1 Implement rate limiting middleware
     - Create token bucket rate limiter
     - Support per-IP rate limiting
     - Support per-user rate limiting
     - Add configurable time windows
     - Return 429 with Retry-After header
     - _Requirements: 16.1, 16.2_
-  - [ ] 29.2 Add rate limit storage backends
+  - [x] 29.2 Add rate limit storage backends
     - Implement in-memory storage (development)
     - Implement Redis storage (production)
     - Support distributed rate limiting
