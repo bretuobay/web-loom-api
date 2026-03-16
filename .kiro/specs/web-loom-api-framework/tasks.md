@@ -542,25 +542,25 @@ The implementation spans 28 weeks across 7 phases, building 14 packages in a Tur
 
 ## Phase 4: Security and Auth (Weeks 13-16)
 
-- [ ] 27. Create @web-loom/api-adapter-lucia package
-  - [ ] 27.1 Implement Lucia AuthAdapter
+- [x] 27. Create @web-loom/api-adapter-lucia package
+  - [x] 27.1 Implement Lucia AuthAdapter
     - Implement createSession() with database storage
     - Implement validateSession() with expiration checking
     - Implement invalidateSession() for logout
     - Add automatic session cleanup
     - _Requirements: 2.4, 14.1, 14.2_
-  - [ ] 27.2 Implement user management
+  - [x] 27.2 Implement user management
     - Implement createUser() with validation
     - Implement getUser() and updateUser()
     - Implement hashPassword() with bcrypt
     - Implement verifyPassword() with timing-safe comparison
     - _Requirements: 14.3, 14.4_
-  - [ ] 27.3 Implement OAuth integration
+  - [x] 27.3 Implement OAuth integration
     - Implement getOAuthAuthorizationUrl() for providers
     - Implement handleOAuthCallback() with token exchange
     - Support Google, GitHub, and generic OAuth2
     - _Requirements: 14.5_
-  - [ ] 27.4 Implement API key management
+  - [x] 27.4 Implement API key management
     - Implement createApiKey() with scopes
     - Implement validateApiKey() with scope checking
     - Implement revokeApiKey()
