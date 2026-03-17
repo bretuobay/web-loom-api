@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main, iterations]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx turbo run lint
+
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx turbo run check-types
+
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npx turbo run test
+      - run: npx turbo run test:coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-node-${{ matrix.node-version }}
+          path: packages/*/coverage/
+
+  property-tests:
+    name: Property-Based Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run with seed 42
+        run: FAST_CHECK_NUM_RUNS=1000 npx turbo run test -- --reporter=verbose
+        env:
+          FAST_CHECK_SEED: 42
+      - name: Run with seed 12345
+        run: FAST_CHECK_NUM_RUNS=1000 npx turbo run test -- --reporter=verbose
+        env:
+          FAST_CHECK_SEED: 12345
+
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [lint, type-check, test, property-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check test coverage meets 90% threshold
+        run: |
+          npx turbo run test:coverage 2>&1 | tee coverage-output.txt
+          # Fail if any package coverage is below 90%
+          if grep -E "All files\s*\|\s*[0-8][0-9]?\." coverage-output.txt; then
+            echo "::error::Test coverage is below 90% threshold"
+            exit 1
+          fi
+      - name: Verify no TypeScript errors
+        run: npx turbo run check-types
+      - name: Verify no lint errors
+        run: npx turbo run lint
