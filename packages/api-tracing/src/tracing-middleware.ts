@@ -1,5 +1,4 @@
 import { Tracer } from './tracer';
-import { Span } from './span';
 import { extractTraceContext, injectTraceContext } from './context';
 import { SpanStatusCode, type TracingMiddlewareOptions } from './types';
 
@@ -38,14 +37,15 @@ export function createTracingMiddleware(options: TracingMiddlewareOptions) {
     const parentCtx = extractTraceContext(req.headers);
 
     // Create root span for this request
-    const span = tracer.createSpan(`${req.method} ${req.url}`, {
-      traceId: parentCtx?.traceId,
-      parentSpanId: parentCtx?.spanId,
+    const spanOpts: import('./types').SpanOptions = {
       attributes: {
         'http.method': req.method,
         'http.url': req.url,
       },
-    });
+    };
+    if (parentCtx?.traceId !== undefined) spanOpts.traceId = parentCtx.traceId;
+    if (parentCtx?.spanId !== undefined) spanOpts.parentSpanId = parentCtx.spanId;
+    const span = tracer.createSpan(`${req.method} ${req.url}`, spanOpts);
 
 
     // Inject trace context into response headers

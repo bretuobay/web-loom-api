@@ -111,12 +111,15 @@ export class HealthChecker {
         ),
       ]);
 
-      return {
+      const detail: CheckDetail = {
         name: check.name,
         status: result.status,
         latency: Date.now() - start,
-        message: result.message,
       };
+      if (result.message !== undefined) {
+        detail.message = result.message;
+      }
+      return detail;
     } catch (error) {
       return {
         name: check.name,

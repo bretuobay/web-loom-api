@@ -91,13 +91,15 @@ export class R2FileStore implements FileStore {
           contentType: options?.httpMetadata?.contentType ?? 'application/octet-stream',
         });
       },
-      async get(key) {
+      async get(key): Promise<{ arrayBuffer(): Promise<ArrayBuffer> } | null> {
         const entry = data.get(key);
         if (!entry) return null;
         const buf = entry.buffer;
+        const ab: ArrayBuffer = new ArrayBuffer(buf.byteLength);
+        new Uint8Array(ab).set(new Uint8Array(buf));
         return {
-          arrayBuffer() {
-            return Promise.resolve(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+          arrayBuffer(): Promise<ArrayBuffer> {
+            return Promise.resolve(ab);
           },
         };
       },

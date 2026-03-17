@@ -6,7 +6,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+// @ts-ignore - module may not be installed
 import { OpenAPIGenerator } from '@web-loom/api-generator-openapi';
+// @ts-ignore - module may not be installed
 import type { ModelDefinition } from '@web-loom/api-generator-openapi';
 
 interface RouteDefinition {

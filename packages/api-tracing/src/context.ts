@@ -12,7 +12,11 @@ export function parseTraceparent(header: string): TraceContext | null {
   const match = trimmed.match(TRACEPARENT_REGEX);
   if (!match) return null;
 
-  const [, version, traceId, spanId, flags] = match;
+  const version = match[1];
+  const traceId = match[2];
+  const spanId = match[3];
+  const flags = match[4];
+  if (!version || !traceId || !spanId || !flags) return null;
 
   // Version "ff" is invalid per spec
   if (version === 'ff') return null;

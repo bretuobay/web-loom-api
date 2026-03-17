@@ -40,7 +40,7 @@ export class MigrationTracker {
     try {
       // Try to query the table
       await this.db.query(
-        `SELECT 1 FROM ${this.tableName} LIMIT 1`
+        `SELECT 1 FROM ${this.tableName} LIMIT 1`, []
       );
       return true;
     } catch {
@@ -59,7 +59,7 @@ export class MigrationTracker {
         applied_at TIMESTAMP NOT NULL DEFAULT NOW(),
         batch INTEGER NOT NULL
       )
-    `);
+    `, []);
   }
 
   /**
@@ -72,10 +72,10 @@ export class MigrationTracker {
       applied_at: Date;
       batch: number;
     }>(
-      `SELECT id, name, applied_at, batch FROM ${this.tableName} ORDER BY id ASC`
+      `SELECT id, name, applied_at, batch FROM ${this.tableName} ORDER BY id ASC`, []
     );
 
-    return result.rows.map(row => ({
+    return result.map((row: any) => ({
       id: row.id,
       name: row.name,
       appliedAt: new Date(row.applied_at),
@@ -88,10 +88,10 @@ export class MigrationTracker {
    */
   async getLatestBatch(): Promise<number> {
     const result = await this.db.query<{ max_batch: number | null }>(
-      `SELECT MAX(batch) as max_batch FROM ${this.tableName}`
+      `SELECT MAX(batch) as max_batch FROM ${this.tableName}`, []
     );
 
-    return result.rows[0]?.max_batch ?? 0;
+    return result[0]?.max_batch ?? 0;
   }
 
   /**
@@ -128,7 +128,7 @@ export class MigrationTracker {
       [batch]
     );
 
-    return result.rows.map(row => ({
+    return result.map((row: any) => ({
       id: row.id,
       name: row.name,
       appliedAt: new Date(row.applied_at),
@@ -150,7 +150,7 @@ export class MigrationTracker {
       [count]
     );
 
-    return result.rows.map(row => ({
+    return result.map((row: any) => ({
       id: row.id,
       name: row.name,
       appliedAt: new Date(row.applied_at),
@@ -167,7 +167,7 @@ export class MigrationTracker {
       [name]
     );
 
-    return (result.rows[0]?.count ?? 0) > 0;
+    return (result[0]?.count ?? 0) > 0;
   }
 
   /**
@@ -175,9 +175,9 @@ export class MigrationTracker {
    */
   async getMigrationCount(): Promise<number> {
     const result = await this.db.query<{ count: number }>(
-      `SELECT COUNT(*) as count FROM ${this.tableName}`
+      `SELECT COUNT(*) as count FROM ${this.tableName}`, []
     );
 
-    return result.rows[0]?.count ?? 0;
+    return result[0]?.count ?? 0;
   }
 }

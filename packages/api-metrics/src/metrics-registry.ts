@@ -27,20 +27,7 @@ function formatLabels(key: string): string {
   return `{${key}}`;
 }
 
-function parseLabelsKey(key: string): MetricLabels {
-  if (!key) return {};
-  const labels: MetricLabels = {};
-  const pairs = key.split(',');
-  for (const pair of pairs) {
-    const eqIdx = pair.indexOf('=');
-    if (eqIdx !== -1) {
-      const k = pair.slice(0, eqIdx);
-      const v = pair.slice(eqIdx + 2, -1); // strip quotes
-      labels[k] = v;
-    }
-  }
-  return labels;
-}
+
 
 
 // ---- Internal metric implementations with accessible state ----
@@ -135,8 +122,9 @@ class HistogramImpl implements Histogram {
     d.count += 1;
     // Store per-bucket (non-cumulative); serialization makes them cumulative
     for (let i = 0; i < this.buckets.length; i++) {
-      if (value <= this.buckets[i]) {
-        d.bucketCounts[i]++;
+      const bucket = this.buckets[i];
+      if (bucket !== undefined && value <= bucket) {
+        d.bucketCounts[i] = (d.bucketCounts[i] ?? 0) + 1;
         break;
       }
     }
@@ -224,8 +212,8 @@ function serializeHistogram(metric: HistogramImpl): string[] {
       const labelPrefix = key ? key + ',' : '';
       let cumulative = 0;
       for (let i = 0; i < metric.buckets.length; i++) {
-        cumulative += data.bucketCounts[i];
-        lines.push(`${metric.name}_bucket{${labelPrefix}le="${metric.buckets[i]}"} ${cumulative}`);
+        cumulative += (data.bucketCounts[i] ?? 0);
+        lines.push(`${metric.name}_bucket{${labelPrefix}le="${(metric.buckets[i] ?? 0)}"} ${cumulative}`);
       }
       lines.push(`${metric.name}_bucket{${labelPrefix}le="+Inf"} ${data.count}`);
       lines.push(`${metric.name}_sum${formatLabels(key)} ${data.sum}`);
@@ -240,8 +228,8 @@ function calculateQuantile(sorted: number[], q: number): number {
   const pos = q * (sorted.length - 1);
   const lower = Math.floor(pos);
   const upper = Math.ceil(pos);
-  if (lower === upper) return sorted[lower];
-  return sorted[lower] + (pos - lower) * (sorted[upper] - sorted[lower]);
+  if (lower === upper) return (sorted[lower] ?? 0);
+  return (sorted[lower] ?? 0) + (pos - lower) * ((sorted[upper] ?? 0) - (sorted[lower] ?? 0));
 }
 
 function serializeSummary(metric: SummaryImpl): string[] {

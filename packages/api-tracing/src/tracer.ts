@@ -5,7 +5,6 @@ import {
   type TracerOptions,
   type SpanOptions,
   type TracerInterface,
-  type SpanMethods,
   type SpanData,
   type Sampler,
 } from './types';
@@ -17,12 +16,12 @@ export class Tracer implements TracerInterface {
   private serviceName: string;
   private sampler: Sampler;
   private onSpanEnd?: (span: SpanData) => void;
-  private activeSpan?: Span;
+  private activeSpan: Span | undefined;
 
   constructor(options: TracerOptions = {}) {
     this.serviceName = options.serviceName ?? 'unknown-service';
     this.sampler = options.sampler ?? new AlwaysSampler();
-    this.onSpanEnd = options.onSpanEnd;
+    if (options.onSpanEnd !== undefined) this.onSpanEnd = options.onSpanEnd;
   }
 
   configure(options: TracerOptions): void {
@@ -35,15 +34,19 @@ export class Tracer implements TracerInterface {
     const traceId = options?.traceId ?? this.activeSpan?.traceId ?? generateTraceId();
     const parentSpanId = options?.parentSpanId ?? this.activeSpan?.spanId;
 
-    const span = new Span(name, {
+    const spanOpts: SpanOptions & { onEnd?: (span: SpanData) => void } = {
       traceId,
-      parentSpanId,
       attributes: {
         'service.name': this.serviceName,
         ...options?.attributes,
       },
-      onEnd: (spanData) => this.onSpanEnd?.(spanData),
-    });
+    };
+    if (parentSpanId !== undefined) spanOpts.parentSpanId = parentSpanId;
+    if (this.onSpanEnd !== undefined) {
+      const handler = this.onSpanEnd;
+      spanOpts.onEnd = (spanData: SpanData) => handler(spanData);
+    }
+    const span = new Span(name, spanOpts);
 
     return span;
   }

@@ -51,7 +51,7 @@ export function resetSequence(): void {
 
 export type FactoryAttrs<T> = Partial<T> | (() => Partial<T>);
 
-export interface RelationConfig<T> {
+export interface RelationConfig<T extends Record<string, unknown>> {
   factory: Factory<T>;
   foreignKey?: string;
   count?: number;
@@ -79,7 +79,7 @@ type PersistFn<T> = (data: T) => Promise<T>;
 interface FactoryOptions<T extends Record<string, unknown>> {
   defaultAttrs: FactoryAttrs<T>;
   persistFn?: PersistFn<T>;
-  relations: Map<string, RelationConfig<unknown>>;
+  relations: Map<string, RelationConfig<Record<string, unknown>>>;
 }
 
 /**
@@ -96,9 +96,9 @@ export function defineFactory<T extends Record<string, unknown>>(
 ): Factory<T> {
   const options: FactoryOptions<T> = {
     defaultAttrs,
-    persistFn,
     relations: new Map(),
   };
+  if (persistFn !== undefined) options.persistFn = persistFn;
 
   return createFactory<T>(name, options);
 }
@@ -158,11 +158,12 @@ function createFactory<T extends Record<string, unknown>>(
       relOptions?: { foreignKey?: string; count?: number }
     ): Factory<T> {
       const newRelations = new Map(options.relations);
-      newRelations.set(name, {
-        factory: relFactory as Factory<unknown>,
-        foreignKey: relOptions?.foreignKey,
-        count: relOptions?.count,
-      });
+      const relConfig: RelationConfig<Record<string, unknown>> = {
+        factory: relFactory as Factory<Record<string, unknown>>,
+      };
+      if (relOptions?.foreignKey !== undefined) relConfig.foreignKey = relOptions.foreignKey;
+      if (relOptions?.count !== undefined) relConfig.count = relOptions.count;
+      newRelations.set(name, relConfig);
       return createFactory<T>(_name, {
         ...options,
         relations: newRelations,

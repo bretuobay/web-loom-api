@@ -34,7 +34,7 @@ export class ProbabilitySampler implements Sampler {
     this.threshold = Math.floor(rate * 0xffffffff);
   }
 
-  shouldSample(traceId: string): SamplingResult {
+  shouldSample(traceId: string, _spanName?: string, _attributes?: Record<string, SpanAttributeValue>): SamplingResult {
     // Use last 8 hex chars of traceId for deterministic hash
     const hash = parseInt(traceId.slice(-8), 16);
     const decision = hash <= this.threshold ? SamplingDecision.RECORD_AND_SAMPLE : SamplingDecision.DROP;

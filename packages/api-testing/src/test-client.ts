@@ -175,12 +175,13 @@ export class TestClient {
 
     const rawBody = body !== undefined ? JSON.stringify(body) : undefined;
 
-    const responseData = await this.handler({
+    const reqObj: { method: HttpMethod; url: string; headers: Record<string, string>; body?: string } = {
       method,
       url,
       headers,
-      body: rawBody,
-    });
+    };
+    if (rawBody !== undefined) reqObj.body = rawBody;
+    const responseData = await this.handler(reqObj);
 
     // Run response interceptors
     for (const interceptor of this.responseInterceptors) {
@@ -194,11 +195,12 @@ export class TestClient {
 function createFetchHandler(baseUrl: string): RequestHandler {
   return async (req) => {
     const url = `${baseUrl.replace(/\/$/, '')}${req.url}`;
-    const response = await fetch(url, {
+    const fetchInit: RequestInit = {
       method: req.method,
       headers: req.headers,
-      body: req.body,
-    });
+    };
+    if (req.body !== undefined) fetchInit.body = req.body;
+    const response = await fetch(url, fetchInit);
 
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {

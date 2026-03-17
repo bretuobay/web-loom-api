@@ -47,7 +47,7 @@ export function createMockDatabase(): MockDatabase {
   const db: MockDatabase = {
 
     query<T = unknown>(sql: string, params?: unknown[]): T {
-      queries.push({ sql, params, timestamp: Date.now() });
+      queries.push({ sql, params: params ?? [], timestamp: Date.now() });
       const handler = findHandler(sql);
       if (handler) {
         return handler(sql, params) as T;
@@ -56,7 +56,7 @@ export function createMockDatabase(): MockDatabase {
     },
 
     execute(sql: string, params?: unknown[]): { affectedRows: number } {
-      queries.push({ sql, params, timestamp: Date.now() });
+      queries.push({ sql, params: params ?? [], timestamp: Date.now() });
       const handler = findHandler(sql);
       if (handler) {
         const result = handler(sql, params);
@@ -85,7 +85,7 @@ export function createMockDatabase(): MockDatabase {
       const txQueries: QueryRecord[] = [];
       const txDb: MockDatabase = {
         query<U = unknown>(sql: string, params?: unknown[]): U {
-          const record = { sql, params, timestamp: Date.now() };
+          const record: QueryRecord = { sql, params: params ?? [], timestamp: Date.now() };
           txQueries.push(record);
           queries.push(record);
           const h = findHandler(sql);
@@ -93,7 +93,7 @@ export function createMockDatabase(): MockDatabase {
           return defaultQueryResult as U;
         },
         execute(sql: string, params?: unknown[]) {
-          const record = { sql, params, timestamp: Date.now() };
+          const record: QueryRecord = { sql, params: params ?? [], timestamp: Date.now() };
           txQueries.push(record);
           queries.push(record);
           const h = findHandler(sql);

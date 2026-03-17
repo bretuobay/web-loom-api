@@ -65,10 +65,14 @@ function parsePartHeaders(raw: string): Map<string, string> {
 function parseContentDisposition(value: string): { name: string; filename?: string } {
   const nameMatch = /\bname="([^"]*)"/.exec(value);
   const filenameMatch = /\bfilename="([^"]*)"/.exec(value);
-  return {
+  const result: { name: string; filename?: string } = {
     name: nameMatch?.[1] ?? '',
-    filename: filenameMatch?.[1],
   };
+  const fn = filenameMatch?.[1];
+  if (fn !== undefined) {
+    result.filename = fn;
+  }
+  return result;
 }
 
 // -----------------------------------------------------------------------

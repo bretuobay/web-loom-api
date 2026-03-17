@@ -27,8 +27,7 @@ import type {
   SchemaDefinition,
   FieldSchema,
   ValidationResult,
-  ValidationError,
-} from '@web-loom/api-core';
+  ValidationError, ValidationFieldError} from '@web-loom/api-core';
 
 /**
  * Zod adapter implementation
@@ -285,7 +284,7 @@ export class ZodAdapter implements ValidationAdapter {
   /**
    * Format Zod errors into ValidationError array
    */
-  private formatZodErrors(error: ZodError): ValidationError[] {
+  private formatZodErrors(error: ZodError): ValidationFieldError[] {
     // Zod errors are in the issues property
     const issues = error.issues || [];
     

@@ -7,7 +7,9 @@
 import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
+// @ts-ignore - module may not be installed
 import { ClientGenerator } from '@web-loom/api-generator-client';
+// @ts-ignore - module may not be installed
 import type { ModelDefinition, RouteDefinition } from '@web-loom/api-generator-client';
 
 /**

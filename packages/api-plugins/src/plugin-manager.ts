@@ -21,6 +21,8 @@ export class PluginManager {
   private readonly _context: PluginContextImpl;
   private readonly _config: PluginSystemConfig;
 
+  get config(): PluginSystemConfig { return this._config; }
+
   constructor(config: PluginSystemConfig = {}, appConfig: Record<string, unknown> = {}) {
     this._config = config;
     this._context = new PluginContextImpl(appConfig);

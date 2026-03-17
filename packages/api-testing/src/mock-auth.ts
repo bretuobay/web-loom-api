@@ -40,12 +40,10 @@ export function createMockAuth(): MockAuth {
   const auth: MockAuth = {
     createUser(data: Partial<MockUser> & { email: string }): MockUser {
       const user: MockUser = {
-        id: data.id ?? randomUUID(),
-        email: data.email,
-        name: data.name,
-        role: data.role ?? 'user',
+        id: randomUUID(),
+        role: 'user',
         ...data,
-      };
+      } as MockUser;
       users.push(user);
       return user;
     },

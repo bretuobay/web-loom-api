@@ -37,14 +37,15 @@ export class CloudWatchLogger {
     message: string,
     context?: Record<string, unknown>
   ): void {
-    const entry = formatForCloudWatch({
+    const logEntry: Record<string, unknown> = {
       level,
       message,
       timestamp: new Date().toISOString(),
-      requestId: this.requestId,
-      traceId: this.traceId,
       context: { ...this.defaultContext, ...context },
-    });
+    };
+    if (this.requestId !== undefined) (logEntry as any).requestId = this.requestId;
+    if (this.traceId !== undefined) (logEntry as any).traceId = this.traceId;
+    const entry = formatForCloudWatch(logEntry as any);
 
     // CloudWatch captures stdout as log entries
     process.stdout.write(entry + '\n');

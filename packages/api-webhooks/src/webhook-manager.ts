@@ -35,11 +35,11 @@ export class WebhookManager {
 
   constructor(opts?: WebhookManagerOptions) {
     this.registry = new WebhookRegistry(opts?.webhookStore);
-    this.delivery = new WebhookDelivery({
-      logStore: opts?.logStore,
-      transport: opts?.transport,
-      deliveryOptions: opts?.deliveryOptions,
-    });
+    this.delivery = new WebhookDelivery(opts ? {
+      ...(opts.logStore !== undefined && { logStore: opts.logStore }),
+      ...(opts.transport !== undefined && { transport: opts.transport }),
+      ...(opts.deliveryOptions !== undefined && { deliveryOptions: opts.deliveryOptions }),
+    } : undefined);
   }
 
   // -------------------------------------------------------------------

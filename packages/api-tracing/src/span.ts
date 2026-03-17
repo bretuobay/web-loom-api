@@ -54,13 +54,13 @@ export class Span implements SpanData, SpanMethods {
   constructor(name: string, options?: SpanOptions & { onEnd?: (span: SpanData) => void }) {
     this.spanId = generateSpanId();
     this.traceId = options?.traceId ?? generateTraceId();
-    this.parentSpanId = options?.parentSpanId;
+    if (options?.parentSpanId !== undefined) this.parentSpanId = options.parentSpanId;
     this.name = name;
     this.startTime = Date.now();
     this.status = { code: SpanStatusCode.UNSET };
-    this.attributes = { ...options?.attributes };
+    this.attributes = (options?.attributes ? { ...options.attributes } : {}) as Record<string, SpanAttributeValue>;
     this.events = [];
-    this.onEnd = options?.onEnd;
+    if (options?.onEnd !== undefined) this.onEnd = options.onEnd;
   }
 
   setAttribute(key: string, value: SpanAttributeValue): void {
@@ -70,12 +70,15 @@ export class Span implements SpanData, SpanMethods {
 
   addEvent(name: string, attributes?: Record<string, SpanAttributeValue>): void {
     if (this.ended) return;
-    this.events.push({ name, timestamp: Date.now(), attributes });
+    const evt: SpanEvent = { name, timestamp: Date.now() };
+    if (attributes !== undefined) evt.attributes = attributes;
+    this.events.push(evt);
   }
 
   setStatus(code: SpanStatusCode, message?: string): void {
     if (this.ended) return;
-    this.status = { code, message };
+    this.status = { code };
+    if (message !== undefined) this.status.message = message;
   }
 
   end(): void {
@@ -91,16 +94,17 @@ export class Span implements SpanData, SpanMethods {
   }
 
   toJSON(): SpanData {
-    return {
+    const data: SpanData = {
       spanId: this.spanId,
       traceId: this.traceId,
-      parentSpanId: this.parentSpanId,
       name: this.name,
       startTime: this.startTime,
-      endTime: this.endTime,
       status: this.status,
       attributes: { ...this.attributes },
       events: [...this.events],
     };
+    if (this.parentSpanId !== undefined) data.parentSpanId = this.parentSpanId;
+    if (this.endTime !== undefined) data.endTime = this.endTime;
+    return data;
   }
 }

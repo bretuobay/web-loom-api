@@ -90,15 +90,13 @@ export function parseAPIGatewayV1Event(
   const method = event.httpMethod;
   const hasBody = event.body !== null && !['GET', 'HEAD'].includes(method);
 
-  return new Request(url, {
-    method,
-    headers,
-    body: hasBody
-      ? event.isBase64Encoded
-        ? Buffer.from(event.body!, 'base64')
-        : event.body!
-      : undefined,
-  });
+  const reqInit: RequestInit = { method, headers };
+  if (hasBody) {
+    reqInit.body = event.isBase64Encoded
+      ? Buffer.from(event.body!, 'base64')
+      : event.body!;
+  }
+  return new Request(url, reqInit);
 }
 
 /**
@@ -128,15 +126,13 @@ export function parseAPIGatewayV2Event(
   const method = event.requestContext.http.method;
   const hasBody = event.body !== undefined && !['GET', 'HEAD'].includes(method);
 
-  return new Request(url, {
-    method,
-    headers,
-    body: hasBody
-      ? event.isBase64Encoded
-        ? Buffer.from(event.body!, 'base64')
-        : event.body!
-      : undefined,
-  });
+  const reqInit: RequestInit = { method, headers };
+  if (hasBody) {
+    reqInit.body = event.isBase64Encoded
+      ? Buffer.from(event.body!, 'base64')
+      : event.body!;
+  }
+  return new Request(url, reqInit);
 }
 
 /**
@@ -166,15 +162,13 @@ export function parseFunctionURLEvent(
   const method = event.requestContext.http.method;
   const hasBody = event.body !== undefined && !['GET', 'HEAD'].includes(method);
 
-  return new Request(url, {
-    method,
-    headers,
-    body: hasBody
-      ? event.isBase64Encoded
-        ? Buffer.from(event.body!, 'base64')
-        : event.body!
-      : undefined,
-  });
+  const reqInit: RequestInit = { method, headers };
+  if (hasBody) {
+    reqInit.body = event.isBase64Encoded
+      ? Buffer.from(event.body!, 'base64')
+      : event.body!;
+  }
+  return new Request(url, reqInit);
 }
 
 /**
@@ -182,7 +176,7 @@ export function parseFunctionURLEvent(
  */
 function isBinaryContentType(contentType: string, binaryMediaTypes: string[]): boolean {
   if (binaryMediaTypes.length === 0) return false;
-  const normalized = contentType.split(';')[0].trim().toLowerCase();
+  const normalized = (contentType.split(';')[0] ?? '').trim().toLowerCase();
   return binaryMediaTypes.some((type) => {
     if (type === '*/*') return true;
     if (type.endsWith('/*')) {
@@ -229,7 +223,7 @@ export async function formatAPIGatewayV1Response(
   return {
     statusCode: response.status,
     headers,
-    multiValueHeaders: Object.keys(multiValueHeaders).length > 0 ? multiValueHeaders : undefined,
+    ...(Object.keys(multiValueHeaders).length > 0 && { multiValueHeaders }),
     body,
     isBase64Encoded,
   };

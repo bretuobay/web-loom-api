@@ -180,7 +180,7 @@ export function createRDSProxyConfig(
     database,
     username,
     useIAMAuth: overrides?.useIAMAuth ?? process.env.RDS_USE_IAM_AUTH === 'true',
-    region: overrides?.region || process.env.AWS_REGION,
+    region: overrides?.region || process.env.AWS_REGION || 'us-east-1',
     ssl: overrides?.ssl ?? true,
     maxConnections: overrides?.maxConnections ?? 10,
     idleTimeoutMs: overrides?.idleTimeoutMs ?? 60000,

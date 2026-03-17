@@ -1,7 +1,7 @@
 /**
  * Benchmarking utilities for @web-loom/api-testing
  */
-import type { RequestHandler, TestResponseData } from './types';
+import type { RequestHandler } from './types';
 
 // ---- Types ----
 
@@ -59,7 +59,7 @@ export interface ThroughputResult {
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
   const idx = Math.ceil((p / 100) * sorted.length) - 1;
-  return sorted[Math.max(0, idx)];
+  return sorted[Math.max(0, idx)] ?? 0;
 }
 
 function computeStats(timings: number[]): {
@@ -74,8 +74,8 @@ function computeStats(timings: number[]): {
   const total = sorted.reduce((sum, t) => sum + t, 0);
   return {
     avgMs: round(total / sorted.length),
-    minMs: round(sorted[0]),
-    maxMs: round(sorted[sorted.length - 1]),
+    minMs: round(sorted[0] ?? 0),
+    maxMs: round(sorted[sorted.length - 1] ?? 0),
     p50Ms: round(percentile(sorted, 50)),
     p95Ms: round(percentile(sorted, 95)),
     p99Ms: round(percentile(sorted, 99)),
@@ -166,12 +166,13 @@ export async function benchmarkLatency(
     const result = await benchmark(
       `${req.method} ${req.path}`,
       async () => {
-        await handler({
+        const reqObj: { method: string; url: string; headers: Record<string, string>; body?: string } = {
           method: req.method,
           url: req.path,
           headers: req.headers ?? {},
-          body: req.body !== undefined ? JSON.stringify(req.body) : undefined,
-        });
+        };
+        if (req.body !== undefined) reqObj.body = JSON.stringify(req.body);
+        await handler(reqObj);
       },
       { iterations: 100, warmup: 5 }
     );
@@ -215,12 +216,13 @@ export async function benchmarkThroughput(
     while (hrtimeMs() < deadline) {
       const start = hrtimeMs();
       try {
-        await handler({
+        const stressReq: { method: string; url: string; headers: Record<string, string>; body?: string } = {
           method: request.method,
           url: request.path,
           headers: request.headers ?? {},
-          body: request.body !== undefined ? JSON.stringify(request.body) : undefined,
-        });
+        };
+        if (request.body !== undefined) stressReq.body = JSON.stringify(request.body);
+        await handler(stressReq);
       } catch {
         errors++;
       }
@@ -279,15 +281,15 @@ export function formatBenchmarkReport(results: BenchmarkResult[]): string {
   ]);
 
   const colWidths = header.map((h, i) =>
-    Math.max(h.length, ...rows.map((r) => r[i].length))
+    Math.max(h.length, ...rows.map((r) => (r[i] ?? '').length))
   );
 
   const pad = (s: string, w: number) => s.padEnd(w);
   const sep = colWidths.map((w) => '-'.repeat(w)).join(' | ');
 
-  const headerLine = header.map((h, i) => pad(h, colWidths[i])).join(' | ');
+  const headerLine = header.map((h, i) => pad(h, colWidths[i] ?? 0)).join(' | ');
   const dataLines = rows.map((row) =>
-    row.map((cell, i) => pad(cell, colWidths[i])).join(' | ')
+    row.map((cell, i) => pad(cell, colWidths[i] ?? 0)).join(' | ')
   );
 
   return [headerLine, sep, ...dataLines].join('\n');

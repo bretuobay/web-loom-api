@@ -299,7 +299,7 @@ export function parseOpenApiSpec(spec: OpenApiSpec): ParsedSpec {
       };
 
       if (op.requestBody && typeof op.requestBody === 'object') {
-        endpoint.requestBody = op.requestBody as ParsedEndpoint['requestBody'];
+        if (op.requestBody) endpoint.requestBody = op.requestBody as NonNullable<ParsedEndpoint['requestBody']>;
       }
 
       endpoints.push(endpoint);

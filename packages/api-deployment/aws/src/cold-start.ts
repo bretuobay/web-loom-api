@@ -55,7 +55,7 @@ export class ColdStartOptimizer {
     if (!event || typeof event !== 'object') return false;
 
     // Check for the configured warmup field
-    const record = event as Record<string, unknown>;
+    const record = event as unknown as Record<string, unknown>;
     if (record[this.warmupEventField] === warmupValue) {
       return true;
     }

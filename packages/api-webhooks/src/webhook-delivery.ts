@@ -82,11 +82,11 @@ export class WebhookDelivery {
     let lastError: string | undefined;
     let attempts = 0;
 
-    for (let attempt = 1; attempt <= this.options.maxAttempts; attempt++) {
+    for (let attempt = 1; attempt <= (this.options.maxAttempts ?? 3); attempt++) {
       attempts = attempt;
 
       if (attempt > 1) {
-        const delay = calculateBackoffDelay(attempt - 1, this.options.baseDelay, this.options.maxDelay);
+        const delay = calculateBackoffDelay(attempt - 1, this.options.baseDelay ?? 1000, this.options.maxDelay ?? 30000);
         await this.sleep(delay);
       }
 
@@ -95,7 +95,7 @@ export class WebhookDelivery {
           webhook.url,
           body,
           { [SIGNATURE_HEADER]: signature },
-          this.options.timeout,
+          this.options.timeout ?? 10000,
         );
         lastStatusCode = statusCode;
 

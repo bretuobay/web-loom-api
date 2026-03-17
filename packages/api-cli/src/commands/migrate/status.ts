@@ -54,7 +54,7 @@ export const statusCommand = new Command('status')
       console.log('Migrations:');
       console.log('-----------');
       
-      files.forEach((file, index) => {
+      files.forEach((file, _index) => {
         const isApplied = appliedSet.has(file);
         const status = isApplied ? '✓ Applied' : '○ Pending';
         const statusColor = isApplied ? '\x1b[32m' : '\x1b[33m'; // Green or Yellow
@@ -116,7 +116,7 @@ function loadAppliedMigrations(migrationsDir: string): string[] {
 /**
  * Get the date when a migration was applied
  */
-function getAppliedDate(migrationsDir: string, fileName: string): string | null {
+function getAppliedDate(migrationsDir: string, _fileName: string): string | null {
   const trackingFile = path.join(migrationsDir, '.migrations.json');
   
   if (!fs.existsSync(trackingFile)) {

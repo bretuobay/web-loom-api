@@ -40,10 +40,11 @@ export function isEdgeRuntime(options?: VercelHandlerOptions): boolean {
  * ```
  */
 export function createEdgeConfig(options?: { regions?: string[] }): VercelEdgeConfig {
-  return {
-    runtime: 'edge',
-    regions: options?.regions,
-  };
+  const config: VercelEdgeConfig = { runtime: 'edge' };
+  if (options?.regions !== undefined) {
+    config.regions = options.regions;
+  }
+  return config;
 }
 
 /**

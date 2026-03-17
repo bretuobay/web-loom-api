@@ -16,7 +16,7 @@ export class DocsServer {
   private spec: any = null;
 
   constructor(
-    private projectRoot: string,
+    public readonly projectRoot: string,
     private config: SpecGeneratorConfig = {}
   ) {
     this.config.projectRoot = projectRoot;

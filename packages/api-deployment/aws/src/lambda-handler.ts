@@ -137,6 +137,6 @@ export function createLambdaHandler(
  * Check if an event matches the configured warmup event field
  */
 function isWarmupByField(event: LambdaEvent, warmupField: string): boolean {
-  const record = event as Record<string, unknown>;
+  const record = event as unknown as Record<string, unknown>;
   return record['source'] === warmupField || record[warmupField] !== undefined;
 }
