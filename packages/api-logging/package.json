@@ -1,0 +1,35 @@
+{
+  "name": "@web-loom/api-logging",
+  "version": "0.1.0",
+  "description": "Structured logging with sensitive data sanitization for Web Loom API Framework",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "webloom",
+    "webloom-logging",
+    "api",
+    "structured-logging",
+    "sanitization"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@web-loom/api-shared": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsup": "^8.3.5",
+    "typescript": "5.9.2",
+    "vitest": "^2.1.8"
+  }
+}

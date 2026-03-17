@@ -27,8 +27,7 @@ import type {
   SchemaDefinition,
   FieldSchema,
   ValidationResult,
-  ValidationError,
-} from '@web-loom/api-core';
+  ValidationFieldError} from '@web-loom/api-core';
 
 /**
  * Zod adapter implementation
@@ -269,14 +268,15 @@ export class ZodAdapter implements ValidationAdapter {
       });
     }
 
+    // Make optional if not required. Apply this before defaults so omitted
+    // values still receive the default at parse time.
+    if (!field.required) {
+      schema = schema.optional();
+    }
+
     // Apply default value
     if (field.default !== undefined) {
       schema = schema.default(field.default);
-    }
-
-    // Make optional if not required
-    if (!field.required) {
-      schema = schema.optional();
     }
 
     return schema;
@@ -285,7 +285,7 @@ export class ZodAdapter implements ValidationAdapter {
   /**
    * Format Zod errors into ValidationError array
    */
-  private formatZodErrors(error: ZodError): ValidationError[] {
+  private formatZodErrors(error: ZodError): ValidationFieldError[] {
     // Zod errors are in the issues property
     const issues = error.issues || [];
     
@@ -321,3 +321,4 @@ export class ZodAdapter implements ValidationAdapter {
     );
   }
 }
+

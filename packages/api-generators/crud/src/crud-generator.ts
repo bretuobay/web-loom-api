@@ -341,6 +341,7 @@ export class CRUDGenerator {
         data = this.applyTimestamps(model, data, 'create');
 
         // Wrap in transaction for consistency
+        // eslint-disable-next-line no-useless-catch
         try {
           const created = await this.database.transaction(async () => {
             return await this.database.insert(model, data);

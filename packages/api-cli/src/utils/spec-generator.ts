@@ -1,28 +1,32 @@
 /**
  * OpenAPI Spec Generator Utility
- * 
+ *
  * Discovers routes and models from project and generates OpenAPI spec
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { RouteDefinition } from '@web-loom/api-core';
+import type { HTTPMethod } from '@web-loom/api-shared';
+// @ts-ignore - module may not be installed
 import { OpenAPIGenerator } from '@web-loom/api-generator-openapi';
+// @ts-ignore - module may not be installed
 import type { ModelDefinition } from '@web-loom/api-generator-openapi';
 
-interface RouteDefinition {
+interface DiscoveredRoute {
   path: string;
-  method: string;
+  method: HTTPMethod;
   handler: string;
-  validation?: {
-    body?: any;
-    params?: any;
-    query?: any;
-  };
-  auth?: {
-    required: boolean;
-    roles?: string[];
-  };
+  validation?: RouteDefinition['validation'];
+  auth?: RouteDefinition['auth'];
 }
+
+const HTTP_METHODS: HTTPMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+const placeholderHandler: RouteDefinition['handler'] = () =>
+  new Response(JSON.stringify({ error: 'Not implemented' }), {
+    status: 501,
+    headers: { 'Content-Type': 'application/json' },
+  });
 
 export interface SpecGeneratorConfig {
   title?: string;
@@ -34,35 +38,43 @@ export interface SpecGeneratorConfig {
 /**
  * Generate OpenAPI specification from project
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function generateOpenAPISpec(config: SpecGeneratorConfig = {}): any {
   const projectRoot = config.projectRoot || process.cwd();
-  
+
   const generator = new OpenAPIGenerator({
     title: config.title || 'Web Loom API',
     version: config.version || '1.0.0',
     description: config.description || 'API documentation',
   });
 
-  // Discover routes and models
   const routes = discoverRoutes(projectRoot);
   const models = discoverModels(projectRoot);
 
-  // Register models
   for (const model of models) {
     generator.registerModel(model);
   }
 
-  // Register routes
   for (const route of routes) {
-    generator.registerRoute({
+    const routeDefinition: RouteDefinition = {
       path: route.path,
-      method: route.method.toLowerCase() as any,
-      summary: `${route.method} ${route.path}`,
-      description: `Handler: ${route.handler}`,
-      tags: [route.path.split('/')[1] || 'default'],
-      validation: route.validation,
-      auth: route.auth,
-    });
+      method: route.method,
+      handler: placeholderHandler,
+      metadata: {
+        description: route.handler,
+        tags: [route.path.split('/')[1] || 'default'],
+      },
+    };
+
+    if (route.validation !== undefined) {
+      routeDefinition.validation = route.validation;
+    }
+
+    if (route.auth !== undefined) {
+      routeDefinition.auth = route.auth;
+    }
+
+    generator.registerRoute(routeDefinition);
   }
 
   return generator.toJSON();
@@ -71,15 +83,15 @@ export function generateOpenAPISpec(config: SpecGeneratorConfig = {}): any {
 /**
  * Discover routes from src/routes directory
  */
-function discoverRoutes(projectRoot: string): RouteDefinition[] {
-  const routes: RouteDefinition[] = [];
+function discoverRoutes(projectRoot: string): DiscoveredRoute[] {
+  const routes: DiscoveredRoute[] = [];
   const routesDir = path.join(projectRoot, 'src', 'routes');
 
   if (!fs.existsSync(routesDir)) {
     return routes;
   }
 
-  const scanDirectory = (dir: string) => {
+  const scanDirectory = (dir: string): void => {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
 
     for (const entry of entries) {
@@ -89,7 +101,6 @@ function discoverRoutes(projectRoot: string): RouteDefinition[] {
       if (entry.isDirectory()) {
         scanDirectory(fullPath);
       } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))) {
-        // Convert file path to URL path
         let urlPath = relativePath
           .replace(/\.(ts|js)$/, '')
           .replace(/\\/g, '/')
@@ -97,17 +108,14 @@ function discoverRoutes(projectRoot: string): RouteDefinition[] {
           .replace(/index$/, '');
 
         if (!urlPath.startsWith('/')) {
-          urlPath = '/' + urlPath;
+          urlPath = `/${urlPath}`;
         }
 
-        // Remove trailing slash except for root
         if (urlPath !== '/' && urlPath.endsWith('/')) {
           urlPath = urlPath.slice(0, -1);
         }
 
-        // Add route for each HTTP method (we'll discover actual methods later)
-        const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
-        for (const method of methods) {
+        for (const method of HTTP_METHODS) {
           routes.push({
             path: urlPath,
             method,
@@ -133,7 +141,6 @@ function discoverModels(projectRoot: string): ModelDefinition[] {
     return models;
   }
 
-  // For now, return empty array
-  // In a real implementation, we would parse model files
   return models;
 }
+

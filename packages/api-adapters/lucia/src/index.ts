@@ -1,2 +1,2 @@
-// Placeholder for Lucia adapter
-export const ADAPTER_NAME = 'lucia';
+export { LuciaAuthAdapter } from './lucia-auth-adapter';
+export type { OAuthProviderConfig, LuciaAuthAdapterOptions } from './lucia-auth-adapter';

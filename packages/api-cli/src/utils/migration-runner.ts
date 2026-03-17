@@ -75,11 +75,11 @@ export class MigrationRunner {
       const migration: Migration = {
         name: fileName,
         filePath,
-        up: async (db: DatabaseAdapter) => {
+        up: async (_db: DatabaseAdapter) => {
           // This would be the actual migration's up() method
           throw new Error('Migration loading not implemented in simulation mode');
         },
-        down: async (db: DatabaseAdapter) => {
+        down: async (_db: DatabaseAdapter) => {
           // This would be the actual migration's down() method
           throw new Error('Migration loading not implemented in simulation mode');
         },
@@ -136,7 +136,7 @@ export class MigrationRunner {
     // Start transaction
     await this.db.transaction(async (trx) => {
       // Run migration
-      await migration.up(trx);
+      await migration.up(trx as unknown as DatabaseAdapter);
       
       // Record migration
       await this.tracker.recordMigration(fileName, batch);
@@ -200,7 +200,7 @@ export class MigrationRunner {
     // Start transaction
     await this.db.transaction(async (trx) => {
       // Run migration down
-      await migration.down(trx);
+      await migration.down(trx as unknown as DatabaseAdapter);
       
       // Remove migration record
       await this.tracker.removeMigration(fileName);
@@ -232,8 +232,8 @@ export class MigrationRunner {
       return {
         name: file,
         status: applied ? 'applied' as const : 'pending' as const,
-        appliedAt: applied?.appliedAt,
-        batch: applied?.batch,
+        ...(applied?.appliedAt !== undefined && { appliedAt: applied.appliedAt }),
+        ...(applied?.batch !== undefined && { batch: applied.batch }),
       };
     });
 

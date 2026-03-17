@@ -96,7 +96,7 @@ export async function getTemplateFiles(template: TemplateType): Promise<Template
   // Scan template-specific files
   try {
     await scanDirectory(templateDir, templateDir);
-  } catch (err) {
+  } catch {
     // Template directory might not exist yet
     console.warn(`Template directory not found: ${templateDir}`);
   }
@@ -104,7 +104,7 @@ export async function getTemplateFiles(template: TemplateType): Promise<Template
   // Scan shared files
   try {
     await scanDirectory(sharedDir, sharedDir, true);
-  } catch (err) {
+  } catch {
     // Shared directory might not exist yet
     console.warn(`Shared template directory not found: ${sharedDir}`);
   }

@@ -1,2 +1,2 @@
-// Placeholder for Resend adapter
-export const ADAPTER_NAME = 'resend';
+export { ResendEmailAdapter } from './resend-email-adapter';
+export type { ResendEmailAdapterOptions, SentEmail } from './resend-email-adapter';

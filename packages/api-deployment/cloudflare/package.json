@@ -1,7 +1,7 @@
 {
   "name": "@web-loom/api-deployment-cloudflare",
   "version": "0.1.0",
-  "description": "Cloudflare deployment adapter for Web Loom API Framework",
+  "description": "Cloudflare Workers deployment adapter for Web Loom API Framework",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -15,15 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist"
   },
-  "keywords": [
-    "webloom",
-    "api",
-    "deployment",
-    "cloudflare"
-  ],
-  "license": "MIT",
   "dependencies": {
-    "@web-loom/api-core": "*",
     "@web-loom/api-shared": "*"
   },
   "devDependencies": {

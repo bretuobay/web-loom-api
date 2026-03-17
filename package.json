@@ -36,6 +36,7 @@
     "apps/*",
     "packages/*",
     "packages/api-adapters/*",
+    "packages/api-deployment/*",
     "packages/api-generators/*",
     "packages/api-middleware/*"
   ],

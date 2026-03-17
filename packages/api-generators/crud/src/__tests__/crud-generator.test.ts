@@ -3,7 +3,6 @@ import { CRUDGenerator } from '../crud-generator';
 import type {
   ModelDefinition,
   DatabaseAdapter,
-  ValidationAdapter,
   RequestContext,
   QueryBuilder,
 } from '@web-loom/api-core';
@@ -16,7 +15,7 @@ class MockDatabaseAdapter implements Partial<DatabaseAdapter> {
   deleteFn = vi.fn();
   transactionFn = vi.fn();
 
-  select<T>(model: ModelDefinition): QueryBuilder<T> {
+  select<T>(_model: ModelDefinition): QueryBuilder<T> {
     const mockQueryBuilder = {
       where: vi.fn().mockReturnThis(),
       orderBy: vi.fn().mockReturnThis(),
@@ -45,8 +44,7 @@ class MockDatabaseAdapter implements Partial<DatabaseAdapter> {
   }
 }
 
-// Mock validation adapter (not used in basic CRUD yet)
-class MockValidationAdapter implements Partial<ValidationAdapter> {}
+
 
 describe('CRUDGenerator', () => {
   let generator: CRUDGenerator;

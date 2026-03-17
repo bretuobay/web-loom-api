@@ -6,6 +6,7 @@ describe('Error Handler', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     processExitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });

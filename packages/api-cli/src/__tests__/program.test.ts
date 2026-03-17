@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, _vi } from 'vitest';
 import { createProgram } from '../program.js';
 import { CLI_VERSION } from '../version.js';
 
@@ -27,7 +27,7 @@ describe('CLI Program', () => {
 
   describe('Global Options', () => {
     it('should support --debug option', () => {
-      const options = program.opts();
+      const _options = program.opts();
       expect(program.options.some(opt => opt.long === '--debug')).toBe(true);
     });
 
