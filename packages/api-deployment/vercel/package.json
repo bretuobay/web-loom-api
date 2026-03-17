@@ -15,15 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist"
   },
-  "keywords": [
-    "webloom",
-    "api",
-    "deployment",
-    "vercel"
-  ],
-  "license": "MIT",
   "dependencies": {
-    "@web-loom/api-core": "*",
     "@web-loom/api-shared": "*"
   },
   "devDependencies": {

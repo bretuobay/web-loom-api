@@ -1,7 +1,7 @@
 {
-  "name": "@web-loom/api-deployment-cloudflare",
+  "name": "@web-loom/api-logging",
   "version": "0.1.0",
-  "description": "Cloudflare Workers deployment adapter for Web Loom API Framework",
+  "description": "Structured logging with sensitive data sanitization for Web Loom API Framework",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -15,6 +15,14 @@
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist"
   },
+  "keywords": [
+    "webloom",
+    "webloom-logging",
+    "api",
+    "structured-logging",
+    "sanitization"
+  ],
+  "license": "MIT",
   "dependencies": {
     "@web-loom/api-shared": "*"
   },
