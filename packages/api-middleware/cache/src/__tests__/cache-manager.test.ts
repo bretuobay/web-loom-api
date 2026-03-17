@@ -81,7 +81,7 @@ describe('CacheManager', () => {
 
   it('promotes L2 entries to L1 on read', async () => {
     // Manually set in L2 only (bypassing manager)
-    const managerL1Only = new CacheManager({ l1: new MemoryCacheStore({ cleanupIntervalMs: 0 }), l2, defaultTtl: 60_000 });
+    const _managerL1Only = new CacheManager({ l1: new MemoryCacheStore({ cleanupIntervalMs: 0 }), l2, defaultTtl: 60_000 });
 
     // Set via the full manager (populates both l1 and l2)
     await manager.set('shared', 'value');

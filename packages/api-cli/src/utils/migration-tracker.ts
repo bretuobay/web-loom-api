@@ -75,6 +75,7 @@ export class MigrationTracker {
       `SELECT id, name, applied_at, batch FROM ${this.tableName} ORDER BY id ASC`, []
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.map((row: any) => ({
       id: row.id,
       name: row.name,
@@ -128,6 +129,7 @@ export class MigrationTracker {
       [batch]
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.map((row: any) => ({
       id: row.id,
       name: row.name,
@@ -150,6 +152,7 @@ export class MigrationTracker {
       [count]
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.map((row: any) => ({
       id: row.id,
       name: row.name,

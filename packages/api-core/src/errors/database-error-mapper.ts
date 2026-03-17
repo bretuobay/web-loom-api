@@ -119,6 +119,7 @@ export function mapDatabaseError(error: unknown): Error {
   }
 
   const message = error.message;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const errorCode = (error as any).code;
 
   // Check for unique constraint violation (409 Conflict)
@@ -215,6 +216,7 @@ export function isDatabaseError(error: unknown): boolean {
 
   // Check for common database error indicators
   const message = error.message.toLowerCase();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const errorCode = (error as any).code;
 
   return (

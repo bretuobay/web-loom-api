@@ -536,6 +536,7 @@ export class OpenAPIGenerator {
         break;
 
       case 'POST':
+        // eslint-disable-next-line no-case-declarations
         const postResponse: OpenAPIResponse = {
           description: 'Resource created successfully',
         };
@@ -591,6 +592,7 @@ export class OpenAPIGenerator {
 
       case 'PUT':
       case 'PATCH':
+        // eslint-disable-next-line no-case-declarations
         const updateResponse: OpenAPIResponse = {
           description: 'Resource updated successfully',
         };

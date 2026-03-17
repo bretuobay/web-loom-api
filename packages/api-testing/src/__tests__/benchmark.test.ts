@@ -10,7 +10,7 @@ import type { BenchmarkResult } from '../benchmark';
 import type { RequestHandler } from '../types';
 
 // Simple mock handler for testing
-const mockHandler: RequestHandler = async (req) => ({
+const mockHandler: RequestHandler = async (_req) => ({
   status: 200,
   headers: { 'content-type': 'application/json' },
   body: JSON.stringify({ ok: true }),

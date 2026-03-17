@@ -64,6 +64,7 @@ const HASH_KEY_LENGTH = 64;
 const SALT_LENGTH = 32;
 
 function toSafeUser(stored: StoredUser): User {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...rest } = stored;
   return rest as User;
 }
@@ -199,6 +200,7 @@ export class LuciaAuthAdapter implements AuthAdapter {
       passwordHash = await this.hashPassword(data.password);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { email: _e, password: _p, name, role, ...rest } = data;
 
     const storedUser: StoredUser = {
@@ -434,6 +436,7 @@ export class LuciaAuthAdapter implements AuthAdapter {
 
     apiKey.lastUsedAt = new Date();
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { key: _k, ...safeKey } = apiKey;
     return {
       valid: true,

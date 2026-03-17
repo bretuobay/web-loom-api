@@ -34,7 +34,9 @@ function runStoreTests(name: string, createStore: () => JobStore) {
       await store.save(job);
       const retrieved = await store.get(job.id);
       expect(retrieved).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(retrieved!.id).toBe(job.id);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(retrieved!.name).toBe(job.name);
     });
 
@@ -50,7 +52,9 @@ function runStoreTests(name: string, createStore: () => JobStore) {
       await store.save(high);
 
       const dequeued = await store.dequeue();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(dequeued!.id).toBe('high');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(dequeued!.status).toBe('processing');
     });
 
@@ -62,6 +66,7 @@ function runStoreTests(name: string, createStore: () => JobStore) {
       await store.save(older);
 
       const dequeued = await store.dequeue();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(dequeued!.id).toBe('older');
     });
 
@@ -83,6 +88,7 @@ function runStoreTests(name: string, createStore: () => JobStore) {
 
       const pendingJobs = await store.getByStatus('pending');
       expect(pendingJobs).toHaveLength(1);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(pendingJobs[0]!.id).toBe('p1');
     });
 
@@ -96,6 +102,7 @@ function runStoreTests(name: string, createStore: () => JobStore) {
 
       const dead = await store.getDeadLetterJobs();
       expect(dead).toHaveLength(1);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(dead[0]!.id).toBe(job.id);
     });
 

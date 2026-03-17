@@ -16,8 +16,11 @@ interface RouteDefinition {
   method: string;
   handler: string;
   validation?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     query?: any;
   };
   auth?: {
@@ -36,6 +39,7 @@ export interface SpecGeneratorConfig {
 /**
  * Generate OpenAPI specification from project
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function generateOpenAPISpec(config: SpecGeneratorConfig = {}): any {
   const projectRoot = config.projectRoot || process.cwd();
   
@@ -58,6 +62,7 @@ export function generateOpenAPISpec(config: SpecGeneratorConfig = {}): any {
   for (const route of routes) {
     generator.registerRoute({
       path: route.path,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       method: route.method.toLowerCase() as any,
       summary: `${route.method} ${route.path}`,
       description: `Handler: ${route.handler}`,

@@ -47,6 +47,7 @@ export function handleError(err: unknown, debugMode: boolean = false): never {
 /**
  * Wrap async command handler with error handling
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapCommand<T extends any[]>(
   fn: (...args: T) => Promise<void>
 ): (...args: T) => Promise<void> {

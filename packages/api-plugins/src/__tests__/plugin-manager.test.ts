@@ -259,6 +259,7 @@ describe('PluginManager – extension points', () => {
 
     await mgr.initializeAll();
     expect(mgr.context.routes).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(mgr.context.routes[0]!.path).toBe('/health');
   });
 
@@ -275,6 +276,7 @@ describe('PluginManager – extension points', () => {
 
     await mgr.initializeAll();
     expect(mgr.context.models).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(mgr.context.models[0]!.name).toBe('AuditLog');
   });
 

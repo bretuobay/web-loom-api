@@ -13,6 +13,7 @@ import { generateOpenAPISpec, type SpecGeneratorConfig } from './spec-generator.
  */
 export class DocsServer {
   private server: http.Server | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private spec: any = null;
 
   constructor(
@@ -25,6 +26,7 @@ export class DocsServer {
   /**
    * Generate OpenAPI specification
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private generateSpec(): any {
     return generateOpenAPISpec(this.config);
   }

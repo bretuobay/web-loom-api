@@ -62,6 +62,7 @@ function serializeValue(value: unknown, fieldDef: FieldDef): unknown {
 
     case 'array':
       if (Array.isArray(value) && fieldDef.items) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return value.map((item) => serializeValue(item, fieldDef.items!));
       }
       return value;
@@ -124,6 +125,7 @@ function deserializeValue(value: unknown, fieldDef: FieldDef): unknown {
 
     case 'array':
       if (Array.isArray(value) && fieldDef.items) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return value.map((item) => deserializeValue(item, fieldDef.items!));
       }
       return value;

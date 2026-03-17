@@ -30,6 +30,7 @@ describe('WebhookRegistry', () => {
     const wh = await registry.register({ url: 'https://example.com/hook', events: ['a'] });
     const found = await registry.get(wh.id);
     expect(found).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(found!.id).toBe(wh.id);
   });
 
@@ -78,7 +79,9 @@ describe('WebhookRegistry', () => {
     const updated = await registry.update(wh.id, { url: 'https://b.com', events: ['b', 'c'] });
 
     expect(updated).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.url).toBe('https://b.com');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.events).toEqual(['b', 'c']);
   });
 

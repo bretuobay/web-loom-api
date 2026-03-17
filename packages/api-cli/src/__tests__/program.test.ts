@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, _vi } from 'vitest';
 import { createProgram } from '../program.js';
 import { CLI_VERSION } from '../version.js';
 
@@ -27,7 +27,7 @@ describe('CLI Program', () => {
 
   describe('Global Options', () => {
     it('should support --debug option', () => {
-      const options = program.opts();
+      const _options = program.opts();
       expect(program.options.some(opt => opt.long === '--debug')).toBe(true);
     });
 
@@ -58,25 +58,25 @@ describe('CLI Program', () => {
   describe('Command Parsing', () => {
     it('should parse --debug flag with a command', () => {
       program.parse(['node', 'webloom', 'init', '--debug']);
-      const options = program.opts();
+      const _options = program.opts();
       expect(options.debug).toBe(true);
     });
 
     it('should parse --config with value', () => {
       program.parse(['node', 'webloom', 'init', '--config', 'custom.config.ts']);
-      const options = program.opts();
+      const _options = program.opts();
       expect(options.config).toBe('custom.config.ts');
     });
 
     it('should parse --no-color flag', () => {
       program.parse(['node', 'webloom', 'init', '--no-color']);
-      const options = program.opts();
+      const _options = program.opts();
       expect(options.color).toBe(false);
     });
 
     it('should use default config path when not specified', () => {
       program.parse(['node', 'webloom', 'init']);
-      const options = program.opts();
+      const _options = program.opts();
       expect(options.config).toBe('webloom.config.ts');
     });
   });

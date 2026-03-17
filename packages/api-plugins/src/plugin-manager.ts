@@ -69,6 +69,7 @@ export class PluginManager {
 
     // Register phase
     for (const name of ordered) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const record = this._plugins.get(name)!;
       if (record.state !== 'loaded') continue;
       try {
@@ -83,6 +84,7 @@ export class PluginManager {
 
     // Init phase
     for (const name of ordered) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const record = this._plugins.get(name)!;
       if (record.state !== 'registered') continue;
       try {
@@ -97,6 +99,7 @@ export class PluginManager {
 
     // Ready phase
     for (const name of ordered) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const record = this._plugins.get(name)!;
       if (record.state !== 'initialized') continue;
       try {
@@ -117,6 +120,7 @@ export class PluginManager {
     const ordered = this._resolveDependencyOrder().reverse();
 
     for (const name of ordered) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const record = this._plugins.get(name)!;
       if (record.state === 'error' || record.state === 'shutdown') continue;
       try {

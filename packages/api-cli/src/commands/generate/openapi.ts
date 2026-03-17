@@ -85,6 +85,7 @@ export const createGenerateOpenAPICommand = (): Command => {
         const pathCount = Object.keys(spec.paths || {}).length;
         let operationCount = 0;
         for (const pathItem of Object.values(spec.paths || {})) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           operationCount += Object.keys(pathItem as any).filter(
             key => ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'].includes(key)
           ).length;

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { rateLimit } from '../rate-limit';
 import { MemoryRateLimitStore } from '../stores/memory-store';
 import type { RequestContext, NextFunction } from '@web-loom/api-core';
-import type { RateLimitInfo, RateLimitStore, TokenBucketState } from '../types';
+import type { RateLimitInfo, RateLimitStore } from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers

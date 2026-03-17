@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, _vi } from 'vitest';
 import { Logger } from '../logger';
 import { LogSanitizer } from '../log-sanitizer';
 import type { LogEntry } from '../types';
@@ -20,7 +20,9 @@ describe('Logger', () => {
       logger.error('error msg');
 
       expect(entries).toHaveLength(2);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.level).toBe('warn');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[1]!.level).toBe('error');
     });
 
@@ -32,6 +34,7 @@ describe('Logger', () => {
       logger.info('info msg');
 
       expect(entries).toHaveLength(1);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.level).toBe('info');
     });
 
@@ -55,6 +58,7 @@ describe('Logger', () => {
 
       logger.info('test message');
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const entry = entries[0]!;
       expect(entry.timestamp).toBeDefined();
       expect(new Date(entry.timestamp).toISOString()).toBe(entry.timestamp);
@@ -68,7 +72,9 @@ describe('Logger', () => {
 
       logger.info('request done', { status: 200, duration: 45 });
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.status).toBe(200);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.duration).toBe(45);
     });
   });
@@ -88,6 +94,7 @@ describe('Logger', () => {
 
       logger.info('hello');
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.requestId).toBe(requestId);
     });
   });
@@ -100,7 +107,9 @@ describe('Logger', () => {
 
       child.info('child log');
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.service).toBe('api');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.userId).toBe('u123');
     });
 
@@ -113,6 +122,7 @@ describe('Logger', () => {
       child.error('should appear');
 
       expect(entries).toHaveLength(1);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.level).toBe('error');
     });
 
@@ -123,6 +133,7 @@ describe('Logger', () => {
 
       parent.info('parent log');
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.userId).toBeUndefined();
     });
   });
@@ -135,6 +146,7 @@ describe('Logger', () => {
 
       logger.info('login', { password: 'secret123' });
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.password).toBe('[REDACTED]');
     });
 
@@ -146,6 +158,7 @@ describe('Logger', () => {
 
       child.info('login', { password: 'secret123' });
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(entries[0]!.password).toBe('[REDACTED]');
     });
   });

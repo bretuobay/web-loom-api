@@ -55,11 +55,12 @@ function createMockKV(store: Map<string, string> = new Map()): KVNamespace {
 function createMockD1(): { db: D1Database; data: Map<string, unknown[]> } {
   const data = new Map<string, unknown[]>();
 
-  const createStatement = (sql: string): D1PreparedStatement => {
-    let boundParams: unknown[] = [];
+  const createStatement = (_sql: string): D1PreparedStatement => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let _boundParams: unknown[] = [];
     const stmt: D1PreparedStatement = {
       bind(...values: unknown[]) {
-        boundParams = values;
+        _boundParams = values;
         return stmt;
       },
       first: vi.fn(async () => ({ id: 1, name: 'test' })),
@@ -95,7 +96,7 @@ function createMockD1(): { db: D1Database; data: Map<string, unknown[]> } {
 
 function createMockAI(): AiBinding {
   return {
-    run: vi.fn(async (model: string, inputs: Record<string, unknown>) => {
+    run: vi.fn(async (model: string, _inputs: Record<string, unknown>) => {
       if (model.includes('llama')) {
         return { response: 'Generated text response' };
       }

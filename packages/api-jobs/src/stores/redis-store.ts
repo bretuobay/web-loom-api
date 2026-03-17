@@ -86,6 +86,7 @@ export class RedisJobStore implements JobStore {
       return a.createdAt - b.createdAt;
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const selected = candidates[0]!;
     selected.status = 'processing';
     selected.updatedAt = now;

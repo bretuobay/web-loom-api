@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { HonoAdapter, type HonoAdapterOptions } from '../hono-adapter';
+import { HonoAdapter } from '../hono-adapter';
 import type { RequestContext } from '@web-loom/api-core';
 
 describe('HonoAdapter', () => {
@@ -15,7 +15,7 @@ describe('HonoAdapter', () => {
 
   describe('Route Registration', () => {
     it('should register a GET route', async () => {
-      adapter.registerRoute('GET', '/test', async (ctx) => {
+      adapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'GET test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -105,7 +105,7 @@ describe('HonoAdapter', () => {
     });
 
     it('should register an OPTIONS route', async () => {
-      adapter.registerRoute('OPTIONS', '/test', async (ctx) => {
+      adapter.registerRoute('OPTIONS', '/test', async (_ctx) => {
         return new Response(null, {
           status: 204,
           headers: { 'Allow': 'GET, POST, OPTIONS' },
@@ -120,7 +120,7 @@ describe('HonoAdapter', () => {
     });
 
     it('should register a HEAD route', async () => {
-      adapter.registerRoute('HEAD', '/test', async (ctx) => {
+      adapter.registerRoute('HEAD', '/test', async (_ctx) => {
         return new Response(null, {
           status: 200,
           headers: { 'Content-Length': '42' },
@@ -270,7 +270,7 @@ describe('HonoAdapter', () => {
         return response;
       });
 
-      adapter.registerRoute('GET', '/test', async (ctx) => {
+      adapter.registerRoute('GET', '/test', async (_ctx) => {
         executionOrder.push('handler');
         return new Response(JSON.stringify({ order: executionOrder }), {
           headers: { 'Content-Type': 'application/json' },
@@ -294,7 +294,7 @@ describe('HonoAdapter', () => {
         { path: '/admin/*' }
       );
 
-      adapter.registerRoute('GET', '/admin/users', async (ctx) => {
+      adapter.registerRoute('GET', '/admin/users', async (_ctx) => {
         executionOrder.push('handler');
         return new Response(JSON.stringify({ order: executionOrder }), {
           headers: { 'Content-Type': 'application/json' },
@@ -339,7 +339,7 @@ describe('HonoAdapter', () => {
         return await next();
       });
 
-      adapter.registerRoute('GET', '/protected', async (ctx) => {
+      adapter.registerRoute('GET', '/protected', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'Protected data' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -434,7 +434,7 @@ describe('HonoAdapter', () => {
 
   describe('Error Handling', () => {
     it('should propagate handler errors', async () => {
-      adapter.registerRoute('GET', '/error', async (ctx) => {
+      adapter.registerRoute('GET', '/error', async (_ctx) => {
         throw new Error('Test error');
       });
 
@@ -445,7 +445,7 @@ describe('HonoAdapter', () => {
     });
 
     it('should handle async handler errors', async () => {
-      adapter.registerRoute('GET', '/async-error', async (ctx) => {
+      adapter.registerRoute('GET', '/async-error', async (_ctx) => {
         await new Promise((resolve) => setTimeout(resolve, 10));
         throw new Error('Async test error');
       });
@@ -463,7 +463,7 @@ describe('HonoAdapter', () => {
         cors: { enabled: true, origin: '*' },
       });
 
-      corsAdapter.registerRoute('GET', '/test', async (ctx) => {
+      corsAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -512,7 +512,7 @@ describe('HonoAdapter', () => {
         },
       });
 
-      corsAdapter.registerRoute('GET', '/test', async (ctx) => {
+      corsAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -537,7 +537,7 @@ describe('HonoAdapter', () => {
         },
       });
 
-      corsAdapter.registerRoute('GET', '/test', async (ctx) => {
+      corsAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -558,7 +558,7 @@ describe('HonoAdapter', () => {
         cors: { enabled: false },
       });
 
-      noCorsAdapter.registerRoute('GET', '/test', async (ctx) => {
+      noCorsAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -582,7 +582,7 @@ describe('HonoAdapter', () => {
         },
       });
 
-      corsAdapter.registerRoute('GET', '/test', async (ctx) => {
+      corsAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -617,7 +617,7 @@ describe('HonoAdapter', () => {
         },
       });
 
-      corsAdapter.registerRoute('GET', '/test', async (ctx) => {
+      corsAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -667,7 +667,7 @@ describe('HonoAdapter', () => {
       // Create a large response body (> 1KB)
       const largeData = { data: 'x'.repeat(2000) };
 
-      compressAdapter.registerRoute('GET', '/large', async (ctx) => {
+      compressAdapter.registerRoute('GET', '/large', async (_ctx) => {
         return new Response(JSON.stringify(largeData), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -692,7 +692,7 @@ describe('HonoAdapter', () => {
         compression: { enabled: true },
       });
 
-      compressAdapter.registerRoute('GET', '/small', async (ctx) => {
+      compressAdapter.registerRoute('GET', '/small', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'small' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -719,7 +719,7 @@ describe('HonoAdapter', () => {
 
       const largeData = { data: 'x'.repeat(2000) };
 
-      noCompressAdapter.registerRoute('GET', '/large', async (ctx) => {
+      noCompressAdapter.registerRoute('GET', '/large', async (_ctx) => {
         return new Response(JSON.stringify(largeData), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -743,7 +743,7 @@ describe('HonoAdapter', () => {
 
       const largeData = { data: 'x'.repeat(2000) };
 
-      compressAdapter.registerRoute('GET', '/large', async (ctx) => {
+      compressAdapter.registerRoute('GET', '/large', async (_ctx) => {
         return new Response(JSON.stringify(largeData), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -774,7 +774,7 @@ describe('HonoAdapter', () => {
         },
       });
 
-      logAdapter.registerRoute('GET', '/test', async (ctx) => {
+      logAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -801,7 +801,7 @@ describe('HonoAdapter', () => {
         },
       });
 
-      noLogAdapter.registerRoute('GET', '/test', async (ctx) => {
+      noLogAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -826,7 +826,7 @@ describe('HonoAdapter', () => {
         },
       });
 
-      customLogAdapter.registerRoute('GET', '/test', async (ctx) => {
+      customLogAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -852,14 +852,14 @@ describe('HonoAdapter', () => {
         },
       });
 
-      logAdapter.registerRoute('GET', '/success', async (ctx) => {
+      logAdapter.registerRoute('GET', '/success', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'ok' }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
       });
 
-      logAdapter.registerRoute('GET', '/notfound', async (ctx) => {
+      logAdapter.registerRoute('GET', '/notfound', async (_ctx) => {
         return new Response(JSON.stringify({ error: 'not found' }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' },
@@ -897,7 +897,7 @@ describe('HonoAdapter', () => {
         return await next();
       });
 
-      orderedAdapter.registerRoute('GET', '/test', async (ctx) => {
+      orderedAdapter.registerRoute('GET', '/test', async (_ctx) => {
         executionOrder.push('handler');
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
@@ -928,7 +928,7 @@ describe('HonoAdapter', () => {
         compression: { enabled: false },
       });
 
-      minimalAdapter.registerRoute('GET', '/test', async (ctx) => {
+      minimalAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify({ message: 'test' }), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -953,7 +953,7 @@ describe('HonoAdapter', () => {
 
       const largeData = { data: 'x'.repeat(2000) };
 
-      selectiveAdapter.registerRoute('GET', '/test', async (ctx) => {
+      selectiveAdapter.registerRoute('GET', '/test', async (_ctx) => {
         return new Response(JSON.stringify(largeData), {
           headers: { 'Content-Type': 'application/json' },
         });

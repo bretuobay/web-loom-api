@@ -8,7 +8,7 @@
  *   - `*`        any value
  *   - `N`        exact value
  *   - `N-M`      range (inclusive)
- *   - `*​/N`      step (every N)
+ *   - `{star}/{N}` step values (every N)
  *   - `N-M/S`    range with step
  *   - `N,M,...`  list of values
  */
@@ -39,6 +39,7 @@ function parseField(expr: string, min: number, max: number): CronField {
     // Step: */N or N-M/S
     const stepMatch = trimmed.match(/^(\*|(\d+)-(\d+))\/(\d+)$/);
     if (stepMatch) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const step = parseInt(stepMatch[4]!, 10);
       let start = min;
       let end = max;
@@ -53,7 +54,9 @@ function parseField(expr: string, min: number, max: number): CronField {
     // Range: N-M
     const rangeMatch = trimmed.match(/^(\d+)-(\d+)$/);
     if (rangeMatch) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const start = parseInt(rangeMatch[1]!, 10);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const end = parseInt(rangeMatch[2]!, 10);
       for (let i = start; i <= end; i++) values.add(i);
       continue;
@@ -93,10 +96,15 @@ export function parseCron(expression: string): ParsedCron {
   }
 
   return {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     minute: parseField(parts[0]!, FIELD_RANGES[0]![0], FIELD_RANGES[0]![1]),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     hour: parseField(parts[1]!, FIELD_RANGES[1]![0], FIELD_RANGES[1]![1]),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     dayOfMonth: parseField(parts[2]!, FIELD_RANGES[2]![0], FIELD_RANGES[2]![1]),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     month: parseField(parts[3]!, FIELD_RANGES[3]![0], FIELD_RANGES[3]![1]),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     dayOfWeek: parseField(parts[4]!, FIELD_RANGES[4]![0], FIELD_RANGES[4]![1]),
   };
 }

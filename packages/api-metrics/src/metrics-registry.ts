@@ -283,6 +283,7 @@ export class MetricsRegistry {
 
   createCounter(options: CounterOptions): Counter {
     if (this.metrics.has(options.name)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
       if (existing.type !== 'counter') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Counter;
@@ -294,6 +295,7 @@ export class MetricsRegistry {
 
   createGauge(options: GaugeOptions): Gauge {
     if (this.metrics.has(options.name)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
       if (existing.type !== 'gauge') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Gauge;
@@ -305,6 +307,7 @@ export class MetricsRegistry {
 
   createHistogram(options: HistogramOptions): Histogram {
     if (this.metrics.has(options.name)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
       if (existing.type !== 'histogram') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Histogram;
@@ -316,6 +319,7 @@ export class MetricsRegistry {
 
   createSummary(options: SummaryOptions): Summary {
     if (this.metrics.has(options.name)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
       if (existing.type !== 'summary') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Summary;

@@ -75,6 +75,7 @@ describe('Span', () => {
     expect(span.endTime).toBeUndefined();
     span.end();
     expect(span.endTime).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(span.endTime!).toBeGreaterThanOrEqual(span.startTime);
   });
 
@@ -136,8 +137,11 @@ describe('W3C Trace Context', () => {
     it('should parse a valid traceparent header', () => {
       const ctx = parseTraceparent('00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01');
       expect(ctx).not.toBeNull();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(ctx!.traceId).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(ctx!.spanId).toBe('00f067aa0ba902b7');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(ctx!.traceFlags).toBe(1);
     });
 
@@ -172,6 +176,7 @@ describe('W3C Trace Context', () => {
 
     it('should roundtrip parse/format', () => {
       const original = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const ctx = parseTraceparent(original)!;
       expect(formatTraceparent(ctx)).toBe(original);
     });
@@ -202,7 +207,9 @@ describe('W3C Trace Context', () => {
         tracestate: 'vendor1=value1',
       });
       expect(ctx).not.toBeNull();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(ctx!.traceId).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(ctx!.traceState).toBe('vendor1=value1');
     });
 
@@ -402,6 +409,7 @@ describe('Samplers', () => {
 
 describe('createTracingMiddleware', () => {
   it('should create a root span for requests', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const spans: any[] = [];
     const tracer = new Tracer({ serviceName: 'test', onSpanEnd: (s) => spans.push(s) });
     const middleware = createTracingMiddleware({ tracer });
@@ -419,6 +427,7 @@ describe('createTracingMiddleware', () => {
   });
 
   it('should set error status for error responses', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const spans: any[] = [];
     const tracer = new Tracer({ serviceName: 'test', onSpanEnd: (s) => spans.push(s) });
     const middleware = createTracingMiddleware({ tracer });
@@ -432,6 +441,7 @@ describe('createTracingMiddleware', () => {
   });
 
   it('should set error status when next is called with error', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const spans: any[] = [];
     const tracer = new Tracer({ serviceName: 'test', onSpanEnd: (s) => spans.push(s) });
     const middleware = createTracingMiddleware({ tracer });
@@ -445,6 +455,7 @@ describe('createTracingMiddleware', () => {
   });
 
   it('should propagate incoming trace context', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const spans: any[] = [];
     const tracer = new Tracer({ serviceName: 'test', onSpanEnd: (s) => spans.push(s) });
     const middleware = createTracingMiddleware({ tracer });
@@ -476,6 +487,7 @@ describe('createTracingMiddleware', () => {
   });
 
   it('should skip excluded paths', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const spans: any[] = [];
     const tracer = new Tracer({ serviceName: 'test', onSpanEnd: (s) => spans.push(s) });
     const middleware = createTracingMiddleware({ tracer, excludePaths: ['/health'] });

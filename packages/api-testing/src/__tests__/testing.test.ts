@@ -470,6 +470,7 @@ describe('createMockAuth', () => {
 
     const validated = auth.validateSession(session.id);
     expect(validated).not.toBeNull();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(validated!.userId).toBe(user.id);
   });
 

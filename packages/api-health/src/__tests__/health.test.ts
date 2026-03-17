@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, _vi, beforeEach } from 'vitest';
 import { HealthChecker } from '../health-checker';
 import {
   handleLivenessRequest,

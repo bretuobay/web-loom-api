@@ -33,6 +33,7 @@ describe('WebhookManager', () => {
     const wh = await manager.create({ url: 'https://a.com/hook', events: ['a'] });
     const found = await manager.get(wh.id);
     expect(found).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(found!.id).toBe(wh.id);
   });
 
@@ -46,6 +47,7 @@ describe('WebhookManager', () => {
   it('updates a webhook', async () => {
     const wh = await manager.create({ url: 'https://a.com', events: ['a'] });
     const updated = await manager.update(wh.id, { active: false });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.active).toBe(false);
   });
 
@@ -95,7 +97,9 @@ describe('WebhookManager', () => {
     const result = await manager.test(wh.id);
 
     expect(result).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(result!.status).toBe('success');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(result!.webhookId).toBe(wh.id);
   });
 

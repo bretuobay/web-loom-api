@@ -33,7 +33,9 @@ describe('JobQueue', () => {
     expect(id).toBeTruthy();
     const job = await queue.getJob(id);
     expect(job).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(job!.name).toBe('test');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(job!.status).toBe('pending');
   });
 
@@ -43,10 +45,13 @@ describe('JobQueue', () => {
     await queue.enqueue({ name: 'normal', data: {}, priority: 'normal' });
 
     const first = await queue.dequeue();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(first!.name).toBe('critical');
     const second = await queue.dequeue();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(second!.name).toBe('normal');
     const third = await queue.dequeue();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(third!.name).toBe('low');
   });
 
@@ -58,10 +63,13 @@ describe('JobQueue', () => {
     const id = await queue.enqueue({ name: 'work', data: { x: 42 } });
     const job = await queue.dequeue();
     expect(job).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await queue.processJob(job!);
 
     const updated = await queue.getJob(id);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.status).toBe('completed');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.completedAt).toBeDefined();
     expect(handler).toHaveBeenCalledOnce();
   });
@@ -78,12 +86,17 @@ describe('JobQueue', () => {
     });
 
     const job = await queue.dequeue();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await queue.processJob(job!);
 
     const updated = await queue.getJob(id);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.status).toBe('retrying');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.attempts).toBe(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.lastError).toBe('boom');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.scheduledAt).toBeDefined();
   });
 
@@ -98,6 +111,7 @@ describe('JobQueue', () => {
     });
 
     const job = await queue.dequeue();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await queue.processJob(job!);
 
     // Job should be in dead letter, not in main store
@@ -106,16 +120,20 @@ describe('JobQueue', () => {
 
     const deadJobs = await queue.getDeadLetterJobs();
     expect(deadJobs).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(deadJobs[0]!.status).toBe('failed');
   });
 
   it('fails job when no handler is registered', async () => {
     const id = await queue.enqueue({ name: 'unknown', data: {} });
     const job = await queue.dequeue();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await queue.processJob(job!);
 
     const updated = await queue.getJob(id);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.status).toBe('failed');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(updated!.lastError).toContain('No handler registered');
   });
 

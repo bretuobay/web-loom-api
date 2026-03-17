@@ -62,6 +62,7 @@ describe('WebhookDelivery', () => {
     const wh = makeWebhook();
     await delivery.deliver(wh, 'order.created', { orderId: '123' });
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const [url, body, headers] = (transport.post as ReturnType<typeof vi.fn>).mock.calls[0]!;
     expect(url).toBe('https://example.com/hook');
     expect(headers[SIGNATURE_HEADER]).toBeTruthy();
@@ -109,7 +110,9 @@ describe('WebhookDelivery', () => {
 
     const logs = await delivery.getLogs('wh-1');
     expect(logs).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(logs[0]!.event).toBe('order.created');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(logs[0]!.result.status).toBe('success');
   });
 
@@ -121,6 +124,7 @@ describe('WebhookDelivery', () => {
 
     const logs = await delivery.getLogs('wh-1');
     expect(logs).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(logs[0]!.result.status).toBe('failed');
   });
 });

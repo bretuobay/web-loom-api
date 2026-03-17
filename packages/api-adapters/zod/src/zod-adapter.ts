@@ -27,7 +27,7 @@ import type {
   SchemaDefinition,
   FieldSchema,
   ValidationResult,
-  ValidationError, ValidationFieldError} from '@web-loom/api-core';
+  ValidationFieldError} from '@web-loom/api-core';
 
 /**
  * Zod adapter implementation
