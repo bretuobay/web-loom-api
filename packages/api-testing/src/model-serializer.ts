@@ -43,7 +43,9 @@ function serializeValue(value: unknown, fieldDef: FieldDef): unknown {
   switch (fieldDef.type) {
     case 'date':
       if (value instanceof Date) {
-        if (isNaN(value.getTime())) return value;
+        if (isNaN(value.getTime())) {
+          return { __type: 'date', value: null, invalid: true };
+        }
         return { __type: 'date', value: value.toISOString() };
       }
       return value;
@@ -95,7 +97,11 @@ function deserializeValue(value: unknown, fieldDef: FieldDef): unknown {
         '__type' in value &&
         (value as Record<string, unknown>).__type === 'date'
       ) {
-        return new Date((value as Record<string, unknown>).value as string);
+        const serializedDate = value as Record<string, unknown>;
+        if (serializedDate.invalid === true) {
+          return new Date(Number.NaN);
+        }
+        return new Date(serializedDate.value as string);
       }
       return value;
 
@@ -272,3 +278,4 @@ export function validateDeserialized(
     }
   }
 }
+
