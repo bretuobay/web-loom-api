@@ -10,6 +10,18 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 import { generateOpenAPISpec } from '../../utils/spec-generator.js';
 
+type OpenAPISpecDocument = {
+  paths?: Record<string, Record<string, unknown>>;
+} & Record<string, unknown>;
+
+const normalizeSpecDocument = (spec: unknown): OpenAPISpecDocument => {
+  if (typeof spec === 'string') {
+    return JSON.parse(spec) as OpenAPISpecDocument;
+  }
+
+  return spec as OpenAPISpecDocument;
+};
+
 export const createGenerateOpenAPICommand = (): Command => {
   return new Command('openapi')
     .description('Generate OpenAPI specification file')
@@ -26,88 +38,81 @@ export const createGenerateOpenAPICommand = (): Command => {
       description: string;
     }) => {
       try {
-        console.log('📝 Generating OpenAPI specification...');
+        console.log('Generating OpenAPI specification...');
         console.log('');
 
-        // Validate format
         if (options.format !== 'json' && options.format !== 'yaml') {
-          console.error('❌ Invalid format. Must be "json" or "yaml"');
+          console.error('Invalid format. Must be "json" or "yaml"');
           process.exit(1);
         }
 
-        // Generate spec
-        const spec = generateOpenAPISpec({
-          title: options.title,
-          version: options.version,
-          description: options.description,
-          projectRoot: process.cwd(),
-        });
+        const spec = normalizeSpecDocument(
+          generateOpenAPISpec({
+            title: options.title,
+            version: options.version,
+            description: options.description,
+            projectRoot: process.cwd(),
+          })
+        );
 
-        // Determine output path
         let outputPath = options.output;
         if (!path.isAbsolute(outputPath)) {
           outputPath = path.join(process.cwd(), outputPath);
         }
 
-        // Ensure output directory exists
         const outputDir = path.dirname(outputPath);
         if (!fs.existsSync(outputDir)) {
           fs.mkdirSync(outputDir, { recursive: true });
         }
 
-        // Format output
         let content: string;
         if (options.format === 'yaml') {
           content = yaml.stringify(spec);
-          // Ensure .yaml or .yml extension
           if (!outputPath.endsWith('.yaml') && !outputPath.endsWith('.yml')) {
             outputPath = outputPath.replace(/\.[^.]+$/, '.yaml');
           }
         } else {
           content = JSON.stringify(spec, null, 2);
-          // Ensure .json extension
           if (!outputPath.endsWith('.json')) {
             outputPath = outputPath.replace(/\.[^.]+$/, '.json');
           }
         }
 
-        // Write file
         fs.writeFileSync(outputPath, content, 'utf-8');
 
-        console.log('✓ OpenAPI specification generated successfully');
+        console.log('OpenAPI specification generated successfully');
         console.log('');
-        console.log(`📄 File: ${path.relative(process.cwd(), outputPath)}`);
-        console.log(`📊 Format: ${options.format.toUpperCase()}`);
-        console.log(`📚 Title: ${options.title}`);
-        console.log(`🔢 Version: ${options.version}`);
-        
-        // Count paths and operations
-        const pathCount = Object.keys(spec.paths || {}).length;
+        console.log(`File: ${path.relative(process.cwd(), outputPath)}`);
+        console.log(`Format: ${options.format.toUpperCase()}`);
+        console.log(`Title: ${options.title}`);
+        console.log(`Version: ${options.version}`);
+
+        const pathItems = Object.values(spec.paths ?? {});
+        const pathCount = pathItems.length;
         let operationCount = 0;
-        for (const pathItem of Object.values(spec.paths || {})) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          operationCount += Object.keys(pathItem as any).filter(
+        for (const pathItem of pathItems) {
+          operationCount += Object.keys(pathItem).filter(
             key => ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'].includes(key)
           ).length;
         }
-        
-        console.log(`🛣️  Paths: ${pathCount}`);
-        console.log(`⚡ Operations: ${operationCount}`);
+
+        console.log(`Paths: ${pathCount}`);
+        console.log(`Operations: ${operationCount}`);
         console.log('');
-        console.log('💡 Tips:');
-        console.log('   • Use --format yaml to generate YAML format');
-        console.log('   • Use --output <path> to specify custom output path');
-        console.log('   • Import this file into API testing tools like Postman or Insomnia');
-        console.log('   • Use with Swagger UI or Scalar for interactive documentation');
+        console.log('Tips:');
+        console.log('   Use --format yaml to generate YAML format');
+        console.log('   Use --output <path> to specify custom output path');
+        console.log('   Import this file into API testing tools like Postman or Insomnia');
+        console.log('   Use with Swagger UI or Scalar for interactive documentation');
       } catch (error) {
-        console.error('❌ Error generating OpenAPI specification:', error instanceof Error ? error.message : error);
-        
+        console.error('Error generating OpenAPI specification:', error instanceof Error ? error.message : error);
+
         if (error instanceof Error && error.stack) {
           console.log('');
           console.log('Stack trace:');
           console.log(error.stack);
         }
-        
+
         process.exit(1);
       }
     });
