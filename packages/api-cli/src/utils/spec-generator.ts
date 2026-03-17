@@ -64,8 +64,7 @@ export function generateOpenAPISpec(config: SpecGeneratorConfig = {}): any {
       path: route.path,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       method: route.method.toLowerCase() as any,
-      summary: `${route.method} ${route.path}`,
-      description: `Handler: ${route.handler}`,
+      description: `${route.method} ${route.path} - Handler: ${route.handler}`,
       tags: [route.path.split('/')[1] || 'default'],
       validation: route.validation,
       auth: route.auth,

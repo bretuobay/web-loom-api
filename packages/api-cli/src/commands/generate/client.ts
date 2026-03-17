@@ -50,13 +50,13 @@ function discoverRoutes(projectRoot: string): RouteDefinition[] {
         }
 
         // Add route for each HTTP method
-        const methods: Array<'get' | 'post' | 'put' | 'patch' | 'delete'> = ['get', 'post', 'put', 'patch', 'delete'];
+        const methods: Array<'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'> = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
         for (const method of methods) {
           routes.push({
             path: urlPath,
             method,
             metadata: {
-              description: `${method.toUpperCase()} ${urlPath}`,
+              description: `${method} ${urlPath}`,
               tags: [urlPath.split('/')[1] || 'default'],
             },
           });
@@ -161,7 +161,7 @@ export const createGenerateClientCommand = (): Command => {
         ];
 
         if (generated.errors) {
-          files.push({ name: 'errors.ts', content: generated.errors });
+          files.push({ name: 'errors.ts', content: generated.errors as string });
         }
 
         if (generated.hooks) {
