@@ -257,7 +257,7 @@ export class RouteDiscovery {
     };
 
     for (const route of allRoutes) {
-      routesByMethod[route.method]++;
+      routesByMethod[route.method] = (routesByMethod[route.method] ?? 0) + 1;
     }
 
     return {
