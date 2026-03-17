@@ -58,25 +58,25 @@ describe('CLI Program', () => {
   describe('Command Parsing', () => {
     it('should parse --debug flag with a command', () => {
       program.parse(['node', 'webloom', 'init', '--debug']);
-      const _options = program.opts();
+      const options = program.opts();
       expect(options.debug).toBe(true);
     });
 
     it('should parse --config with value', () => {
       program.parse(['node', 'webloom', 'init', '--config', 'custom.config.ts']);
-      const _options = program.opts();
+      const options = program.opts();
       expect(options.config).toBe('custom.config.ts');
     });
 
     it('should parse --no-color flag', () => {
       program.parse(['node', 'webloom', 'init', '--no-color']);
-      const _options = program.opts();
+      const options = program.opts();
       expect(options.color).toBe(false);
     });
 
     it('should use default config path when not specified', () => {
       program.parse(['node', 'webloom', 'init']);
-      const _options = program.opts();
+      const options = program.opts();
       expect(options.config).toBe('webloom.config.ts');
     });
   });

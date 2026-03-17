@@ -268,14 +268,15 @@ export class ZodAdapter implements ValidationAdapter {
       });
     }
 
+    // Make optional if not required. Apply this before defaults so omitted
+    // values still receive the default at parse time.
+    if (!field.required) {
+      schema = schema.optional();
+    }
+
     // Apply default value
     if (field.default !== undefined) {
       schema = schema.default(field.default);
-    }
-
-    // Make optional if not required
-    if (!field.required) {
-      schema = schema.optional();
     }
 
     return schema;
@@ -320,3 +321,4 @@ export class ZodAdapter implements ValidationAdapter {
     );
   }
 }
+
