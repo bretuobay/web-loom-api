@@ -161,7 +161,7 @@ export const createGenerateClientCommand = (): Command => {
         ];
 
         if (generated.errors) {
-          files.push({ name: 'errors.ts', content: generated.errors as string });
+          files.push({ name: 'errors.ts', content: generated.errors! });
         }
 
         if (generated.hooks) {

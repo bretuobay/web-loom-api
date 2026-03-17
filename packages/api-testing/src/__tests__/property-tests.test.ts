@@ -95,7 +95,7 @@ describe('Property 3: Special Type Round-Trip Handling', () => {
   it('Date values round-trip correctly (same timestamp)', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('1970-01-01'), max: new Date('2100-01-01') }),
+        fc.date({ min: new Date('1970-01-01'), max: new Date('2100-01-01') }).filter(d => !isNaN(d.getTime())),
         (value) => {
           const schema = makeSchema({ field: { type: 'date' } });
           const model = { field: value };

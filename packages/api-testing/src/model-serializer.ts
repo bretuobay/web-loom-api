@@ -43,6 +43,7 @@ function serializeValue(value: unknown, fieldDef: FieldDef): unknown {
   switch (fieldDef.type) {
     case 'date':
       if (value instanceof Date) {
+        if (isNaN(value.getTime())) return value;
         return { __type: 'date', value: value.toISOString() };
       }
       return value;
