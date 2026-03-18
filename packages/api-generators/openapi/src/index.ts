@@ -1,10 +1,6 @@
-/**
- * @web-loom/api-generator-openapi
- * 
- * OpenAPI 3.1 specification generator for Web Loom API Framework
- */
-
-export { OpenAPIGenerator } from './openapi-generator';
-export type { ModelDefinition } from './openapi-generator';
-export * from './types';
-export type { FieldDefinition, FieldType, ValidationRules } from './schema-mapper';
+export { generateOpenApiDocument } from './generate-openapi';
+export type { OpenApiDocument } from './generate-openapi';
+export { setupOpenApiRoutes } from './serve-openapi';
+export { zodToSchema } from './zod-to-schema';
+export { buildCrudPathItems } from './builders/crud-paths';
+export { buildManualPathItems } from './builders/manual-paths';

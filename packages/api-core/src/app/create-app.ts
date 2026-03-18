@@ -41,6 +41,19 @@ export interface CreateAppOptions {
    * ```
    */
   crudGenerator?: (model: AnyModel) => InstanceType<typeof Hono>;
+
+  /**
+   * Optional OpenAPI route setup callback. When provided, registers
+   * /openapi.json, /openapi.yaml, and /docs after all other routes.
+   *
+   * Pass setupOpenApiRoutes from @web-loom/api-generator-openapi.
+   */
+  openapiSetup?: (
+    hono: Hono<any>,
+    models: AnyModel[],
+    routeMetas: unknown[],
+    config: import('../config/types').OpenApiConfig,
+  ) => Promise<void>;
 }
 
 /**
@@ -145,6 +158,11 @@ export async function createApp(config: WebLoomConfig, options?: CreateAppOption
   if (config.routes?.dir) {
     const routesDir = resolve(process.cwd(), config.routes.dir);
     await discoverAndMountRoutes(hono, routesDir);
+  }
+
+  // ── OpenAPI routes (after all app routes) ────────────────────────────────
+  if (options?.openapiSetup && config.openapi?.enabled !== false) {
+    await options.openapiSetup(hono, modelRegistry.getAll(), [], config.openapi ?? {});
   }
 
   // ── Global error handler ──────────────────────────────────────────────────

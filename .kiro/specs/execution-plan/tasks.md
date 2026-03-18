@@ -112,16 +112,16 @@ Depends on `model-system` (Model types, registry), `routing-system` (Hono router
 
 Depends on all previous phases.
 
-- [ ] OG-1: Add `zod-to-json-schema`, `openapi-types`, `@hono/swagger-ui`, `@scalar/hono-api-reference` dependencies
-- [ ] OG-2: Implement `openApiMeta(meta)` middleware factory (attaches metadata via Symbol, no request-path effect)
-- [ ] OG-3: Implement `zodToSchema(schema, name, schemas)` with nullable/default handling and graceful fallback
-- [ ] OG-4: Implement CRUD path items builder — 6 operations per model, correct `requestBody` refs, query params, error responses
-- [ ] OG-5: Implement hand-written path items builder from `openApiMeta()` annotations
-- [ ] OG-6: Implement `generateOpenApiDocument(models, routeMetas, config)` producing a valid OpenAPI 3.1 document
-- [ ] OG-7: Register `/openapi.json`, `/openapi.yaml`, and `/docs` (Swagger or Scalar) in `createApp()`; skip when `config.openapi.enabled === false`
+- [x] OG-1: Add `zod-to-json-schema`, `openapi-types`, `@hono/swagger-ui`, `@scalar/hono-api-reference` dependencies
+- [x] OG-2: Implement `openApiMeta(meta)` middleware factory (attaches metadata via Symbol, no request-path effect)
+- [x] OG-3: Implement `zodToSchema(schema, name, schemas)` with nullable/default handling and graceful fallback
+- [x] OG-4: Implement CRUD path items builder — 6 operations per model, correct `requestBody` refs, query params, error responses
+- [x] OG-5: Implement hand-written path items builder from `openApiMeta()` annotations
+- [x] OG-6: Implement `generateOpenApiDocument(models, routeMetas, config)` producing a valid OpenAPI 3.1 document
+- [x] OG-7: Register `/openapi.json`, `/openapi.yaml`, and `/docs` (Swagger or Scalar) in `createApp()`; skip when `config.openapi.enabled === false`
 - [ ] OG-8: Implement `webloom generate openapi` CLI command with `--output` and `--format` flags
 - [ ] OG-9: Implement `webloom generate client` CLI command producing a native-fetch TypeScript client
-- [ ] OG-10: Pass all OpenAPI generator tests; validate output against OpenAPI 3.1 schema
+- [x] OG-10: Pass all OpenAPI generator tests; validate output against OpenAPI 3.1 schema
 
 **Gate:** `GET /openapi.json` returns a valid OpenAPI 3.1 document listing all CRUD and annotated hand-written routes. `webloom generate openapi` writes the file. `webloom generate client` produces a typed TypeScript client.
 
