@@ -18,7 +18,7 @@ export function buildReplaceHandler<TTable extends Table>(model: Model<TTable>):
   return async (c) => {
     const db = c.var.db as any;
     const pk = getPrimaryKeyColumn(model.table);
-    const rawId = c.req.param('id');
+    const rawId = c.req.param('id') ?? '';
 
     const { value: id, error } = coerceId(pk.column, rawId);
     if (error) {
