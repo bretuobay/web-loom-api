@@ -6,19 +6,14 @@ Strategies for minimizing cold starts, optimizing queries, and reducing bundle s
 
 Serverless cold starts happen when a new instance is created. Web Loom targets < 100ms initialization.
 
-### Lazy Adapter Loading
+### Lazy Email Loading
 
-Non-critical adapters (auth, email) are loaded on first use, not at startup:
+The email adapter is optional and initialized only when `c.var.email` is first accessed. Omitting it from config eliminates the import entirely from the cold start path:
 
 ```typescript
 defineConfig({
-  adapters: {
-    api: honoAdapter(),        // Loaded immediately
-    database: drizzleAdapter(), // Loaded immediately
-    validation: zodAdapter(),   // Loaded immediately
-    auth: luciaAdapter(),       // Lazy — loaded on first auth request
-    email: resendAdapter(),     // Lazy — loaded on first email send
-  },
+  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
+  // email: omit unless needed — zero cold start cost when absent
 });
 ```
 

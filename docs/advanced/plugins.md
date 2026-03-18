@@ -1,223 +1,224 @@
-# Plugin Development
+# Extending Web Loom API
 
-Plugins extend Web Loom API without modifying core code. They can register middleware, routes, models, and hook into lifecycle events.
+Web Loom API does not have a formal plugin system. Extension happens through the standard mechanisms the framework is built on: Hono middleware, route files, and `defineModel()`. This guide shows the common patterns.
 
-## Plugin Interface
+## Global Middleware
+
+Register middleware that runs on every request via `app.hono` after `createApp()`:
 
 ```typescript
-interface Plugin {
-  name: string;
-  version: string;
+// src/index.ts
+import { createApp } from "@web-loom/api-core";
+import type { MiddlewareHandler } from "hono";
+import config from "../webloom.config";
+import "./schema";
 
-  // Lifecycle hooks
-  onInit?(runtime: CoreRuntime): Promise<void>;
-  onStart?(runtime: CoreRuntime): Promise<void>;
-  onShutdown?(runtime: CoreRuntime): Promise<void>;
+const app = await createApp(config);
 
-  // Extension points
-  registerMiddleware?(app: Application): void;
-  registerRoutes?(app: Application): void;
-  registerModels?(registry: ModelRegistry): void;
-  extendConfig?(schema: ConfigSchema): void;
+// Request timing
+const requestTimer: MiddlewareHandler = async (c, next) => {
+  const start = Date.now();
+  await next();
+  c.res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
+};
+
+// Apply globally
+app.hono.use("/*", requestTimer);
+
+await app.start(3000);
+```
+
+For reuse across projects, package middleware as a plain function and import it:
+
+```typescript
+// packages/timing-middleware/src/index.ts
+import type { MiddlewareHandler } from "hono";
+
+export function timingMiddleware(): MiddlewareHandler {
+  return async (c, next) => {
+    const start = Date.now();
+    await next();
+    c.res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
+  };
 }
 ```
 
-## Creating a Plugin
+## Adding Routes
 
-### Monitoring Plugin
+Drop a file into `src/routes/` — it's discovered and mounted automatically at the matching path.
+
+For routes that need to be shared across projects, export the Hono app and mount it manually:
 
 ```typescript
-import type { Plugin } from "@web-loom/api-core";
+// packages/health-routes/src/index.ts
+import { Hono } from "hono";
 
-export const monitoringPlugin: Plugin = {
-  name: "monitoring",
-  version: "1.0.0",
+export function createHealthRoutes(): Hono {
+  const app = new Hono();
 
-  registerMiddleware(app) {
-    app.use(async (ctx, next) => {
-      const start = Date.now();
-      await next();
-      const duration = Date.now() - start;
+  app.get("/health", (c) => c.json({ status: "ok" }));
+  app.get("/ready", (c) => c.json({ status: "ready" }));
 
-      metrics.recordRequest({
-        method: ctx.request.method,
-        path: ctx.request.url,
-        status: ctx.response?.status,
-        duration,
-      });
-    });
-  },
-};
+  return app;
+}
 ```
 
-
-### GraphQL Plugin
-
 ```typescript
-import type { Plugin } from "@web-loom/api-core";
+// src/index.ts
+import { createHealthRoutes } from "@myorg/health-routes";
 
-export const graphqlPlugin: Plugin = {
-  name: "graphql",
-  version: "1.0.0",
-
-  async onInit(runtime) {
-    const models = runtime.getModelRegistry().getAll();
-    this.schema = generateGraphQLSchema(models);
-  },
-
-  registerRoutes(app) {
-    app.post("/graphql", createGraphQLHandler(this.schema));
-    app.get("/graphql", createGraphQLPlayground());
-  },
-};
+const app = await createApp(config);
+app.hono.route("/", createHealthRoutes());
 ```
 
-### Audit Log Plugin
+## Adding Models
+
+Call `defineModel()` anywhere before `createApp()`. Models register themselves in the global `ModelRegistry` on import.
 
 ```typescript
-export const auditPlugin: Plugin = {
-  name: "audit-log",
-  version: "1.0.0",
+// src/schema/audit-log.ts
+import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
+import { defineModel } from "@web-loom/api-core";
 
-  registerMiddleware(app) {
-    app.use(async (ctx, next) => {
-      await next();
+export const auditLogsTable = pgTable("audit_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id"),
+  action: text("action").notNull(),
+  resource: text("resource").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
-      if (["POST", "PUT", "PATCH", "DELETE"].includes(ctx.request.method)) {
-        await ctx.db.insert(AuditLog, {
-          userId: ctx.user?.id,
-          action: ctx.request.method,
-          resource: ctx.request.url,
-          timestamp: new Date(),
-          ip: ctx.request.headers.get("x-forwarded-for"),
-        });
-      }
-    });
-  },
-
-  registerModels(registry) {
-    registry.register(AuditLog);
-  },
-};
-```
-
-## Registering Plugins
-
-### In Configuration
-
-```typescript
-import { defineConfig } from "@web-loom/api-core";
-import { monitoringPlugin } from "./plugins/monitoring";
-import { auditPlugin } from "./plugins/audit";
-
-export default defineConfig({
-  // ...
-  plugins: [monitoringPlugin, auditPlugin],
+// No CRUD routes — just a registry entry for the OpenAPI generator
+export const AuditLog = defineModel(auditLogsTable, {
+  name: "AuditLog",
+  crud: false,
 });
 ```
 
-### Programmatically
+```typescript
+// src/index.ts
+import "./schema/audit-log"; // import to register
+```
+
+## Audit Logging Pattern
+
+A common "plugin-like" pattern: a self-contained module that exports a middleware and a model:
+
+```typescript
+// src/audit/index.ts
+import { defineRoutes } from "@web-loom/api-core";
+import { auditLogsTable } from "./schema";
+import type { MiddlewareHandler } from "hono";
+
+export const auditMiddleware: MiddlewareHandler = async (c, next) => {
+  await next();
+
+  const method = c.req.method;
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    await c.var.db.insert(auditLogsTable).values({
+      userId: c.var.user?.id ?? null,
+      action: method,
+      resource: new URL(c.req.url).pathname,
+    });
+  }
+};
+```
+
+```typescript
+// src/index.ts
+import { auditMiddleware } from "./audit";
+
+const app = await createApp(config);
+app.hono.use("/api/*", auditMiddleware);
+```
+
+## Lifecycle Hooks
+
+There is no formal lifecycle hook system. Use standard Node.js process events for shutdown handling:
 
 ```typescript
 const app = await createApp(config);
-app.registerPlugin(monitoringPlugin);
-```
+await app.start(3000);
 
-## Plugin Lifecycle
-
-Plugins are initialized in registration order:
-
-1. `extendConfig()` — Extend the configuration schema (before config validation)
-2. `onInit()` — Initialize plugin state (after adapters are ready)
-3. `registerModels()` — Register additional models
-4. `registerMiddleware()` — Register global middleware
-5. `registerRoutes()` — Register additional routes
-6. `onStart()` — Called when the app starts listening
-7. `onShutdown()` — Called during graceful shutdown
-
-## Plugin Discovery
-
-Plugins are discovered from three sources:
-
-1. **Configuration** — Explicitly listed in `defineConfig({ plugins: [...] })`
-2. **Auto-discovery** — Packages matching `@web-loom/*` in `node_modules`
-3. **Local plugins** — Files in `src/plugins/`
-
-## Extending Configuration
-
-Plugins can add custom configuration options:
-
-```typescript
-export const cachePlugin: Plugin = {
-  name: "cache",
-  version: "1.0.0",
-
-  extendConfig(schema) {
-    schema.extend({
-      cache: {
-        driver: { type: "string", enum: ["memory", "redis"], default: "memory" },
-        ttl: { type: "number", default: 300 },
-        redisUrl: { type: "string", optional: true },
-      },
-    });
-  },
-
-  async onInit(runtime) {
-    const cacheConfig = runtime.config.cache;
-    // Initialize cache based on config
-  },
-};
-```
-
-## Dependency Resolution
-
-If your plugin depends on another plugin, declare it:
-
-```typescript
-export const analyticsPlugin: Plugin = {
-  name: "analytics",
-  version: "1.0.0",
-  dependencies: ["monitoring"], // Must be loaded after monitoring
-
-  async onInit(runtime) {
-    // monitoring plugin is guaranteed to be initialized
-  },
-};
-```
-
-## Publishing Plugins
-
-Package your plugin as an npm package with the `@web-loom/` prefix for auto-discovery:
-
-```json
-{
-  "name": "@web-loom/plugin-monitoring",
-  "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "peerDependencies": {
-    "@web-loom/api-core": "^1.0.0"
-  }
-}
-```
-
-## Testing Plugins
-
-```typescript
-import { createApp } from "@web-loom/api-core";
-import { createTestClient } from "@web-loom/api-testing";
-import { myPlugin } from "./my-plugin";
-
-describe("My Plugin", () => {
-  it("registers routes", async () => {
-    const app = await createApp({
-      ...baseConfig,
-      plugins: [myPlugin],
-    });
-    const client = createTestClient(app);
-
-    const res = await client.get("/my-plugin-route");
-    expect(res.status).toBe(200);
-  });
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM received — shutting down gracefully");
+  await app.shutdown(10_000);
+  process.exit(0);
 });
+
+process.on("SIGINT", async () => {
+  await app.shutdown(5_000);
+  process.exit(0);
+});
+```
+
+`app.shutdown()` waits for in-flight requests to complete and closes the database connection.
+
+## Auth Extension
+
+Extend authentication by composing strategies from `@web-loom/api-middleware-auth`:
+
+```typescript
+import {
+  jwtAuth,
+  apiKeyAuth,
+  composeAuth,
+  requireRole,
+} from "@web-loom/api-middleware-auth";
+
+// Custom API key lookup
+const apiKeyStrategy = apiKeyAuth({
+  validate: async (key) => {
+    const [record] = await db
+      .select()
+      .from(apiKeysTable)
+      .where(eq(apiKeysTable.hash, hashKey(key)));
+    if (!record) return null;
+    return { id: record.userId, role: record.role };
+  },
+});
+
+// Accept either JWT or API key
+const multiAuth = composeAuth(
+  jwtAuth({ secret: process.env.JWT_SECRET! }),
+  apiKeyStrategy,
+);
+
+// Apply globally
+app.hono.use("/api/*", multiAuth);
+
+// Restrict a specific path to admins
+app.hono.use("/api/admin/*", multiAuth, requireRole("admin"));
+```
+
+## Packaging Reusable Extensions
+
+Structure a reusable extension as a plain TypeScript package:
+
+```
+packages/my-extension/
+  src/
+    middleware.ts   # MiddlewareHandler exports
+    routes.ts       # Hono app factory
+    schema.ts       # defineModel() calls (imported for side effects)
+    index.ts        # re-exports
+  package.json      # peerDependencies: { "@web-loom/api-core": "^1" }
+```
+
+```typescript
+// packages/my-extension/src/index.ts
+export { myMiddleware } from "./middleware";
+export { createMyRoutes } from "./routes";
+export "./schema"; // register models as a side effect on import
+```
+
+Consumer usage:
+
+```typescript
+import { myMiddleware, createMyRoutes } from "@myorg/my-extension";
+import "@myorg/my-extension/schema"; // or import the package to trigger model registration
+
+const app = await createApp(config);
+app.hono.use("/*", myMiddleware);
+app.hono.route("/extension", createMyRoutes());
 ```

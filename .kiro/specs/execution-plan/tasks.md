@@ -88,19 +88,19 @@ These three specs share only `stack-foundation` types. They have no dependency o
 
 Depends on `model-system` (Model types, registry), `routing-system` (Hono router, validate), and `auth-middleware` (authenticate, requireRole).
 
-- [ ] CG-1: Create `@web-loom/api-generator-crud` package with correct inter-package dependencies
-- [ ] CG-2: Implement `getPrimaryKeyColumn(table)` using `getTableColumns()` from `drizzle-orm`
-- [ ] CG-3: Implement `resolveAuthMiddleware(opts)` mapping `CrudOperationOptions.auth` to middleware array
-- [ ] CG-4: Implement List handler — pagination, equality + operator filtering (`[gte]`, `[lte]`, `[like]`, `[in]`), sort, parallel count query
-- [ ] CG-5: Implement Read handler — query by PK, 404 on missing, PK type validation
-- [ ] CG-6: Implement Create handler — `zValidator` body, `.returning()`, 409 on unique constraint, timestamp injection
-- [ ] CG-7: Implement Replace handler — full insert schema validation, update by PK, 404 on missing
-- [ ] CG-8: Implement Patch handler — update schema (all optional), 400 on empty body, update by PK
-- [ ] CG-9: Implement Delete handler — hard delete or soft delete (`deletedAt`), 204 on success, 409 on FK violation
-- [ ] CG-10: Apply soft-delete `isNull(table.deletedAt)` filter to List and Read handlers
-- [ ] CG-11: Implement `generateCrudRouter(model)` composing all handlers with auth middleware
-- [ ] CG-12: Mount generated CRUD routers in `createApp()` before file-based routes
-- [ ] CG-13: Pass all CRUD generator integration tests (libsql in-memory)
+- [x] CG-1: Create `@web-loom/api-generator-crud` package with correct inter-package dependencies
+- [x] CG-2: Implement `getPrimaryKeyColumn(table)` using `getTableColumns()` from `drizzle-orm`
+- [x] CG-3: Implement `resolveAuthMiddleware(opts)` mapping `CrudOperationOptions.auth` to middleware array
+- [x] CG-4: Implement List handler — pagination, equality + operator filtering (`[gte]`, `[lte]`, `[like]`, `[in]`), sort, parallel count query
+- [x] CG-5: Implement Read handler — query by PK, 404 on missing, PK type validation
+- [x] CG-6: Implement Create handler — `zValidator` body, `.returning()`, 409 on unique constraint, timestamp injection
+- [x] CG-7: Implement Replace handler — full insert schema validation, update by PK, 404 on missing
+- [x] CG-8: Implement Patch handler — update schema (all optional), 400 on empty body, update by PK
+- [x] CG-9: Implement Delete handler — hard delete or soft delete (`deletedAt`), 204 on success, 409 on FK violation
+- [x] CG-10: Apply soft-delete `isNull(table.deletedAt)` filter to List and Read handlers
+- [x] CG-11: Implement `generateCrudRouter(model)` composing all handlers with auth middleware
+- [x] CG-12: Mount generated CRUD routers in `createApp()` before file-based routes
+- [x] CG-13: Pass all CRUD generator integration tests (libsql in-memory)
 
 **Gate:** A model with `crud: true` gets all six endpoints. Pagination, filtering, sorting work. Auth options (`auth: true`, `auth: 'admin'`) produce correct 401/403 responses. Soft delete hides records from list/read.
 

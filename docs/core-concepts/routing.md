@@ -1,202 +1,147 @@
 # Routing Guide
 
-Web Loom API supports two routing approaches: **file-based routing** (automatic discovery from `src/routes/`) and **programmatic routing** with `defineRoutes()`. Both can be used together.
+Web Loom API supports two routing approaches: **file-based routing** (auto-discovery from `src/routes/`) and **CRUD generation** from models. Both work together — CRUD routes are mounted first and hand-written routes can override them.
 
 ## File-Based Routing
 
-Route files in `src/routes/` are automatically discovered and mapped to URL paths:
+Route files in `src/routes/` (configurable via `routes.dir`) are discovered automatically at startup. Each file must export a Hono app instance as its **default export**.
 
-| File Path | URL Path |
-|-----------|----------|
+| File Path | Mount Path |
+|-----------|-----------|
 | `src/routes/users.ts` | `/users` |
 | `src/routes/users/[id].ts` | `/users/:id` |
-| `src/routes/posts/[...slug].ts` | `/posts/*` (catch-all) |
 | `src/routes/api/v1/health.ts` | `/api/v1/health` |
+| `src/routes/index.ts` | `/` |
 
-### Dynamic Segments
+## `defineRoutes()`
 
-Use `[param]` in filenames for dynamic URL segments:
-
-```
-src/routes/users/[id].ts  →  /users/:id
-```
-
-Access the parameter in your handler:
+`defineRoutes()` returns a `Hono<{ Variables: WebLoomVariables }>` instance with `c.var.db` and `c.var.email` pre-typed. Use it as the default export of every route file:
 
 ```typescript
-router.get("/users/:id", {
-  handler: async (ctx) => {
-    const userId = ctx.params.id;
-    // ...
-  },
-});
-```
-
-### Catch-All Routes
-
-Use `[...param]` for catch-all segments:
-
-```
-src/routes/docs/[...path].ts  →  /docs/*
-```
-
-### Route Conflicts
-
-If two files map to the same URL path and HTTP method, the Core Runtime terminates with a conflict error at startup.
-
-## Programmatic Routing with `defineRoutes()`
-
-Define routes explicitly using the `defineRoutes()` function:
-
-```typescript
+// src/routes/users.ts
 import { defineRoutes } from "@web-loom/api-core";
+import { usersTable } from "../schema";
+import { eq } from "drizzle-orm";
 
-export default defineRoutes((router) => {
-  router.get("/api/health", {
-    handler: async (ctx) => {
-      return ctx.json({ status: "ok" });
-    },
-  });
+const app = defineRoutes();
 
-  router.post("/api/users", {
-    handler: async (ctx) => {
-      // ...
-    },
-  });
+app.get("/", async (c) => {
+  const users = await c.var.db.select().from(usersTable);
+  return c.json({ users });
 });
+
+app.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const [user] = await c.var.db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, id));
+
+  if (!user) return c.json({ error: { code: "NOT_FOUND", message: "User not found" } }, 404);
+  return c.json({ user });
+});
+
+export default app;
 ```
 
-### HTTP Methods
+## Dynamic Segments
 
-```typescript
-router.get(path, options);     // GET
-router.post(path, options);    // POST
-router.put(path, options);     // PUT
-router.patch(path, options);   // PATCH
-router.delete(path, options);  // DELETE
-router.options(path, options); // OPTIONS
+Use `[param]` in directory or file names for dynamic URL segments:
+
+```
+src/routes/users/[id].ts        →  /users/:id
+src/routes/posts/[id]/comments  →  /posts/:id/comments
 ```
 
-### Route Options
+## `validate()` — Request Validation
+
+`validate(target, schema)` wraps `@hono/zod-validator` and formats errors as the standard `VALIDATION_ERROR` shape.
 
 ```typescript
-router.post("/api/posts", {
-  // Request validation
-  validation: {
-    body: Post.schema.pick("title", "content", "status"),
-    query: { page: { type: "number", min: 1 } },
-    params: { id: { type: "uuid" } },
-  },
+import { defineRoutes, validate } from "@web-loom/api-core";
+import { z } from "zod";
 
-  // Middleware (runs before handler)
-  middleware: [authenticate, adminOnly],
+const app = defineRoutes();
 
-  // Response caching
-  cache: { ttl: 60, tags: ["posts"] },
-
-  // Auth requirement
-  auth: true,           // or "admin", "owner", false
-
-  // Rate limit override
-  rateLimit: { windowMs: 60_000, max: 10 },
-
-  // Route metadata (used by OpenAPI generator)
-  metadata: {
-    description: "Create a new post",
-    tags: ["posts"],
-  },
-
-  // The handler
-  handler: async (ctx) => {
+app.post(
+  "/",
+  validate("json", z.object({
+    name: z.string().min(1).max(100),
+    email: z.string().email(),
+  })),
+  async (c) => {
+    const data = c.req.valid("json"); // typed
     // ...
   },
-});
+);
+
+// Validate query params
+app.get(
+  "/search",
+  validate("query", z.object({
+    q: z.string().optional(),
+    limit: z.coerce.number().min(1).max(100).default(20),
+  })),
+  async (c) => {
+    const { q, limit } = c.req.valid("query");
+    // ...
+  },
+);
 ```
 
-## Request Context
+Validation targets: `"json"` | `"query"` | `"param"` | `"form"` | `"header"`
 
-Every handler receives a `ctx` object with access to the request, adapters, and utilities:
-
-```typescript
-handler: async (ctx) => {
-  // Request data
-  ctx.params          // URL parameters (e.g., { id: "abc" })
-  ctx.query           // Query string parameters
-  ctx.body            // Parsed and validated request body
-  ctx.request         // Raw Request object
-
-  // Adapters
-  ctx.db              // Database adapter (query builder)
-  ctx.auth            // Auth adapter (sessions, passwords)
-  ctx.email           // Email adapter
-
-  // Utilities
-  ctx.json(data, status?)     // Return JSON response
-  ctx.setCookie(name, value)  // Set a cookie
-  ctx.deleteCookie(name)      // Delete a cookie
-
-  // Auth context (when authenticated)
-  ctx.user            // Current user
-  ctx.session         // Current session
-
-  // Advanced
-  ctx.cache           // Cache adapter
-  ctx.webhooks        // Webhook dispatcher
-  ctx.jobs            // Background job queue
-}
-```
-
-## Request Validation
-
-Validation schemas are defined inline or derived from models:
-
-### Inline Validation
-
-```typescript
-router.post("/api/items", {
-  validation: {
-    body: {
-      name: { type: "string", required: true, minLength: 1 },
-      price: { type: "number", required: true, min: 0 },
-      tags: { type: "array", items: { type: "string" } },
-    },
-  },
-  handler: async (ctx) => {
-    // ctx.body is typed as { name: string; price: number; tags?: string[] }
-  },
-});
-```
-
-### Model-Based Validation
-
-```typescript
-router.post("/api/users", {
-  validation: {
-    body: User.schema.pick("name", "email", "password"),
-  },
-  handler: async (ctx) => {
-    // ctx.body is typed as { name: string; email: string; password: string }
-  },
-});
-```
-
-### Validation Errors
-
-Invalid requests return HTTP 400 with structured errors:
+### Validation Error Response
 
 ```json
 {
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Request validation failed",
+    "requestId": "550e8400-e29b-41d4-a716-446655440000",
+    "timestamp": "2025-01-15T10:30:45.123Z",
     "details": {
       "fields": [
-        { "path": ["email"], "message": "Invalid email format", "code": "invalid_format" },
-        { "path": ["name"], "message": "Required", "code": "required" }
+        { "path": ["email"], "message": "Invalid email", "code": "invalid_string" },
+        { "path": ["name"], "message": "Required", "code": "invalid_type" }
       ]
     }
   }
 }
+```
+
+## Request Context (`c`)
+
+Every handler receives Hono's context object `c`:
+
+```typescript
+app.get("/:id", async (c) => {
+  // URL params
+  c.req.param("id")          // string | undefined
+  c.req.param()              // Record<string, string>
+
+  // Query string
+  c.req.query("page")        // string | undefined
+  c.req.queries("tags")      // string[] | undefined
+
+  // Headers
+  c.req.header("Authorization") // string | undefined
+
+  // Validated data (only after validate() middleware)
+  c.req.valid("json")        // typed validated body
+  c.req.valid("query")       // typed validated query
+
+  // Injected by Web Loom
+  c.var.db                   // AnyDrizzleDB — Drizzle instance
+  c.var.email                // EmailAdapter | undefined
+  c.var.user                 // AuthUser | undefined (set by auth middleware)
+
+  // Response helpers
+  return c.json({ data })         // 200 JSON
+  return c.json({ data }, 201)    // 201 JSON
+  return c.text("ok")             // 200 text
+  return c.body(null, 204)        // 204 No Content
+});
 ```
 
 ## Middleware
@@ -204,128 +149,94 @@ Invalid requests return HTTP 400 with structured errors:
 ### Route-Level Middleware
 
 ```typescript
-import { authenticate, adminOnly } from "../middleware/auth";
+import { jwtAuth, requireRole } from "@web-loom/api-middleware-auth";
 
-router.get("/api/admin/users", {
-  middleware: [authenticate, adminOnly],
-  handler: async (ctx) => {
-    // Only authenticated admins reach this handler
-  },
+const app = defineRoutes();
+
+// Apply middleware to all routes in this file
+app.use("/*", jwtAuth({ secret: process.env.JWT_SECRET! }));
+
+// Apply to a specific route
+app.delete("/:id", requireRole("admin"), async (c) => {
+  // Only admins reach here
 });
-```
-
-### Writing Custom Middleware
-
-```typescript
-import { Middleware } from "@web-loom/api-core";
-
-export const logRequest: Middleware = async (ctx, next) => {
-  const start = Date.now();
-  console.log(`→ ${ctx.request.method} ${ctx.request.url}`);
-
-  await next();
-
-  console.log(`← ${Date.now() - start}ms`);
-};
 ```
 
 ### Global Middleware
 
-Register middleware that runs on every request:
+Register in `src/index.ts` via `app.hono`:
 
 ```typescript
 const app = await createApp(config);
-app.use(logRequest);
-app.use(corsMiddleware);
+app.hono.use("/*", myGlobalMiddleware);
 ```
 
-### Execution Order
+## OpenAPI Annotations
 
-1. Global middleware (in registration order)
-2. Route-specific middleware (in array order)
-3. Route handler
-4. Response middleware (reverse order)
-
-A middleware can short-circuit the chain by returning a response without calling `next()`:
+Use `openApiMeta()` to add OpenAPI metadata to hand-written routes. The middleware has no effect at request time — it only attaches metadata for documentation generation.
 
 ```typescript
-const requireApiKey: Middleware = async (ctx, next) => {
-  const key = ctx.request.headers.get("X-API-Key");
-  if (!key) {
-    return ctx.json({ error: "API key required" }, 401);
-  }
-  await next();
-};
-```
+import { defineRoutes, validate, openApiMeta } from "@web-loom/api-core";
+import { z } from "zod";
 
-## Query Builder
+const app = defineRoutes();
 
-The `ctx.db` object provides a type-safe query builder:
+app.post(
+  "/send-invite",
+  openApiMeta({
+    summary: "Send an invitation email",
+    tags: ["invites"],
+    operationId: "sendInvite",
+    request: {
+      body: z.object({ email: z.string().email() }),
+    },
+    responses: {
+      204: { description: "Invitation sent" },
+      422: { description: "Invalid email address" },
+    },
+  }),
+  validate("json", z.object({ email: z.string().email() })),
+  async (c) => {
+    const { email } = c.req.valid("json");
+    await c.var.email?.send({ to: email, subject: "You're invited!" });
+    return c.body(null, 204);
+  },
+);
 
-```typescript
-// Select with conditions
-const users = await ctx.db
-  .select(User)
-  .where("role", "=", "admin")
-  .orderBy("createdAt", "desc")
-  .limit(20);
-
-// Select with relationships
-const post = await ctx.db
-  .select(Post)
-  .where("id", "=", ctx.params.id)
-  .with("author")
-  .with("comments")
-  .first();
-
-// Insert
-const user = await ctx.db.insert(User, {
-  name: "Alice",
-  email: "alice@example.com",
-});
-
-// Update
-const updated = await ctx.db.update(User, userId, { name: "Bob" });
-
-// Delete
-await ctx.db.delete(User, userId);
-
-// Transactions
-const result = await ctx.db.transaction(async (tx) => {
-  const user = await tx.insert(User, userData);
-  const post = await tx.insert(Post, { ...postData, userId: user.id });
-  return { user, post };
-});
+export default app;
 ```
 
 ## CRUD Routes
 
-When a model has `crud: true`, these routes are auto-generated:
+When a model has `crud: true` or `crud: { ... }`, these routes are auto-generated and mounted before file-based routes:
 
 ```
+GET    /users          → List (paginated, filterable, sortable)
 POST   /users          → Create
-GET    /users          → List (paginated)
-GET    /users/:id      → Get by ID
-PUT    /users/:id      → Full update
+GET    /users/:id      → Read by ID
+PUT    /users/:id      → Replace (full body required)
 PATCH  /users/:id      → Partial update
-DELETE /users/:id      → Delete
+DELETE /users/:id      → Delete (or soft-delete)
 ```
 
-### Pagination
+### List Query Parameters
 
-```bash
-# Page-based
-GET /users?page=2&limit=20
+| Param | Description | Example |
+|-------|-------------|---------|
+| `page` | Page number (default: 1) | `?page=2` |
+| `limit` | Items per page (default: 20, max: 100) | `?limit=50` |
+| `sort` | Field to sort by; prefix `-` for descending | `?sort=-createdAt,name` |
+| `fields` | Comma-separated fields to return | `?fields=id,name,email` |
+| `search` | Full-text search (LIKE on string columns) | `?search=alice` |
+| `field[op]` | Operator filtering | `?age[gte]=18&age[lte]=65` |
 
-# Cursor-based
-GET /users?cursor=abc123&limit=20
-```
+Operator suffixes: `[gte]`, `[lte]`, `[like]`, `[in]`
 
-Response includes pagination metadata:
+### Paginated Response
 
 ```json
 {
-  "data": [...],
+  "data": [ ... ],
   "pagination": {
     "page": 2,
     "limit": 20,
@@ -335,28 +246,6 @@ Response includes pagination metadata:
     "hasPrev": true
   }
 }
-```
-
-### Filtering and Sorting
-
-```bash
-# Filter by field
-GET /users?status=active
-
-# Comparison operators
-GET /users?age[gte]=18&age[lte]=65
-
-# Sort (prefix with - for descending)
-GET /users?sort=-createdAt,name
-
-# Field selection
-GET /users?fields=id,name,email
-
-# Include relationships
-GET /users?include=posts,comments
-
-# Search
-GET /users?search=alice
 ```
 
 ## Error Responses
@@ -377,9 +266,12 @@ All errors follow a consistent format:
 | Status | Code | When |
 |--------|------|------|
 | 400 | `VALIDATION_ERROR` | Invalid request data |
-| 401 | `UNAUTHORIZED` | Missing or invalid auth |
+| 401 | `UNAUTHORIZED` | Missing or invalid credentials |
 | 403 | `FORBIDDEN` | Insufficient permissions |
-| 404 | `NOT_FOUND` | Resource or route not found |
-| 409 | `CONFLICT` | Version mismatch or unique constraint |
-| 429 | `RATE_LIMITED` | Too many requests |
+| 404 | `NOT_FOUND` | Resource not found |
+| 409 | `CONFLICT` | Unique constraint or FK violation |
 | 500 | `INTERNAL_ERROR` | Unhandled server error |
+
+## Route Conflicts
+
+If two route files map to the same path prefix, a `RouteConflictError` is thrown at startup. File-based routes that overlap with CRUD routes emit a warning; the hand-written route wins.

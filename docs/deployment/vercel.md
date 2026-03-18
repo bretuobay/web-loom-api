@@ -13,22 +13,12 @@ Deploy your Web Loom API to Vercel Edge Functions for global low-latency respons
 ```typescript
 // src/shared/app.ts
 import { createApp, defineConfig } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
+import "./schema"; // register models
 
 const config = defineConfig({
-  adapters: {
-    api: honoAdapter(),
-    database: drizzleAdapter(),
-    validation: zodAdapter(),
-  },
-  database: {
-    url: process.env.DATABASE_URL!,
-    poolSize: 1,
-  },
-  security: { cors: { origin: ["*"] } },
+  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
   features: { crud: true },
+  openapi: { enabled: true },
   observability: { logging: { level: "warn", format: "json" } },
 });
 
@@ -44,17 +34,16 @@ export function getApp() {
 
 ```typescript
 // api/index.ts
-import { createVercelHandler } from "@web-loom/api-deployment-vercel";
-import { getApp } from "../src/shared/app";
-
 export const config = {
   runtime: "edge",
   regions: ["iad1", "sfo1", "cdg1"],
 };
 
-export default createVercelHandler(async () => {
-  return getApp();
-});
+export default async function handler(request: Request) {
+  const { getApp } = await import("../src/shared/app");
+  const app = await getApp();
+  return app.handleRequest(request);
+};
 ```
 
 ## Step 3: Configure Vercel

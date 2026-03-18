@@ -1,140 +1,186 @@
 # @web-loom/api
 
-A modular REST API meta-framework for building serverless APIs by assembling best-of-breed tools with sensible defaults.
+A modular REST API framework for building serverless APIs on top of [Hono](https://hono.dev), [Drizzle ORM](https://orm.drizzle.team), and [Zod](https://zod.dev).
 
 Write once, deploy anywhere — Vercel Edge, Cloudflare Workers, AWS Lambda, or Docker.
 
 ## Why Web Loom API?
 
 - **Serverless-first** — optimized for cold starts and edge deployment
-- **Modular adapters** — swap databases, auth, email providers via CLI without refactoring
-- **Model-driven** — define models once, get validation, CRUD routes, OpenAPI specs, and typed clients
+- **Model-driven** — define a Drizzle table once, get CRUD routes, OpenAPI specs, and typed clients automatically
+- **No magic adapters** — Hono, Drizzle, and Zod are first-class; you write real Drizzle queries in route handlers
 - **Platform-agnostic** — deploy to Vercel, Cloudflare, AWS Lambda, or Docker from the same codebase
-- **AI-friendly** — machine-readable schemas and generation-friendly conventions
+- **OpenAPI built-in** — live `/openapi.json`, `/openapi.yaml`, and `/docs` (Swagger or Scalar)
 
 ## Quick Start
 
 ```bash
-npm install @web-loom/api-core
+npm install @web-loom/api-core drizzle-orm
 ```
 
 ```typescript
-import { createApp, defineModel, defineRoutes } from '@web-loom/api-core';
+// webloom.config.ts
+import { defineConfig } from "@web-loom/api-core";
 
-// Define a model
-const User = defineModel('User', {
-  fields: {
-    id: { type: 'string', required: true },
-    name: { type: 'string', required: true },
-    email: { type: 'string', required: true },
+export default defineConfig({
+  database: {
+    url: process.env.DATABASE_URL!,
+    driver: "neon-serverless", // or "libsql" | "pg"
   },
+  routes: { dir: "./src/routes" },
+  openapi: { enabled: true, title: "My API", version: "1.0.0" },
+});
+```
+
+```typescript
+// src/schema.ts — your Drizzle table is the single source of truth
+import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
+import { defineModel } from "@web-loom/api-core";
+
+export const usersTable = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Define routes
-const userRoutes = defineRoutes('/users', {
-  'GET /': async (ctx) => {
-    return ctx.json(await ctx.db.findMany('users'));
-  },
-  'POST /': async (ctx) => {
-    const data = await ctx.body();
-    return ctx.json(await ctx.db.create('users', data), 201);
-  },
+// Registers the model; auto-generates 6 CRUD routes at /users
+export const User = defineModel(usersTable, {
+  name: "User",
+  crud: true,
+});
+```
+
+```typescript
+// src/routes/users.ts — hand-written routes alongside generated CRUD
+import { defineRoutes, validate } from "@web-loom/api-core";
+import { z } from "zod";
+import { usersTable } from "../schema";
+
+const app = defineRoutes();
+
+// GET /users/search?q=...
+app.get("/search", async (c) => {
+  const q = c.req.query("q") ?? "";
+  const users = await c.var.db
+    .select()
+    .from(usersTable)
+    .where(like(usersTable.name, `%${q}%`));
+  return c.json({ users });
 });
 
-// Create and start the app
-const app = createApp({
-  models: [User],
-  routes: [userRoutes],
-  adapters: {
-    framework: 'hono',
-    database: 'drizzle',
-    validation: 'zod',
-  },
-});
+export default app;
+```
+
+```typescript
+// src/index.ts
+import { createApp } from "@web-loom/api-core";
+import config from "../webloom.config";
+import "./src/schema"; // import models so they register
+
+const app = await createApp(config);
+await app.start(3000);
 ```
 
 ## Packages
 
 ### Core
 
+| Package | Description |
+|---------|-------------|
+| `@web-loom/api-core` | Core runtime, model registry, route discovery, configuration |
+| `@web-loom/api-shared` | Shared types and utilities |
+| `@web-loom/api-cli` | CLI for code generation and scaffolding (`webloom` command) |
+
+### Generators
 
 | Package | Description |
 |---------|-------------|
-| `@web-loom/api-core` | Core runtime, model registry, route registry, configuration |
-| `@web-loom/api-shared` | Shared types and utilities across all packages |
-| `@web-loom/api-cli` | CLI for project scaffolding, code generation, component switching |
-
-### Adapters
-
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-adapter-hono` | Hono HTTP framework adapter |
-| `@web-loom/api-adapter-drizzle` | Drizzle ORM database adapter |
-| `@web-loom/api-adapter-zod` | Zod validation adapter |
-| `@web-loom/api-adapter-lucia` | Lucia authentication adapter (sessions, OAuth, API keys) |
-| `@web-loom/api-adapter-resend` | Resend email adapter |
+| `@web-loom/api-generator-crud` | Automatic CRUD route generation from model definitions |
+| `@web-loom/api-generator-openapi` | OpenAPI 3.1 document generation + Swagger/Scalar UI |
 
 ### Middleware
 
 | Package | Description |
 |---------|-------------|
-| `@web-loom/api-middleware-auth` | Session auth, API key auth, RBAC, field permissions |
-| `@web-loom/api-middleware-validation` | Request validation and input sanitization |
-| `@web-loom/api-middleware-rate-limit` | Token bucket rate limiting (memory + Redis stores) |
-| `@web-loom/api-middleware-cors` | CORS with origin whitelist, regex, and credentials support |
-| `@web-loom/api-middleware-cache` | Response caching with stale-while-revalidate and tag invalidation |
-
-### Infrastructure
-
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-jobs` | Background job queue with priority, cron scheduling, retries |
-| `@web-loom/api-uploads` | File uploads with multipart parsing, local/S3/R2 stores |
-| `@web-loom/api-webhooks` | Webhook delivery with HMAC-SHA256 signatures and retries |
-| `@web-loom/api-plugins` | Plugin system with lifecycle hooks and dependency resolution |
-
-### Observability
-
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-logging` | Structured JSON logging with sensitive data sanitization |
-| `@web-loom/api-metrics` | Prometheus-compatible metrics collection and `/metrics` endpoint |
-| `@web-loom/api-tracing` | Distributed tracing with W3C Trace Context and sampling |
-| `@web-loom/api-health` | Health check endpoints (`/health/live`, `/health/ready`) |
+| `@web-loom/api-middleware-auth` | JWT, session, and API key auth; RBAC guards; CSRF protection |
 
 ### Deployment
 
 | Package | Description |
 |---------|-------------|
-| `@web-loom/api-deployment-vercel` | Vercel Edge/Serverless handler with KV caching |
-| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers with KV, D1, Durable Objects |
-| `@web-loom/api-deployment-aws` | AWS Lambda with API Gateway, RDS Proxy, cold start optimization |
-| `@web-loom/api-deployment-docker` | Dockerfile and docker-compose generators |
-
-### Testing
-
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-testing` | Test client, factories, mocks, contract testing, benchmarking |
+| `@web-loom/api-deployment-vercel` | Vercel Edge/Serverless handler |
+| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers handler |
+| `@web-loom/api-deployment-aws` | AWS Lambda handler |
 
 ## Deploy Anywhere
 
 ```typescript
-// Vercel Edge
-import { createVercelHandler } from '@web-loom/api-deployment-vercel';
-export default createVercelHandler(app, { runtime: 'edge' });
+// Node.js / Docker
+const app = await createApp(config);
+await app.start(3000);
 
-// Cloudflare Workers
-import { createCloudflareHandler } from '@web-loom/api-deployment-cloudflare';
-export default { fetch: createCloudflareHandler(app) };
+// Vercel Edge / Cloudflare Workers / AWS Lambda
+export default { fetch: (req: Request) => app.handleRequest(req) };
+```
 
-// AWS Lambda
-import { createLambdaHandler } from '@web-loom/api-deployment-aws';
-export const handler = createLambdaHandler(app);
+Or use the deployment packages which set up the entry point for you:
 
-// Docker
-import { generateDockerfile } from '@web-loom/api-deployment-docker';
-const dockerfile = generateDockerfile({ nodeVersion: '20-alpine', port: 3000 });
+```typescript
+// Cloudflare Workers (packages/api-deployment-cloudflare)
+import { app } from "./app";
+export default { fetch: app.handleRequest.bind(app) };
+```
+
+## Authentication
+
+```typescript
+import { jwtAuth, apiKeyAuth, requireRole, composeAuth } from "@web-loom/api-middleware-auth";
+
+const app = defineRoutes();
+
+// Protect all routes with JWT
+app.use("/*", jwtAuth({ secret: process.env.JWT_SECRET! }));
+
+// Restrict an endpoint to admins
+app.delete("/:id", requireRole("admin"), async (c) => { ... });
+
+// Accept JWT or API key on the same route
+app.use("/*", composeAuth(
+  jwtAuth({ secret: process.env.JWT_SECRET! }),
+  apiKeyAuth({ validate: async (key) => lookupApiKey(key) }),
+));
+```
+
+## OpenAPI
+
+```typescript
+import { openApiMeta } from "@web-loom/api-core";
+
+// Annotate hand-written routes for OpenAPI docs
+app.post(
+  "/send-invite",
+  openApiMeta({
+    summary: "Send an invitation email",
+    tags: ["invites"],
+    operationId: "sendInvite",
+    request: { body: z.object({ email: z.string().email() }) },
+    responses: { 204: { description: "Sent" } },
+  }),
+  async (c) => { ... }
+);
+```
+
+Live endpoints (when `openapi.enabled: true`):
+- `GET /openapi.json` — OpenAPI 3.1 spec
+- `GET /openapi.yaml` — YAML version
+- `GET /docs` — Swagger UI or Scalar
+
+Generate a static file or typed client with the CLI:
+
+```bash
+npx webloom generate openapi --output ./openapi.json
+npx webloom generate client --input ./openapi.json --output ./src/client
 ```
 
 ## Project Structure
@@ -144,21 +190,15 @@ packages/
   api-core/              # Core runtime and registries
   api-shared/            # Shared types
   api-cli/               # CLI tools
-  api-adapters/          # Framework, DB, auth, email adapters
-    hono/ drizzle/ zod/ lucia/ resend/
-  api-middleware/         # HTTP middleware
-    auth/ validation/ rate-limit/ cors/ cache/
-  api-jobs/              # Background jobs
-  api-uploads/           # File uploads
-  api-webhooks/          # Webhook delivery
-  api-plugins/           # Plugin system
-  api-logging/           # Structured logging
-  api-metrics/           # Prometheus metrics
-  api-tracing/           # Distributed tracing
-  api-health/            # Health checks
-  api-deployment/        # Platform adapters
-    vercel/ cloudflare/ aws/ docker/
-  api-testing/           # Test utilities
+  api-middleware/
+    auth/                # JWT, session, API key auth; RBAC; CSRF
+  api-generators/
+    crud/                # CRUD route generation
+    openapi/             # OpenAPI document generation
+  api-deployment/
+    vercel/              # Vercel deployment adapter
+    cloudflare/          # Cloudflare Workers deployment adapter
+    aws/                 # AWS Lambda deployment adapter
 examples/
   minimal/               # Simple CRUD API
   full-stack/            # Full-featured app
@@ -190,10 +230,9 @@ npx turbo run lint
 See the [docs/](./docs/) directory:
 
 - [Getting Started](./docs/getting-started.md)
-- [Core Concepts](./docs/core-concepts/) — adapters, models, configuration, routing
+- [Core Concepts](./docs/core-concepts/) — stack overview, models, configuration, routing
 - [API Reference](./docs/api-reference/) — full API documentation
 - [Deployment Guides](./docs/deployment/) — Vercel, Cloudflare, AWS, Docker
-- [Advanced Guides](./docs/advanced/) — custom adapters, plugins, performance, security, testing
 
 ## License
 

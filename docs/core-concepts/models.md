@@ -1,283 +1,216 @@
 # Model-Driven Development
 
-In Web Loom API, you define your data models once using `defineModel()`. The framework uses that single definition to generate database schemas, validation rules, CRUD routes, OpenAPI specs, and TypeScript types.
+In Web Loom API, the **Drizzle table definition is the single source of truth**. `defineModel()` wraps a Drizzle table to:
+
+1. Derive Zod validation schemas automatically via `drizzle-zod`
+2. Register the model in the global `ModelRegistry`
+3. Signal the CRUD generator to produce routes (when `crud: true`)
+4. Provide schema data to the OpenAPI generator
 
 ## Defining a Model
 
 ```typescript
+import { pgTable, uuid, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { defineModel } from "@web-loom/api-core";
 
-export const User = defineModel({
-  name: "User",
-  tableName: "users",
+// Step 1: Drizzle table (your schema, unchanged)
+export const usersTable = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  role: text("role").notNull().default("user"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
 
-  fields: [
-    {
-      name: "id",
-      type: "uuid",
-      database: { primaryKey: true, default: "gen_random_uuid()" },
-    },
-    {
-      name: "name",
-      type: "string",
-      validation: { required: true, minLength: 1, maxLength: 100 },
-    },
-    {
-      name: "email",
-      type: "string",
-      validation: { required: true, format: "email" },
-      database: { unique: true },
-    },
-    {
-      name: "role",
-      type: "enum",
-      validation: { enum: ["user", "admin", "moderator"] },
-      default: "user",
-    },
-  ],
-
-  options: {
-    timestamps: true,
-    crud: true,
-  },
+// Step 2: Register with Web Loom
+export const User = defineModel(usersTable, {
+  name: "User",           // PascalCase — used in OpenAPI, error messages
+  basePath: "/users",     // optional; defaults to "/" + name.toLowerCase() + "s"
+  crud: true,             // generate all 6 CRUD routes
 });
 ```
 
-## Field Types
-
-| Field Type | TypeScript Type | Postgres Type | Validation Options |
-|------------|----------------|---------------|-------------------|
-| `string` | `string` | `VARCHAR` / `TEXT` | `min`, `max`, `pattern`, `format` (`email`, `url`) |
-| `number` | `number` | `INTEGER` / `DECIMAL` | `min`, `max`, `integer`, `positive` |
-| `boolean` | `boolean` | `BOOLEAN` | — |
-| `date` / `datetime` | `Date` | `TIMESTAMP` | `min`, `max` |
-| `uuid` | `string` | `UUID` | UUID format auto-validated |
-| `enum` | union type | `ENUM` / `VARCHAR` | `enum: string[]` |
-| `json` | `object` | `JSONB` | Optional nested schema |
-| `array` | `T[]` | `ARRAY` | `items` schema, `minLength`, `maxLength` |
-| `decimal` | `Decimal` | `DECIMAL` | `precision`, `scale` |
-| `text` | `string` | `TEXT` | `minLength`, `maxLength` |
-
-## Field Configuration
-
-Each field supports three configuration areas:
-
-### Validation
-
-Controls request validation via the Validation Adapter:
+## `ModelMeta` Options
 
 ```typescript
-{
-  name: "email",
-  type: "string",
-  validation: {
-    required: true,
-    format: "email",
-    maxLength: 255,
-  },
+interface ModelMeta {
+  /** PascalCase name, e.g. "User", "BlogPost" */
+  name: string;
+
+  /** URL prefix for CRUD routes. Default: "/" + name.toLowerCase() + "s" */
+  basePath?: string;
+
+  /**
+   * true  — all 6 CRUD operations with public access
+   * false — no CRUD routes generated (default)
+   * object — fine-grained control per operation
+   */
+  crud?: boolean | CrudOptions;
 }
 ```
 
-### Database
+## Fine-Grained CRUD Options
 
-Controls schema generation and query behavior:
-
-```typescript
-{
-  name: "email",
-  type: "string",
-  database: {
-    unique: true,
-    index: true,
-    select: false,  // excluded from default SELECT queries
-    references: { model: "Organization", field: "id" },
-  },
-}
-```
-
-### Default Values
-
-Static values, dynamic functions, or database-level defaults:
+Control auth requirements per operation:
 
 ```typescript
-// Static default
-{ name: "role", type: "enum", default: "user" }
-
-// Dynamic default
-{ name: "createdAt", type: "datetime", default: () => new Date() }
-
-// Database-level default
-{ name: "id", type: "uuid", database: { default: "gen_random_uuid()" } }
-```
-
-## Relationships
-
-Define how models relate to each other:
-
-```typescript
-export const Post = defineModel({
+export const Post = defineModel(postsTable, {
   name: "Post",
-  tableName: "posts",
-  fields: [/* ... */],
-
-  relationships: [
-    { type: "belongsTo", model: "User", foreignKey: "userId" },
-    { type: "hasMany", model: "Comment", foreignKey: "postId" },
-  ],
-});
-```
-
-### Relationship Types
-
-| Type | Description | Example |
-|------|-------------|---------|
-| `hasOne` | One-to-one, foreign key on the other model | User → Profile |
-| `hasMany` | One-to-many, foreign key on the other model | User → Posts |
-| `belongsTo` | Many-to-one, foreign key on this model | Post → User |
-| `manyToMany` | Many-to-many via join table | Post ↔ Tags |
-
-### Many-to-Many
-
-```typescript
-relationships: [
-  {
-    type: "manyToMany",
-    model: "Tag",
-    through: "post_tags",  // join table name
-  },
-]
-```
-
-### Cascade Delete
-
-```typescript
-relationships: [
-  {
-    type: "hasMany",
-    model: "Comment",
-    foreignKey: "postId",
-    cascade: "cascade",    // "cascade" | "restrict" | "set-null"
-  },
-]
-```
-
-## Model Options
-
-```typescript
-options: {
-  // Auto-manage createdAt / updatedAt fields
-  timestamps: true,
-
-  // Soft delete (sets deleted_at instead of removing rows)
-  softDelete: true,
-
-  // Optimistic locking (adds a version field)
-  optimisticLocking: true,
-
-  // CRUD route generation
-  crud: true,
-  // Or fine-grained control:
   crud: {
-    list: { auth: false, cache: { ttl: 60, tags: ["posts"] } },
-    read: { auth: false },
-    create: { auth: true },
-    update: { auth: "owner" },
-    delete: { auth: "admin" },
-  },
-
-  // Field-level permissions
-  permissions: {
-    password: { read: false, write: ["self"] },
-    role: { write: ["admin"] },
-  },
-}
-```
-
-## Using Model Schemas in Routes
-
-Models expose a `.schema` helper for picking fields in validation:
-
-```typescript
-router.post("/api/users", {
-  validation: {
-    body: User.schema.pick("name", "email", "password"),
-  },
-  handler: async (ctx) => {
-    // ctx.body is typed as { name: string; email: string; password: string }
-    const user = await ctx.db.insert(User, ctx.body);
-    return ctx.json({ user }, 201);
+    timestamps: true,          // auto-manage createdAt/updatedAt injection
+    softDelete: true,          // DELETE sets deletedAt instead of removing the row
+    list:   { auth: false },   // public
+    read:   { auth: false },   // public
+    create: { auth: true },    // any authenticated user
+    update: { auth: "owner" }, // role: "owner" (custom string checked by your auth)
+    delete: { auth: "admin" }, // role: "admin"
   },
 });
 ```
 
-Partial schemas for updates:
+`auth` values:
+
+| Value | Behaviour |
+|-------|-----------|
+| `false` / absent | No auth required |
+| `true` | `authenticate` middleware — rejects if `c.var.user` is not set |
+| `"admin"` (any string) | `authenticate` + `requireRole("admin")` |
+
+## Schema Overrides
+
+`drizzle-zod` auto-generates schemas from your column definitions. Use the optional `overrides` parameter to transform them:
 
 ```typescript
-router.put("/api/users/:id", {
-  validation: {
-    body: User.schema.pick("name", "email").partial(),
+import { z } from "zod";
+
+export const User = defineModel(
+  usersTable,
+  { name: "User", crud: true },
+  {
+    // Tighten the insert schema — require password on creation
+    insert: (schema) =>
+      schema.extend({
+        password: z.string().min(8),
+      }),
+
+    // Strip internal fields from select responses
+    select: (schema) =>
+      schema.omit({ deletedAt: true }),
+
+    // Keep update schema as-is (partial of insert is the default)
+    update: (schema) => schema,
   },
-  handler: async (ctx) => {
-    const user = await ctx.db.update(User, ctx.params.id, ctx.body);
-    return ctx.json({ user });
+);
+```
+
+The three derived schemas available on the model:
+
+| Schema | Used for | Contents |
+|--------|----------|----------|
+| `insertSchema` | POST / PUT body validation | All non-generated columns (no `defaultRandom`, etc.) |
+| `selectSchema` | Response typing, OpenAPI responses | All columns |
+| `updateSchema` | PATCH body validation | `insertSchema.partial()` (all fields optional) |
+
+## Accessing Schemas in Routes
+
+Use the model's schemas in custom routes for consistent validation:
+
+```typescript
+import { defineRoutes, validate } from "@web-loom/api-core";
+import { User, usersTable } from "../schema";
+
+const app = defineRoutes();
+
+app.post(
+  "/register",
+  validate("json", User.insertSchema),
+  async (c) => {
+    const data = c.req.valid("json"); // typed as User insert shape
+    const [user] = await c.var.db
+      .insert(usersTable)
+      .values(data)
+      .returning();
+    return c.json({ user }, 201);
   },
+);
+
+// Partial update using the updateSchema
+app.patch(
+  "/:id",
+  validate("json", User.updateSchema),
+  async (c) => {
+    const patch = c.req.valid("json");
+    // ...
+  },
+);
+```
+
+## Type Inference
+
+```typescript
+import type { InferModel } from "@web-loom/api-core";
+
+type UserRow = InferModel<typeof User>["select"]; // typeof usersTable.$inferSelect
+type NewUser = InferModel<typeof User>["insert"]; // typeof usersTable.$inferInsert
+```
+
+Or use Drizzle's own inference directly:
+
+```typescript
+type UserRow = typeof usersTable.$inferSelect;
+type NewUser = typeof usersTable.$inferInsert;
+```
+
+## Soft Delete
+
+When `crud.softDelete: true`, the CRUD generator:
+
+- **DELETE** — sets `deletedAt = NOW()` instead of removing the row
+- **List** — appends `WHERE deleted_at IS NULL` automatically
+- **Read** — appends `WHERE deleted_at IS NULL` automatically
+
+Your table must have a nullable `deletedAt` timestamp column:
+
+```typescript
+export const postsTable = pgTable("posts", {
+  // ...
+  deletedAt: timestamp("deleted_at"), // nullable — no .notNull()
 });
 ```
-
-## Computed Fields
-
-Fields derived from other fields, not stored in the database:
-
-```typescript
-{
-  name: "slug",
-  type: "string",
-  computed: true,
-  // Computed from title on serialization
-}
-```
-
-Computed fields are read-only in API responses and excluded from create/update requests.
 
 ## Model Registry
 
-All models are automatically registered with the Model Registry when discovered in `src/models/`. The registry is used by:
-
-- **CRUD Generator** — generates REST endpoints
-- **OpenAPI Generator** — generates API specification
-- **Client Generator** — generates typed frontend clients
-- **Type Generator** — generates TypeScript interfaces
-
-You can also register models programmatically:
+All models registered via `defineModel()` are available through the app:
 
 ```typescript
 const app = await createApp(config);
-app.getModelRegistry().register(MyModel);
+const registry = app.getModelRegistry();
+
+registry.getAll();                   // AnyModel[]
+registry.get("User");                // AnyModel | undefined
+registry.has("User");                // boolean
 ```
 
-## Code Generation from Models
-
-```bash
-# Generate CRUD routes
-npx webloom generate crud User
-
-# Generate OpenAPI spec
-npx webloom generate openapi --output=./openapi.json
-
-# Generate TypeScript client
-npx webloom generate client --output=./client
-
-# Generate TypeScript types
-npx webloom generate types
-```
+The registry is consumed by the CRUD generator and OpenAPI generator at startup.
 
 ## Serialization
 
-Models handle JSON serialization with special type support:
+`serializeModel()` handles JSON serialization edge cases:
 
-- `Date` → ISO 8601 string
-- `BigInt` → string (avoids JavaScript precision loss)
-- `Decimal` → string
-- `Buffer` → base64 string
+```typescript
+import { serializeModel } from "@web-loom/api-core";
 
-Round-trip serialization is guaranteed: `deserialize(serialize(model)) === model`.
+const row = await c.var.db.select().from(usersTable).limit(1);
+return c.json(serializeModel(row[0]));
+```
+
+Coercions applied:
+
+| Type | Serialized As |
+|------|--------------|
+| `Date` | ISO 8601 string |
+| `BigInt` | string (avoids JS precision loss) |
+| `Buffer` | base64 string |

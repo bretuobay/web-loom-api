@@ -111,40 +111,36 @@ const dbUser = await userFactory.create({ role: "admin" });
 await seed(User, 50, userFactory);
 ```
 
-## Mock Adapters
+## In-Memory Database Testing
 
-Test in isolation without real databases or services:
+Use `libsql` with an in-memory SQLite database for fast, isolated integration tests:
 
 ```typescript
-import { createMockDatabase, createMockAuth, createMockEmail } from "@web-loom/api-testing";
+import { createApp, defineConfig } from "@web-loom/api-core";
+import { createClient } from "@libsql/client";
+import { migrate } from "drizzle-orm/libsql/migrator";
+import { drizzle } from "drizzle-orm/libsql";
 
-describe("Isolated Tests", () => {
-  const mockDb = createMockDatabase();
-  const mockAuth = createMockAuth();
-  const mockEmail = createMockEmail();
+describe("Users API (integration)", () => {
+  let app: Awaited<ReturnType<typeof createApp>>;
 
-  beforeEach(() => {
-    mockDb.reset();
-    mockAuth.reset();
-    mockEmail.reset();
+  beforeAll(async () => {
+    app = await createApp(defineConfig({
+      database: { url: ":memory:", driver: "libsql" },
+    }));
+    // Run migrations on the in-memory DB
+    await migrate(app.db, { migrationsFolder: "./drizzle" });
   });
 
-  it("sends welcome email on signup", async () => {
-    const app = await createApp({
-      ...config,
-      adapters: {
-        ...config.adapters,
-        database: mockDb,
-        auth: mockAuth,
-        email: mockEmail,
-      },
-    });
-    const client = createTestClient(app);
-
-    await client.post("/users", { name: "Alice", email: "alice@test.com", password: "secret123" });
-
-    expect(mockEmail.getSentEmails()).toHaveLength(1);
-    expect(mockEmail.getLastEmail()?.to).toBe("alice@test.com");
+  it("creates a user", async () => {
+    const res = await app.handleRequest(
+      new Request("http://localhost/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Alice", email: "alice@example.com" }),
+      })
+    );
+    expect(res.status).toBe(201);
   });
 });
 ```
@@ -161,18 +157,14 @@ import { describe, it, expect } from "vitest";
 // Validates: Requirements 45.1
 describe("Configuration round-trip", () => {
   const configGenerator = fc.record({
-    adapters: fc.record({
-      api: fc.constant(honoAdapter()),
-      database: fc.constant(drizzleAdapter()),
-      validation: fc.constant(zodAdapter()),
-    }),
     database: fc.record({
       url: fc.webUrl(),
+      driver: fc.constantFrom("neon-serverless", "libsql", "pg"),
       poolSize: fc.integer({ min: 1, max: 100 }),
     }),
     security: fc.record({
       cors: fc.record({
-        origin: fc.array(fc.webUrl(), { minLength: 1 }),
+        origins: fc.array(fc.webUrl(), { minLength: 1 }),
       }),
     }),
   });

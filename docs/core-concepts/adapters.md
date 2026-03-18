@@ -1,271 +1,179 @@
-# Adapter System
+# Stack Overview
 
-Web Loom API uses an adapter-based architecture where every major component — HTTP framework, database, validation, authentication, and email — is abstracted behind a standard interface. You pick the implementations you want, and the framework wires them together.
-
-## How Adapters Work
-
-Each adapter type defines a contract (a TypeScript interface). The framework ships default implementations, but you can swap any of them without changing your application code.
+Web Loom API is built directly on [Hono](https://hono.dev), [Drizzle ORM](https://orm.drizzle.team), and [Zod](https://zod.dev). These are not hidden behind adapter interfaces — you write real Drizzle queries and real Hono handlers. The framework adds model registration, file-based route discovery, CRUD generation, and OpenAPI documentation on top.
 
 ```
-┌─────────────────────────────────────────────┐
-│              Your Application               │
-│  (models, routes, middleware, business logic)│
-├─────────────────────────────────────────────┤
-│              Adapter Interfaces             │
-│  API │ Database │ Validation │ Auth │ Email │
-├──────┼──────────┼────────────┼──────┼───────┤
-│ Hono │ Drizzle  │    Zod     │Lucia │Resend │  ← defaults
-│      │ +Neon    │            │      │       │
-└──────┴──────────┴────────────┴──────┴───────┘
+┌────────────────────────────────────────────────┐
+│                 Your Application               │
+│       models  ·  routes  ·  middleware         │
+├────────────────────────────────────────────────┤
+│               Web Loom API Core                │
+│  createApp · defineModel · defineRoutes        │
+│  validate  · openApiMeta · ModelRegistry       │
+├────────────────────────────────────────────────┤
+│  Hono (HTTP)  │  Drizzle ORM  │  Zod (schemas) │
+├────────────────────────────────────────────────┤
+│     neon-serverless  │  libsql  │  pg           │
+└────────────────────────────────────────────────┘
 ```
 
-Adapters are configured in `defineConfig()`:
+## HTTP — Hono
+
+[Hono](https://hono.dev) is the HTTP layer. `defineRoutes()` returns a `Hono<{ Variables: WebLoomVariables }>` instance, giving full access to Hono's API.
 
 ```typescript
-import { defineConfig } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
-import { luciaAdapter } from "@web-loom/api-adapter-lucia";
-import { resendAdapter } from "@web-loom/api-adapter-resend";
+import { defineRoutes } from "@web-loom/api-core";
 
-export default defineConfig({
-  adapters: {
-    api: honoAdapter(),           // required
-    database: drizzleAdapter(),   // required
-    validation: zodAdapter(),     // required
-    auth: luciaAdapter(),         // optional
-    email: resendAdapter(),       // optional
+const app = defineRoutes();
+
+// Standard Hono handler
+app.get("/hello", (c) => c.text("Hello!"));
+
+// Access Drizzle via c.var.db
+app.get("/users", async (c) => {
+  const users = await c.var.db.select().from(usersTable);
+  return c.json({ users });
+});
+```
+
+Web Loom's `Application` wraps Hono. Reach the underlying instance via `app.hono`:
+
+```typescript
+const app = await createApp(config);
+app.hono.use("/*", myMiddleware);  // register global middleware
+```
+
+## Database — Drizzle ORM
+
+[Drizzle ORM](https://orm.drizzle.team) is the database layer. Three drivers are supported:
+
+| Driver | Connection type | Install |
+|--------|----------------|---------|
+| `neon-serverless` | Neon Postgres over HTTP (edge-safe) | `@neondatabase/serverless` |
+| `libsql` | Turso / local SQLite via libsql | `@libsql/client` |
+| `pg` | Standard node-postgres (Docker, VMs) | `pg` |
+
+Configure via `defineConfig()`:
+
+```typescript
+defineConfig({
+  database: {
+    url: process.env.DATABASE_URL!,
+    driver: "neon-serverless",
   },
+})
+```
+
+In route handlers, `c.var.db` is the Drizzle instance. Cast it to your driver type for full inference:
+
+```typescript
+import type { NeonDatabase } from "drizzle-orm/neon-serverless";
+import * as schema from "./schema";
+
+app.get("/users", async (c) => {
+  const db = c.var.db as NeonDatabase<typeof schema>;
+  const users = await db.select().from(schema.usersTable);
+  return c.json({ users });
+});
+```
+
+## Validation — Zod + drizzle-zod
+
+[Zod](https://zod.dev) is used for all request validation. `defineModel()` generates Zod schemas automatically from Drizzle tables using [drizzle-zod](https://orm.drizzle.team/docs/zod). Use `validate()` to attach them to routes:
+
+```typescript
+import { validate } from "@web-loom/api-core";
+import { User } from "./schema";
+
+app.post("/", validate("json", User.insertSchema), async (c) => {
+  const data = c.req.valid("json"); // fully typed
   // ...
 });
 ```
 
-## Available Adapters
-
-### API Framework Adapter — `@web-loom/api-adapter-hono`
-
-Handles HTTP routing, request parsing, and response serialization.
-
-| Feature | Detail |
-|---------|--------|
-| Package | `@web-loom/api-adapter-hono` |
-| Default | Yes |
-| Size | ~12KB |
-| Edge support | Full (Web Standards API) |
+You can also use Zod schemas directly without a model:
 
 ```typescript
-import { honoAdapter } from "@web-loom/api-adapter-hono";
+import { z } from "zod";
 
-defineConfig({
-  adapters: {
-    api: honoAdapter(),
+app.post(
+  "/subscribe",
+  validate("json", z.object({ email: z.string().email() })),
+  async (c) => {
+    const { email } = c.req.valid("json");
+    // ...
   },
+);
+```
+
+## Authentication — `@web-loom/api-middleware-auth`
+
+Authentication is provided by the `@web-loom/api-middleware-auth` package. It integrates with Hono's middleware system — no adapter required.
+
+Three strategies are available out of the box:
+
+```typescript
+import {
+  jwtAuth,
+  sessionAuth,
+  apiKeyAuth,
+  requireRole,
+  requirePermission,
+  composeAuth,
+  csrfProtection,
+} from "@web-loom/api-middleware-auth";
+```
+
+See the [Auth Middleware reference](../api-reference/middleware.md) for full documentation.
+
+## Email
+
+Email is optional. Pass an `EmailAdapter` implementation to `defineConfig()`:
+
+```typescript
+import { defineConfig } from "@web-loom/api-core";
+import { ResendAdapter } from "@web-loom/api-shared";
+
+export default defineConfig({
+  database: { url: "...", driver: "neon-serverless" },
+  email: new ResendAdapter({
+    apiKey: process.env.RESEND_API_KEY!,
+    from: "noreply@example.com",
+  }),
 });
 ```
 
-**Interface:**
+In route handlers, access via `c.var.email`:
 
 ```typescript
-interface APIFrameworkAdapter {
-  registerRoute(method: HTTPMethod, path: string, handler: RouteHandler): void;
-  registerMiddleware(middleware: Middleware, options?: MiddlewareOptions): void;
-  handleRequest(request: Request): Promise<Response>;
-  listen(port: number): Promise<void>;
-  close(): Promise<void>;
-}
-```
-
-### Database Adapter — `@web-loom/api-adapter-drizzle`
-
-Manages database connections, queries, transactions, and schema operations.
-
-| Feature | Detail |
-|---------|--------|
-| Package | `@web-loom/api-adapter-drizzle` |
-| Default | Yes (with Neon) |
-| Query latency | Sub-10ms from edge |
-| Connection pooling | Built-in |
-
-```typescript
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-
-defineConfig({
-  adapters: {
-    database: drizzleAdapter(),
-  },
-  database: {
-    url: process.env.DATABASE_URL!,
-    poolSize: 10,
-    connectionTimeout: 10_000,
-    readReplicas: [process.env.DATABASE_READ_URL!],
-  },
+app.post("/contact", async (c) => {
+  await c.var.email!.send({
+    to: "support@example.com",
+    subject: "New contact form submission",
+    html: "<p>Hello</p>",
+  });
+  return c.body(null, 204);
 });
 ```
 
-**Interface:**
+Accessing `c.var.email` when no adapter is configured throws a `ConfigurationError`.
 
-```typescript
-interface DatabaseAdapter {
-  connect(config: DatabaseConfig): Promise<void>;
-  disconnect(): Promise<void>;
-  healthCheck(): Promise<boolean>;
-  query<T>(sql: string, params: unknown[]): Promise<T[]>;
-  execute(sql: string, params: unknown[]): Promise<void>;
-  transaction<T>(callback: (tx: Transaction) => Promise<T>): Promise<T>;
-  select<T>(model: ModelDefinition): QueryBuilder<T>;
-  insert<T>(model: ModelDefinition, data: T): Promise<T>;
-  update<T>(model: ModelDefinition, id: string, data: Partial<T>): Promise<T>;
-  delete(model: ModelDefinition, id: string): Promise<void>;
-}
-```
+## OpenAPI — `@web-loom/api-generator-openapi`
 
-### Validation Adapter — `@web-loom/api-adapter-zod`
+OpenAPI document generation is automatic. When `openapi.enabled: true`, the framework:
 
-Validates request bodies, query parameters, and path parameters against model schemas.
+1. Reads all registered models and generates path items for CRUD operations
+2. Reads `openApiMeta()` annotations from route handlers
+3. Combines them into a valid OpenAPI 3.1 document
 
-| Feature | Detail |
-|---------|--------|
-| Package | `@web-loom/api-adapter-zod` |
-| Default | Yes |
-| Size | ~8KB |
-| TypeScript inference | Full |
+Live endpoints:
+- `GET /openapi.json`
+- `GET /openapi.yaml`
+- `GET /docs` (Swagger UI or Scalar)
 
-```typescript
-import { zodAdapter } from "@web-loom/api-adapter-zod";
-
-defineConfig({
-  adapters: {
-    validation: zodAdapter(),
-  },
-});
-```
-
-**Interface:**
-
-```typescript
-interface ValidationAdapter {
-  defineSchema<T>(definition: SchemaDefinition): Schema<T>;
-  validate<T>(schema: Schema<T>, data: unknown): ValidationResult<T>;
-  validateAsync<T>(schema: Schema<T>, data: unknown): Promise<ValidationResult<T>>;
-  merge<T, U>(schema1: Schema<T>, schema2: Schema<U>): Schema<T & U>;
-  partial<T>(schema: Schema<T>): Schema<Partial<T>>;
-  pick<T, K extends keyof T>(schema: Schema<T>, keys: K[]): Schema<Pick<T, K>>;
-  infer<T>(schema: Schema<T>): T;
-}
-```
-
-### Auth Adapter — `@web-loom/api-adapter-lucia`
-
-Session management, password hashing, OAuth2, and API key authentication.
-
-| Feature | Detail |
-|---------|--------|
-| Package | `@web-loom/api-adapter-lucia` |
-| Default | Yes (optional) |
-| Size | ~5KB |
-| Session storage | Database-backed |
-
-```typescript
-import { luciaAdapter } from "@web-loom/api-adapter-lucia";
-
-defineConfig({
-  adapters: {
-    auth: luciaAdapter({
-      sessionExpiry: "30d",
-      cookieName: "session",
-    }),
-  },
-});
-```
-
-**Interface:**
-
-```typescript
-interface AuthAdapter {
-  createSession(userId: string, attributes?: Record<string, unknown>): Promise<Session>;
-  validateSession(sessionId: string): Promise<SessionValidationResult>;
-  invalidateSession(sessionId: string): Promise<void>;
-  createUser(data: UserData): Promise<User>;
-  getUser(userId: string): Promise<User | null>;
-  hashPassword(password: string): Promise<string>;
-  verifyPassword(hash: string, password: string): Promise<boolean>;
-  createApiKey(userId: string, scopes: string[]): Promise<ApiKey>;
-  validateApiKey(key: string): Promise<ApiKeyValidationResult>;
-}
-```
-
-### Email Adapter — `@web-loom/api-adapter-resend`
-
-Send transactional emails, templates, and batch messages.
-
-| Feature | Detail |
-|---------|--------|
-| Package | `@web-loom/api-adapter-resend` |
-| Default | Yes (optional) |
-| Template support | Built-in |
-
-```typescript
-import { resendAdapter } from "@web-loom/api-adapter-resend";
-
-defineConfig({
-  adapters: {
-    email: resendAdapter({
-      apiKey: process.env.RESEND_API_KEY!,
-      from: "noreply@example.com",
-    }),
-  },
-});
-```
-
-**Interface:**
-
-```typescript
-interface EmailAdapter {
-  send(email: EmailMessage): Promise<EmailResult>;
-  sendBatch(emails: EmailMessage[]): Promise<EmailResult[]>;
-  sendTemplate(templateId: string, to: string, variables: Record<string, unknown>): Promise<EmailResult>;
-}
-```
-
-## Swapping Adapters
-
-Switching an adapter is a config change — your models, routes, and business logic stay the same.
+Generate static files with the CLI:
 
 ```bash
-# CLI shortcut
-npx webloom switch database prisma
-npx webloom switch validation yup
+npx webloom generate openapi --output ./openapi.json
+npx webloom generate client --input ./openapi.json --output ./src/client
 ```
-
-Or update `defineConfig()` manually:
-
-```typescript
-// Before: Drizzle + Neon
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-
-// After: Prisma
-import { prismaAdapter } from "@web-loom/api-adapter-prisma";
-
-defineConfig({
-  adapters: {
-    database: prismaAdapter(), // swap one line
-  },
-});
-```
-
-## Adapter Initialization Order
-
-The Core Runtime initializes adapters in dependency order:
-
-1. **API Framework** — HTTP routing must be ready first
-2. **Database** — Connection pool established
-3. **Validation** — Schema compilation
-4. **Auth** (lazy) — Initialized on first authenticated request
-5. **Email** (lazy) — Initialized on first send
-
-Non-critical adapters (auth, email) are lazy-loaded to minimize cold start time on serverless platforms.
-
-## Building Custom Adapters
-
-See the [Custom Adapter Development](../advanced/custom-adapters.md) guide for implementing your own adapter.
