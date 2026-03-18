@@ -70,7 +70,7 @@ export async function discoverAndMountRoutes(
         throw new RouteConflictError(
           route.method.toUpperCase(),
           key.slice(route.method.length + 1),
-          seen.get(key)!,
+          seen.get(key) ?? filePath,
           filePath
         );
       }

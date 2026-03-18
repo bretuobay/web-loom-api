@@ -33,10 +33,10 @@ export function openApiMeta(meta: RouteMeta): MiddlewareHandler {
     await next();
     return;
   };
-  (middleware as any)[ROUTE_META_KEY] = meta;
+  (middleware as MiddlewareHandler & Record<symbol, RouteMeta>)[ROUTE_META_KEY] = meta;
   return middleware;
 }
 
 export function getRouteMeta(middleware: MiddlewareHandler): RouteMeta | undefined {
-  return (middleware as any)[ROUTE_META_KEY];
+  return (middleware as MiddlewareHandler & Record<symbol, RouteMeta>)[ROUTE_META_KEY];
 }
