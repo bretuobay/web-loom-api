@@ -1,105 +1,66 @@
-/**
- * Session Authentication Middleware
- *
- * Validates session tokens from the Authorization header using the AuthAdapter.
- * Attaches authenticated user and session to the RequestContext.
- *
- * @example
- * ```typescript
- * import { sessionAuth } from '@web-loom/api-middleware-auth';
- *
- * // Required authentication
- * app.use(sessionAuth(authAdapter));
- *
- * // Optional authentication
- * app.use(sessionAuth(authAdapter, { optional: true }));
- * ```
- */
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+import type { MiddlewareHandler } from 'hono';
+import type { AuthUser } from './types';
 
-import type { AuthAdapter, RequestContext, NextFunction } from '@web-loom/api-core';
-import type { SessionAuthOptions, AuthenticatedUser } from './types';
-
-/**
- * Extract a token from the Authorization header.
- *
- * @param request - The incoming request
- * @param headerName - Header to read (default 'Authorization')
- * @param prefix - Expected prefix (default 'Bearer')
- * @returns The raw token string, or null if not present / malformed
- */
-function extractToken(
-  request: Request,
-  headerName: string,
-  prefix: string,
-): string | null {
-  const header = request.headers.get(headerName);
-  if (!header) return null;
-
-  if (!header.startsWith(`${prefix} `)) return null;
-
-  const token = header.slice(prefix.length + 1).trim();
-  return token.length > 0 ? token : null;
+/** Minimal Lucia interface — use the real `Lucia` type when lucia is installed. */
+export interface LuciaLike {
+  validateSession(
+    sessionId: string,
+  ): Promise<{ session: { id: string } | null; user: Record<string, unknown> | null }>;
+  createSessionCookie(
+    sessionId: string,
+  ): { name: string; value: string; attributes: Record<string, unknown> };
+  createBlankSessionCookie(): { name: string; value: string; attributes: Record<string, unknown> };
 }
 
+export interface SessionAuthOptions {
+  lucia: LuciaLike;
+  /** Cookie name (default: 'session') */
+  cookieName?: string;
+  /** Map a Lucia user object to `AuthUser` */
+  getUser?: (luciaUser: Record<string, unknown>) => AuthUser;
+}
+
+const defaultGetUser = (u: Record<string, unknown>): AuthUser => ({
+  id: String(u['id'] ?? ''),
+  email: u['email'] as string | undefined,
+  role: u['role'] as string | undefined,
+});
+
 /**
- * Create session authentication middleware.
+ * Lucia session cookie authentication middleware.
  *
- * Extracts a Bearer token from the Authorization header, validates it via
- * the AuthAdapter, and attaches the user + session to the request context.
- *
- * @param adapter - AuthAdapter instance for session validation
- * @param options - Optional configuration
- * @returns Middleware function
+ * Reads the session cookie, validates it with Lucia, refreshes it, and
+ * sets `c.var.user` on success.
  */
-export function sessionAuth(
-  adapter: AuthAdapter,
-  options: SessionAuthOptions = {},
-): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
-  const {
-    optional = false,
-    headerName = 'Authorization',
-    tokenPrefix = 'Bearer',
-  } = options;
+export function sessionAuth(options: SessionAuthOptions): MiddlewareHandler {
+  const cookieName = options.cookieName ?? 'session';
+  const getUser = options.getUser ?? defaultGetUser;
 
-  return async (ctx: RequestContext, next: NextFunction): Promise<Response> => {
-    const token = extractToken(ctx.request, headerName, tokenPrefix);
+  return async (c, next) => {
+    const sessionId = getCookie(c, cookieName);
 
-    if (!token) {
-      if (optional) return next();
+    if (!sessionId) {
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Session required' } }, 401);
+    }
 
-      return new Response(
-        JSON.stringify({
-          error: 'Unauthorized',
-          message: 'Missing authentication token',
-          code: 'UNAUTHORIZED',
-        }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } },
+    const { session, user } = await options.lucia.validateSession(sessionId);
+
+    if (!session || !user) {
+      // Invalidate stale cookie
+      const blank = options.lucia.createBlankSessionCookie();
+      deleteCookie(c, blank.name);
+      return c.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Invalid or expired session' } },
+        401,
       );
     }
 
-    const result = await adapter.validateSession(token);
+    // Refresh session cookie
+    const sessionCookie = options.lucia.createSessionCookie(session.id);
+    setCookie(c, sessionCookie.name, sessionCookie.value, sessionCookie.attributes as Parameters<typeof setCookie>[3]);
 
-    if (!result.valid || !result.user) {
-      if (optional) return next();
-
-      return new Response(
-        JSON.stringify({
-          error: 'Unauthorized',
-          message: 'Invalid or expired session',
-          code: 'INVALID_TOKEN',
-        }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } },
-      );
-    }
-
-    // Attach user and session to context
-    const authedUser: AuthenticatedUser = {
-      ...result.user,
-      authMethod: 'session',
-    };
-    ctx.user = authedUser;
-    ctx.session = result.session;
-
-    return next();
+    c.set('user', getUser(user));
+    await next();
   };
 }

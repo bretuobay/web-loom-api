@@ -1,8 +1,11 @@
 /**
  * @web-loom/api-middleware-validation
  *
- * Validation middleware for Web Loom API Framework
- * Provides middleware for validating request body, query parameters, and path parameters
+ * Validation middleware for Web Loom API Framework.
+ *
+ * @deprecated The adapter-based validators have been replaced with Zod-native
+ * helpers. See the routing-system spec (.kiro/specs/routing-system/) for the
+ * upcoming `validate()` helper.
  */
 
 export {
@@ -12,17 +15,10 @@ export {
   createValidation,
 } from './validation-middleware';
 
-// Input sanitization utilities
+// Input sanitization utilities (unchanged)
 export {
   sanitize,
   sanitizeObject,
   isPathTraversal,
   requestSizeLimit,
 } from './sanitization';
-
-export type {
-  RequestContext,
-  NextFunction,
-  ValidationAdapter,
-  Schema,
-} from '@web-loom/api-core';

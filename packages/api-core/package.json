@@ -32,12 +32,37 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
     "@web-loom/api-shared": "*",
     "dotenv": "^16.0.3",
+    "drizzle-orm": "^0.38.4",
+    "drizzle-zod": "^0.8.3",
+    "hono": "^4.6.0",
     "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@hono/node-server": "^1.13.0",
+    "@libsql/client": "^0.14.0",
+    "@neondatabase/serverless": "^0.10.0",
+    "pg": "^8.13.0"
+  },
+  "peerDependenciesMeta": {
+    "@hono/node-server": {
+      "optional": true
+    },
+    "@neondatabase/serverless": {
+      "optional": true
+    },
+    "@libsql/client": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",
     "vitest": "^2.1.8"

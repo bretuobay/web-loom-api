@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   createErrorHandler,
   formatErrorResponse,
@@ -13,7 +13,9 @@ import {
   ErrorCode,
   type ErrorContext,
 } from '../error-handler';
-import type { RequestContext, NextFunction } from '../../interfaces';
+
+const makeRequest = (path = '/api/users', method = 'GET') =>
+  new Request(`http://localhost${path}`, { method });
 
 describe('Error Handler', () => {
   describe('generateRequestId', () => {
@@ -28,37 +30,24 @@ describe('Error Handler', () => {
   });
 
   describe('extractErrorContext', () => {
-    it('should extract context from request', () => {
-      const ctx: RequestContext = {
-        request: new Request('http://localhost/api/users'),
-        params: {},
-        query: {},
-        body: null,
-        metadata: new Map([
-          ['requestId', 'req_123'],
-          ['userId', 'user_456'],
-        ]),
-      };
+    it('should extract path and method from request', () => {
+      const request = makeRequest('/api/users', 'POST');
+      const context = extractErrorContext(request);
 
-      const context = extractErrorContext(ctx);
-
-      expect(context.requestId).toBe('req_123');
       expect(context.path).toBe('/api/users');
-      expect(context.method).toBe('GET');
-      expect(context.userId).toBe('user_456');
+      expect(context.method).toBe('POST');
+      expect(context.requestId).toMatch(/^req_\d+_[a-z0-9]+$/);
     });
 
-    it('should generate request ID if not present', () => {
-      const ctx: RequestContext = {
-        request: new Request('http://localhost/api/users'),
-        params: {},
-        query: {},
-        body: null,
-        metadata: new Map(),
-      };
+    it('should use provided request ID when given', () => {
+      const request = makeRequest('/api/users');
+      const context = extractErrorContext(request, 'req_123');
 
-      const context = extractErrorContext(ctx);
+      expect(context.requestId).toBe('req_123');
+    });
 
+    it('should generate request ID when not provided', () => {
+      const context = extractErrorContext(makeRequest());
       expect(context.requestId).toMatch(/^req_\d+_[a-z0-9]+$/);
     });
   });
@@ -140,37 +129,10 @@ describe('Error Handler', () => {
   });
 
   describe('createErrorHandler', () => {
-    let mockNext: NextFunction;
-    let ctx: RequestContext;
-
-    beforeEach(() => {
-      mockNext = vi.fn();
-      ctx = {
-        request: new Request('http://localhost/api/users'),
-        params: {},
-        query: {},
-        body: null,
-        metadata: new Map(),
-      };
-    });
-
-    it('should pass through successful responses', async () => {
-      const successResponse = new Response('OK', { status: 200 });
-      mockNext = vi.fn().mockResolvedValue(successResponse);
-
-      const handler = createErrorHandler();
-      const response = await handler(ctx, mockNext);
-
-      expect(response).toBe(successResponse);
-      expect(mockNext).toHaveBeenCalled();
-    });
-
     it('should catch and format WebLoomError', async () => {
       const error = new NotFoundError('User not found');
-      mockNext = vi.fn().mockRejectedValue(error);
-
       const handler = createErrorHandler({ environment: 'production' });
-      const response = await handler(ctx, mockNext);
+      const response = await handler(error, makeRequest());
 
       expect(response.status).toBe(404);
       expect(response.headers.get('Content-Type')).toBe('application/json');
@@ -183,10 +145,8 @@ describe('Error Handler', () => {
 
     it('should catch and format generic errors', async () => {
       const error = new Error('Something went wrong');
-      mockNext = vi.fn().mockRejectedValue(error);
-
       const handler = createErrorHandler({ environment: 'production' });
-      const response = await handler(ctx, mockNext);
+      const response = await handler(error, makeRequest());
 
       expect(response.status).toBe(500);
 
@@ -195,24 +155,20 @@ describe('Error Handler', () => {
       expect(body.error.message).toBe('An unexpected error occurred');
     });
 
-    it('should add request ID if not present', async () => {
+    it('should include X-Request-ID header in response', async () => {
       const error = new Error('Test error');
-      mockNext = vi.fn().mockRejectedValue(error);
-
       const handler = createErrorHandler();
-      await handler(ctx, mockNext);
+      const response = await handler(error, makeRequest());
 
-      expect(ctx.metadata.has('requestId')).toBe(true);
+      expect(response.headers.get('X-Request-ID')).toMatch(/^req_\d+_[a-z0-9]+$/);
     });
 
     it('should call custom logger', async () => {
       const error = new NotFoundError('Not found');
-      mockNext = vi.fn().mockRejectedValue(error);
-
       const logger = vi.fn();
       const handler = createErrorHandler({ logger });
 
-      await handler(ctx, mockNext);
+      await handler(error, makeRequest('/api/users'));
 
       expect(logger).toHaveBeenCalledWith(error, expect.objectContaining({
         requestId: expect.any(String),
@@ -231,10 +187,8 @@ describe('Error Handler', () => {
       ];
 
       for (const { error, expectedStatus } of testCases) {
-        mockNext = vi.fn().mockRejectedValue(error);
         const handler = createErrorHandler();
-        const response = await handler(ctx, mockNext);
-
+        const response = await handler(error, makeRequest());
         expect(response.status).toBe(expectedStatus);
       }
     });

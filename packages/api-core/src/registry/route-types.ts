@@ -1,5 +1,12 @@
 import type { HTTPMethod } from '@web-loom/api-shared';
-import type { RouteHandler, Middleware } from '../interfaces/api-framework-adapter';
+
+// Generic handler/middleware types used for route registry introspection.
+// In the framework core these are opaque; the actual Hono handlers are
+// registered directly on the Hono instance, not through the registry.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RouteHandler = (context: any) => Promise<Response> | Response;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Middleware = (context: any, next: () => Promise<void | Response>) => Promise<void | Response> | void;
 
 /**
  * Route definition for the route registry

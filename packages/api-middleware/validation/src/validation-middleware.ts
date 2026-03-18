@@ -1,245 +1,178 @@
 /**
- * Validation Middleware
- * 
- * Provides middleware for validating request body, query parameters, and path parameters
- * using a ValidationAdapter (e.g., Zod).
- * 
- * @example
- * ```typescript
- * import { createBodyValidation } from '@web-loom/api-middleware-validation';
- * import { ZodAdapter } from '@web-loom/api-adapter-zod';
- * 
- * const adapter = new ZodAdapter();
- * const userSchema = adapter.defineSchema({
- *   name: { type: 'string', required: true },
- *   email: { type: 'string', required: true, format: 'email' }
- * });
- * 
- * const validateBody = createBodyValidation(adapter, userSchema);
- * ```
+ * Validation Middleware — DEPRECATED
+ *
+ * This adapter-based validation middleware has been superseded by the
+ * `validate()` helper from `@web-loom/api-core` which wraps
+ * `@hono/zod-validator` directly with Zod schemas.
+ *
+ * This stub exists only to prevent import errors in dependents until
+ * they are migrated to the new routing-system API (Phase 2B).
+ *
+ * @see .kiro/specs/routing-system/
  */
 
-import type {
-  RequestContext,
-  NextFunction,
-  ValidationAdapter,
-  Schema,
-} from '@web-loom/api-core';
+import type { ZodTypeAny, z } from 'zod';
+import type { Context, Next } from 'hono';
 
 /**
- * Create middleware for validating request body
- * 
- * Validates the request body against a schema and returns 400 with detailed
- * errors if validation fails.
- * 
- * @param adapter - Validation adapter instance
- * @param schema - Schema to validate against
- * @returns Middleware function
+ * @deprecated Use the `validate()` helper from `@web-loom/api-core` instead.
  */
-export function createBodyValidation<T>(
-  adapter: ValidationAdapter,
-  schema: Schema<T>
-): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
-  return async (ctx: RequestContext, next: NextFunction): Promise<Response> => {
-    const result = adapter.validate(schema, ctx.body);
+export function createBodyValidation<T extends ZodTypeAny>(
+  schema: T
+): (c: Context, next: Next) => Promise<void> {
+  return async (c: Context, next: Next): Promise<void> => {
+    const body = await c.req.json().catch(() => ({}));
+    const result = schema.safeParse(body);
 
     if (!result.success) {
-      return new Response(
-        JSON.stringify({
+      c.res = c.json(
+        {
           error: 'Validation Error',
           message: 'Request body validation failed',
           code: 'VALIDATION_ERROR',
-          details: result.errors?.map((err) => ({
-            field: err.path.join('.'),
-            message: err.message,
-            code: err.code,
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+            code: issue.code,
           })),
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       );
+      return;
     }
 
-    // Replace body with validated data
-    ctx.body = result.data;
-
-    return next();
+    await next();
   };
 }
 
 /**
- * Create middleware for validating query parameters
- * 
- * Validates URL query parameters against a schema and returns 400 with
- * detailed errors if validation fails.
- * 
- * @param adapter - Validation adapter instance
- * @param schema - Schema to validate against
- * @returns Middleware function
+ * @deprecated Use the `validate()` helper from `@web-loom/api-core` instead.
  */
-export function createQueryValidation<T>(
-  adapter: ValidationAdapter,
-  schema: Schema<T>
-): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
-  return async (ctx: RequestContext, next: NextFunction): Promise<Response> => {
-    const result = adapter.validate(schema, ctx.query);
+export function createQueryValidation<T extends ZodTypeAny>(
+  schema: T
+): (c: Context, next: Next) => Promise<void> {
+  return async (c: Context, next: Next): Promise<void> => {
+    const query = c.req.queries();
+    const result = schema.safeParse(query);
 
     if (!result.success) {
-      return new Response(
-        JSON.stringify({
+      c.res = c.json(
+        {
           error: 'Validation Error',
           message: 'Query parameter validation failed',
           code: 'VALIDATION_ERROR',
-          details: result.errors?.map((err) => ({
-            field: err.path.join('.'),
-            message: err.message,
-            code: err.code,
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+            code: issue.code,
           })),
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       );
+      return;
     }
 
-    // Replace query with validated data
-    ctx.query = result.data as Record<string, string>;
-
-    return next();
+    await next();
   };
 }
 
 /**
- * Create middleware for validating path parameters
- * 
- * Validates URL path parameters (e.g., :id) against a schema and returns 400
- * with detailed errors if validation fails.
- * 
- * @param adapter - Validation adapter instance
- * @param schema - Schema to validate against
- * @returns Middleware function
+ * @deprecated Use the `validate()` helper from `@web-loom/api-core` instead.
  */
-export function createParamsValidation<T>(
-  adapter: ValidationAdapter,
-  schema: Schema<T>
-): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
-  return async (ctx: RequestContext, next: NextFunction): Promise<Response> => {
-    const result = adapter.validate(schema, ctx.params);
+export function createParamsValidation<T extends ZodTypeAny>(
+  schema: T
+): (c: Context, next: Next) => Promise<void> {
+  return async (c: Context, next: Next): Promise<void> => {
+    const params = c.req.param();
+    const result = schema.safeParse(params);
 
     if (!result.success) {
-      return new Response(
-        JSON.stringify({
+      c.res = c.json(
+        {
           error: 'Validation Error',
           message: 'Path parameter validation failed',
           code: 'VALIDATION_ERROR',
-          details: result.errors?.map((err) => ({
-            field: err.path.join('.'),
-            message: err.message,
-            code: err.code,
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+            code: issue.code,
           })),
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       );
+      return;
     }
 
-    // Replace params with validated data
-    ctx.params = result.data as Record<string, string>;
-
-    return next();
+    await next();
   };
 }
 
 /**
- * Create combined validation middleware
- * 
- * Validates body, query, and params in a single middleware. Useful when
- * multiple parts of the request need validation.
- * 
- * @param adapter - Validation adapter instance
- * @param schemas - Schemas for body, query, and params
- * @returns Middleware function
+ * @deprecated Use the `validate()` helper from `@web-loom/api-core` instead.
  */
-export function createValidation<TBody = unknown, TQuery = unknown, TParams = unknown>(
-  adapter: ValidationAdapter,
+export function createValidation<TBody extends ZodTypeAny, TQuery extends ZodTypeAny, TParams extends ZodTypeAny>(
   schemas: {
-    body?: Schema<TBody>;
-    query?: Schema<TQuery>;
-    params?: Schema<TParams>;
+    body?: TBody;
+    query?: TQuery;
+    params?: TParams;
   }
-): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
-  return async (ctx: RequestContext, next: NextFunction): Promise<Response> => {
+): (c: Context, next: Next) => Promise<void> {
+  return async (c: Context, next: Next): Promise<void> => {
     const errors: Array<{ field: string; message: string; code: string }> = [];
 
-    // Validate body
     if (schemas.body) {
-      const result = adapter.validate(schemas.body, ctx.body);
+      const body = await c.req.json().catch(() => ({}));
+      const result = schemas.body.safeParse(body);
       if (!result.success) {
         errors.push(
-          ...(result.errors?.map((err) => ({
-            field: `body.${err.path.join('.')}`,
-            message: err.message,
-            code: err.code,
-          })) || [])
+          ...result.error.issues.map((issue) => ({
+            field: `body.${issue.path.join('.')}`,
+            message: issue.message,
+            code: issue.code,
+          }))
         );
-      } else {
-        ctx.body = result.data;
       }
     }
 
-    // Validate query
     if (schemas.query) {
-      const result = adapter.validate(schemas.query, ctx.query);
+      const result = schemas.query.safeParse(c.req.queries());
       if (!result.success) {
         errors.push(
-          ...(result.errors?.map((err) => ({
-            field: `query.${err.path.join('.')}`,
-            message: err.message,
-            code: err.code,
-          })) || [])
+          ...result.error.issues.map((issue) => ({
+            field: `query.${issue.path.join('.')}`,
+            message: issue.message,
+            code: issue.code,
+          }))
         );
-      } else {
-        ctx.query = result.data as Record<string, string>;
       }
     }
 
-    // Validate params
     if (schemas.params) {
-      const result = adapter.validate(schemas.params, ctx.params);
+      const result = schemas.params.safeParse(c.req.param());
       if (!result.success) {
         errors.push(
-          ...(result.errors?.map((err) => ({
-            field: `params.${err.path.join('.')}`,
-            message: err.message,
-            code: err.code,
-          })) || [])
+          ...result.error.issues.map((issue) => ({
+            field: `params.${issue.path.join('.')}`,
+            message: issue.message,
+            code: issue.code,
+          }))
         );
-      } else {
-        ctx.params = result.data as Record<string, string>;
       }
     }
 
-    // Return error if any validation failed
     if (errors.length > 0) {
-      return new Response(
-        JSON.stringify({
+      c.res = c.json(
+        {
           error: 'Validation Error',
           message: 'Request validation failed',
           code: 'VALIDATION_ERROR',
           details: errors,
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       );
+      return;
     }
 
-    return next();
+    await next();
   };
 }

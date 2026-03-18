@@ -1,5 +1,7 @@
 // Registry exports
-export { ModelRegistry } from './model-registry';
+// Note: ModelRegistry is now exported from '../models/registry' (Drizzle-based).
+// The legacy adapter-based ModelRegistry lives in './model-registry' for backward
+// compatibility but is no longer part of the public API.
 export { RouteRegistry } from './route-registry';
 export { RouteDiscovery } from './route-discovery';
 
@@ -26,11 +28,5 @@ export type {
   RouteMatch,
 } from './route-types';
 
-// Re-export shared types from interfaces to avoid duplication
-export type {
-  DatabaseFieldConfig,
-  FieldDefinition,
-  ModelDefinition,
-  ModelOptions,
-  Relationship,
-} from '../interfaces/database-adapter';
+// Route handler and middleware types (opaque introspection types for the registry)
+export type { RouteHandler, Middleware } from './route-types';

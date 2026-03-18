@@ -20,8 +20,6 @@ import {
   type ErrorResponse,
   type HTTPStatusCode,
 } from '@web-loom/api-shared';
-import type { RequestContext, NextFunction } from '../interfaces';
-
 /**
  * Environment mode for error handling
  */
@@ -63,17 +61,15 @@ export function generateRequestId(): string {
 }
 
 /**
- * Extract error context from request
+ * Extract error context from a standard Web API Request object.
  */
-export function extractErrorContext(ctx: RequestContext): ErrorContext {
-  const url = new URL(ctx.request.url);
-  
+export function extractErrorContext(request: Request, requestId?: string): ErrorContext {
+  const url = new URL(request.url);
+
   return {
-    requestId: ctx.metadata.get('requestId') as string || generateRequestId(),
+    requestId: requestId || generateRequestId(),
     path: url.pathname,
-    method: ctx.request.method,
-    userId: ctx.metadata.get('userId') as string,
-    metadata: Object.fromEntries(ctx.metadata.entries()),
+    method: request.method,
   };
 }
 
@@ -151,63 +147,33 @@ function defaultLogger(error: Error, context: ErrorContext): void {
 }
 
 /**
- * Create error handler middleware
- * 
- * This middleware catches all errors thrown in route handlers and
- * formats them into consistent ErrorResponse objects.
- * 
- * @example
- * ```typescript
- * const errorHandler = createErrorHandler({
- *   environment: 'production',
- *   includeStackTrace: false,
- * });
- * 
- * apiFramework.registerMiddleware(errorHandler);
- * ```
+ * Create a standalone error handler function for use outside Hono.
+ *
+ * For the Hono `onError` hook, use `formatErrorResponse` and `getStatusCode`
+ * directly in `createApp()`.
  */
 export function createErrorHandler(config: ErrorHandlerConfig = {}) {
-  const logger = config.logger || defaultLogger;
+  const log = config.logger || defaultLogger;
 
-  return async (ctx: RequestContext, next: NextFunction): Promise<Response> => {
-    try {
-      // Ensure request ID exists
-      if (!ctx.metadata.has('requestId')) {
-        ctx.metadata.set('requestId', generateRequestId());
-      }
+  return async (error: unknown, request: Request): Promise<Response> => {
+    const requestId = generateRequestId();
+    const context = extractErrorContext(request, requestId);
 
-      // Execute next middleware/handler
-      return await next();
-    } catch (error) {
-      // Extract error context
-      const context = extractErrorContext(ctx);
-
-      // Log error
-      if (error instanceof Error) {
-        logger(error, context);
-      }
-
-      // Format error response
-      const errorResponse = formatErrorResponse(
-        error instanceof Error ? error : new Error(String(error)),
-        context,
-        config
-      );
-
-      // Get status code
-      const statusCode = getStatusCode(
-        error instanceof Error ? error : new Error(String(error))
-      );
-
-      // Return error response
-      return new Response(JSON.stringify(errorResponse), {
-        status: statusCode,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Request-ID': context.requestId,
-        },
-      });
+    if (error instanceof Error) {
+      log(error, context);
     }
+
+    const err = error instanceof Error ? error : new Error(String(error));
+    const body = formatErrorResponse(err, context, config);
+    const statusCode = getStatusCode(err);
+
+    return new Response(JSON.stringify(body), {
+      status: statusCode,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-ID': requestId,
+      },
+    });
   };
 }
 

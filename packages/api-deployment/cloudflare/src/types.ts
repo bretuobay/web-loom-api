@@ -126,7 +126,7 @@ export interface CloudflareHandlerOptions {
 
 /** Minimal Web Loom app interface for handler creation */
 export interface WebLoomApp {
-  handle(request: Request): Promise<Response>;
+  handleRequest(request: Request): Promise<Response>;
 }
 
 /** Cache store interface for Web Loom framework */

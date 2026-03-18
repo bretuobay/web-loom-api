@@ -1,146 +1,94 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import { Hono } from 'hono';
 import { apiKeyAuth } from '../api-key-auth';
-import type { AuthAdapter, RequestContext, ApiKeyValidationResult } from '@web-loom/api-core';
+import type { AuthUser } from '../types';
 
-function createMockAdapter(overrides: Partial<AuthAdapter> = {}): AuthAdapter {
-  return {
-    createSession: vi.fn(),
-    validateSession: vi.fn(),
-    invalidateSession: vi.fn(),
-    createUser: vi.fn(),
-    getUser: vi.fn().mockResolvedValue(null),
-    updateUser: vi.fn(),
-    hashPassword: vi.fn(),
-    verifyPassword: vi.fn(),
-    getOAuthAuthorizationUrl: vi.fn(),
-    handleOAuthCallback: vi.fn(),
-    createApiKey: vi.fn(),
-    validateApiKey: vi.fn(),
-    revokeApiKey: vi.fn(),
-    ...overrides,
-  } as AuthAdapter;
-}
+const VALID_USER: AuthUser = { id: 'u1', email: 'test@example.com', role: 'user' };
 
-function createCtx(headers: Record<string, string> = {}): RequestContext {
-  const h = new Headers(headers);
-  return {
-    request: new Request('http://localhost/test', { headers: h }),
-    params: {},
-    query: {},
-    body: {},
-    metadata: new Map(),
-  };
+function buildApp(validate: (key: string) => AuthUser | null | Promise<AuthUser | null>) {
+  const app = new Hono();
+  app.use('/test', apiKeyAuth({ validate }));
+  app.get('/test', (c) => c.json({ userId: c.var.user?.id }));
+  return app;
 }
 
 describe('apiKeyAuth', () => {
-  let next: ReturnType<typeof vi.fn>;
-
-  beforeEach(() => {
-    next = vi.fn(() => Promise.resolve(new Response('OK')));
+  it('returns 401 when no key header is present', async () => {
+    const app = buildApp(() => null);
+    const res = await app.request('/test');
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('should return 401 when no API key header is present', async () => {
-    const adapter = createMockAdapter();
-    const middleware = apiKeyAuth(adapter);
-    const response = await middleware(createCtx(), next);
-
-    expect(response.status).toBe(401);
-    const body = await response.json();
-    expect(body.code).toBe('UNAUTHORIZED');
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should return 401 when API key is invalid', async () => {
-    const adapter = createMockAdapter({
-      validateApiKey: vi.fn().mockResolvedValue({ valid: false } satisfies ApiKeyValidationResult),
+  it('returns 401 when validate() returns null', async () => {
+    const app = buildApp(() => null);
+    const res = await app.request('/test', {
+      headers: { 'X-API-Key': 'bad-key' },
     });
-    const middleware = apiKeyAuth(adapter);
-    const response = await middleware(createCtx({ Authorization: 'ApiKey bad-key' }), next);
-
-    expect(response.status).toBe(401);
-    const body = await response.json();
-    expect(body.code).toBe('INVALID_TOKEN');
-    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('should attach user to context on valid API key', async () => {
-    const adapter = createMockAdapter({
-      validateApiKey: vi.fn().mockResolvedValue({
-        valid: true,
-        userId: 'u1',
-        scopes: ['read:users'],
-      } satisfies ApiKeyValidationResult),
-      getUser: vi.fn().mockResolvedValue({ id: 'u1', email: 'test@example.com', role: 'user' }),
+  it('sets c.var.user and calls next on valid key via X-API-Key header', async () => {
+    const app = buildApp(() => VALID_USER);
+    const res = await app.request('/test', {
+      headers: { 'X-API-Key': 'valid-key' },
     });
-
-    const ctx = createCtx({ Authorization: 'ApiKey wl_valid123' });
-    const middleware = apiKeyAuth(adapter);
-    await middleware(ctx, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(ctx.user).toMatchObject({
-      id: 'u1',
-      email: 'test@example.com',
-      scopes: ['read:users'],
-      authMethod: 'apikey',
-    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.userId).toBe('u1');
   });
 
-  it('should return 403 when required scopes are missing', async () => {
-    const adapter = createMockAdapter({
-      validateApiKey: vi.fn().mockResolvedValue({
-        valid: true,
-        userId: 'u1',
-        scopes: ['read:users'],
-      }),
+  it('accepts Authorization: Bearer <key> as fallback for X-API-Key default', async () => {
+    const app = buildApp(() => VALID_USER);
+    const res = await app.request('/test', {
+      headers: { Authorization: 'Bearer valid-key' },
     });
-
-    const middleware = apiKeyAuth(adapter, { requiredScopes: ['write:users'] });
-    const response = await middleware(createCtx({ Authorization: 'ApiKey wl_key' }), next);
-
-    expect(response.status).toBe(403);
-    const body = await response.json();
-    expect(body.code).toBe('INSUFFICIENT_PERMISSIONS');
-    expect(body.message).toContain('write:users');
-    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
   });
 
-  it('should pass when all required scopes are present', async () => {
-    const adapter = createMockAdapter({
-      validateApiKey: vi.fn().mockResolvedValue({
-        valid: true,
-        userId: 'u1',
-        scopes: ['read:users', 'write:users'],
-      }),
-      getUser: vi.fn().mockResolvedValue({ id: 'u1', email: 'a@b.com' }),
+  it('does not accept Authorization: Bearer when a custom header is configured', async () => {
+    const app = new Hono();
+    app.use('/test', apiKeyAuth({ validate: () => VALID_USER, header: 'X-Custom-Key' }));
+    app.get('/test', (c) => c.json({ ok: true }));
+
+    const res = await app.request('/test', {
+      headers: { Authorization: 'Bearer valid-key' },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('reads the key from a custom header when configured', async () => {
+    const app = new Hono();
+    app.use('/test', apiKeyAuth({ validate: () => VALID_USER, header: 'X-Custom-Key' }));
+    app.get('/test', (c) => c.json({ userId: c.var.user?.id }));
+
+    const res = await app.request('/test', {
+      headers: { 'X-Custom-Key': 'valid-key' },
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).userId).toBe('u1');
+  });
+
+  it('passes the raw key string to validate()', async () => {
+    let receivedKey = '';
+    const app = buildApp((key) => {
+      receivedKey = key;
+      return VALID_USER;
     });
 
-    const middleware = apiKeyAuth(adapter, { requiredScopes: ['read:users', 'write:users'] });
-    const ctx = createCtx({ Authorization: 'ApiKey wl_key' });
-    await middleware(ctx, next);
-
-    expect(next).toHaveBeenCalled();
+    await app.request('/test', { headers: { 'X-API-Key': 'my-secret-key' } });
+    expect(receivedKey).toBe('my-secret-key');
   });
 
-  it('should pass through when optional and no key', async () => {
-    const adapter = createMockAdapter();
-    const middleware = apiKeyAuth(adapter, { optional: true });
-    const ctx = createCtx();
-    await middleware(ctx, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(ctx.user).toBeUndefined();
-  });
-
-  it('should pass through when optional and key is invalid', async () => {
-    const adapter = createMockAdapter({
-      validateApiKey: vi.fn().mockResolvedValue({ valid: false }),
+  it('supports async validate()', async () => {
+    const app = buildApp(async () => {
+      await Promise.resolve();
+      return VALID_USER;
     });
-    const middleware = apiKeyAuth(adapter, { optional: true });
-    const ctx = createCtx({ Authorization: 'ApiKey bad' });
-    await middleware(ctx, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(ctx.user).toBeUndefined();
+    const res = await app.request('/test', { headers: { 'X-API-Key': 'k' } });
+    expect(res.status).toBe(200);
   });
 });
