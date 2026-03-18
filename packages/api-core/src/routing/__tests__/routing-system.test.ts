@@ -13,7 +13,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile } from 'node:fs/promises';
 
 import { filePathToMountPath } from '../path-utils';
 import { validate } from '../validate';
@@ -21,6 +21,7 @@ import { defineRoutes } from '../define-routes';
 import { globalErrorHandler } from '../error-handler';
 import { RouteLoadError, RouteConflictError } from '../errors';
 import { discoverAndMountRoutes } from '../route-discovery';
+import type { WebLoomVariables } from '../../types';
 
 // ---------------------------------------------------------------------------
 // filePathToMountPath
@@ -194,7 +195,7 @@ describe('discoverAndMountRoutes', () => {
 
   it('warns and does not throw when routesDir does not exist', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const app = new Hono();
+    const app = new Hono<{ Variables: WebLoomVariables }>();
     await discoverAndMountRoutes(app, '/non/existent/dir');
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('does not exist'));
     warnSpy.mockRestore();

@@ -23,20 +23,10 @@ const usersTable = pgTable('users', {
 });
 
 const postsTable = sqliteTable('posts', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+  id: integer('id').primaryKey(),
   title: text('title').notNull(),
   body: text('body'),
 });
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Isolated registry for tests that need a clean slate. */
-function isolatedRegistry() {
-  const r = new ModelRegistry();
-  return r;
-}
 
 // ---------------------------------------------------------------------------
 // ModelRegistry

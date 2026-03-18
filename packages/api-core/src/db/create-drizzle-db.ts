@@ -38,7 +38,7 @@ export async function createDrizzleDb(config: DrizzleDbConfig): Promise<AnyDrizz
     case 'neon-serverless': {
       const { neon } = await import('@neondatabase/serverless');
       const { drizzle } = await import('drizzle-orm/neon-serverless');
-      return drizzle(neon(url));
+      return drizzle({ client: neon(url) });
     }
 
     case 'libsql': {
@@ -55,7 +55,7 @@ export async function createDrizzleDb(config: DrizzleDbConfig): Promise<AnyDrizz
         ssl: config.ssl ? { rejectUnauthorized: false } : undefined,
         max: config.poolSize,
       });
-      return drizzle(pool);
+      return drizzle({ client: pool });
     }
 
     default: {

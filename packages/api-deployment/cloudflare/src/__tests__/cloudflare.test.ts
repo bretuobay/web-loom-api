@@ -12,7 +12,7 @@ import type { WebLoomApp, CloudflareEnv, ExecutionContext, KVNamespace, D1Databa
 
 function createMockApp(response?: Response): WebLoomApp {
   return {
-    handle: vi.fn().mockResolvedValue(
+    handleRequest: vi.fn().mockResolvedValue(
       response ?? new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -131,13 +131,13 @@ describe('createCloudflareHandler', () => {
     expect(typeof handler).toBe('function');
   });
 
-  it('delegates to app.handle and returns the response', async () => {
+  it('delegates to app.handleRequest and returns the response', async () => {
     const handler = createCloudflareHandler(app);
     const request = new Request('https://example.com/api/test');
     const response = await handler(request, env, ctx);
 
     expect(response.status).toBe(200);
-    expect(app.handle).toHaveBeenCalledOnce();
+    expect(app.handleRequest).toHaveBeenCalledOnce();
     const body = await response.json();
     expect(body).toEqual({ ok: true });
   });
@@ -147,7 +147,7 @@ describe('createCloudflareHandler', () => {
     const request = new Request('https://example.com/api/test');
     await handler(request, env, ctx);
 
-    const passedRequest = (app.handle as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request;
+    const passedRequest = (app.handleRequest as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request;
     expect(passedRequest.headers.get('x-cf-worker')).toBe('true');
   });
 
@@ -162,7 +162,7 @@ describe('createCloudflareHandler', () => {
     const request = new Request('https://example.com/api/test');
     await handler(request, env, ctx);
 
-    const passedRequest = (app.handle as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request;
+    const passedRequest = (app.handleRequest as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request;
     expect(passedRequest.headers.get('x-cf-kv-namespace')).toBe('CACHE');
     expect(passedRequest.headers.get('x-cf-d1-binding')).toBe('DB');
   });
@@ -175,9 +175,9 @@ describe('createCloudflareHandler', () => {
     expect(ctx.waitUntil).toHaveBeenCalled();
   });
 
-  it('returns 500 JSON error when app.handle throws', async () => {
+  it('returns 500 JSON error when app.handleRequest throws', async () => {
     const failApp: WebLoomApp = {
-      handle: vi.fn().mockRejectedValue(new Error('boom')),
+      handleRequest: vi.fn().mockRejectedValue(new Error('boom')),
     };
     const handler = createCloudflareHandler(failApp);
     const request = new Request('https://example.com/api/test');

@@ -40,7 +40,7 @@ export interface CreateAppOptions {
    * const app = await createApp(config, { crudGenerator: generateCrudRouter });
    * ```
    */
-  crudGenerator?: (model: AnyModel) => InstanceType<typeof Hono>;
+  crudGenerator?: (model: AnyModel) => Hono;
 
   /**
    * Optional OpenAPI route setup callback. When provided, registers
@@ -49,7 +49,7 @@ export interface CreateAppOptions {
    * Pass setupOpenApiRoutes from @web-loom/api-generator-openapi.
    */
   openapiSetup?: (
-    hono: Hono<any>,
+    hono: Hono<{ Variables: WebLoomVariables }>,
     models: AnyModel[],
     routeMetas: unknown[],
     config: import('../config/types').OpenApiConfig,
@@ -86,8 +86,9 @@ export async function createApp(config: WebLoomConfig, options?: CreateAppOption
 
   // 2. Email injector (only when configured)
   if (config.email) {
+    const emailAdapter = config.email;
     hono.use('*', async (c, next) => {
-      c.set('email', config.email!);
+      c.set('email', emailAdapter);
       await next();
     });
   } else {
@@ -149,7 +150,7 @@ export async function createApp(config: WebLoomConfig, options?: CreateAppOption
     for (const model of modelRegistry.getAll()) {
       if (!model.meta.crud) continue;
       const router = options.crudGenerator(model);
-      hono.route(model.meta.basePath, router as any);
+      hono.route(model.meta.basePath, router);
     }
   }
 
