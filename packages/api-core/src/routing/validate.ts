@@ -44,5 +44,6 @@ export function validate<T extends keyof ValidationTargets>(
         400,
       );
     }
+    return undefined;
   });
 }

@@ -2,14 +2,10 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "lib": ["ES2022", "WebWorker"],
     "paths": {
-      "@web-loom/api-core": [
-        "../../api-core/dist/index.d.ts"
-      ],
-      "@web-loom/api-shared": [
-        "../../api-shared/dist/index.d.ts"
-      ]
+      "@web-loom/api-core": ["../../api-core/src/index.ts"],
+      "@web-loom/api-shared": ["../../api-shared/src/index.ts"]
     }
   },
   "include": [

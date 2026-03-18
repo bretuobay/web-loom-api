@@ -1,12 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { ErrorHandler } from 'hono';
 import {
-  NotFoundError,
-  ConflictError,
   ValidationError,
-  AuthenticationError,
-  AuthorizationError,
-  RateLimitError,
   WebLoomError,
 } from '@web-loom/api-shared';
 
@@ -61,7 +56,8 @@ export const globalErrorHandler: ErrorHandler = (err, c) => {
           ...(!isProd && err.stack ? { stack: err.stack } : {}),
         },
       },
-      err.statusCode as Parameters<typeof c.json>[1],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (err.statusCode ?? 500) as any,
       headers,
     );
   }

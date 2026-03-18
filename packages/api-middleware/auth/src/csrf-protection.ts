@@ -46,5 +46,6 @@ export function csrfProtection(options: CsrfProtectionOptions): MiddlewareHandle
     }
 
     await next();
+    return;
   };
 }

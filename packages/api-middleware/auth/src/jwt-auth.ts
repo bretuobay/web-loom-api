@@ -1,4 +1,5 @@
 import { verify } from 'hono/jwt';
+import type { SignatureAlgorithm } from 'hono/utils/jwt/jwa';
 import type { MiddlewareHandler } from 'hono';
 import type { AuthUser } from './types';
 
@@ -6,7 +7,7 @@ export interface JwtAuthOptions {
   /** Signing secret or CryptoKey */
   secret: string | CryptoKey;
   /** Algorithm (default: 'HS256') */
-  algorithm?: string;
+  algorithm?: SignatureAlgorithm;
   /** Expected `iss` claim — rejected if present and mismatched */
   issuer?: string;
   /** Expected `aud` claim(s) */
@@ -21,10 +22,10 @@ export interface JwtAuthOptions {
 }
 
 const defaultGetUser = (payload: Record<string, unknown>): AuthUser => ({
-  id: String(payload.sub ?? payload.id ?? ''),
-  email: payload.email as string | undefined,
-  role: payload.role as string | undefined,
-  permissions: payload.permissions as string[] | undefined,
+  id: String(payload['sub'] ?? payload['id'] ?? ''),
+  ...(payload['email'] !== undefined && { email: payload['email'] as string }),
+  ...(payload['role'] !== undefined && { role: payload['role'] as string }),
+  ...(payload['permissions'] !== undefined && { permissions: payload['permissions'] as string[] }),
 });
 
 /**
@@ -52,13 +53,14 @@ export function jwtAuth(options: JwtAuthOptions): MiddlewareHandler {
     try {
       const payload = await verify(token, options.secret, options.algorithm ?? 'HS256');
 
-      if (options.issuer && payload.iss !== options.issuer) {
+      if (options.issuer && payload['iss'] !== options.issuer) {
         throw new Error('Invalid issuer');
       }
 
       if (options.audience) {
         const expected = Array.isArray(options.audience) ? options.audience : [options.audience];
-        const actual = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+        const rawAud = payload['aud'];
+        const actual = Array.isArray(rawAud) ? rawAud : [rawAud];
         if (!expected.some((a) => actual.includes(a))) {
           throw new Error('Invalid audience');
         }
@@ -67,6 +69,7 @@ export function jwtAuth(options: JwtAuthOptions): MiddlewareHandler {
       const getUser = options.getUser ?? defaultGetUser;
       c.set('user', await getUser(payload as Record<string, unknown>));
       await next();
+      return;
     } catch {
       if (options.optional) {
         c.set('user', undefined);

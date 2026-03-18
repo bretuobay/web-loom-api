@@ -1,4 +1,3 @@
-import type { Table } from 'drizzle-orm';
 import { DuplicateModelError } from '../errors/duplicate-model-error';
 import type { AnyModel } from './types';
 

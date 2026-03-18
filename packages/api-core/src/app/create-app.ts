@@ -22,10 +22,26 @@ import type { WebLoomConfig } from '../config/types';
 import type { Application, WebLoomVariables } from '../types';
 import { ConfigurationError } from '../errors/configuration-error';
 import { modelRegistry } from '../models/registry';
+import type { AnyModel } from '../models/types';
 import { RouteRegistry } from '../registry/route-registry';
 import { createDrizzleDb } from '../db/create-drizzle-db';
 import { globalErrorHandler } from '../routing/error-handler';
 import { discoverAndMountRoutes } from '../routing/route-discovery';
+
+export interface CreateAppOptions {
+  /**
+   * Optional CRUD router generator. When provided, the app will call this
+   * function for every model with `crud` enabled and mount the returned
+   * Hono router before file-based routes.
+   *
+   * Pass `generateCrudRouter` from `@web-loom/api-generator-crud`:
+   * ```ts
+   * import { generateCrudRouter } from '@web-loom/api-generator-crud';
+   * const app = await createApp(config, { crudGenerator: generateCrudRouter });
+   * ```
+   */
+  crudGenerator?: (model: AnyModel) => InstanceType<typeof Hono>;
+}
 
 /**
  * Create and return a running Web Loom application.
@@ -37,7 +53,7 @@ import { discoverAndMountRoutes } from '../routing/route-discovery';
  *
  * @throws {ConfigurationError} if `database.url` or `database.driver` is missing
  */
-export async function createApp(config: WebLoomConfig): Promise<Application> {
+export async function createApp(config: WebLoomConfig, options?: CreateAppOptions): Promise<Application> {
   // ── Database ─────────────────────────────────────────────────────────────
   const db = await createDrizzleDb(config.database);
 
@@ -114,6 +130,15 @@ export async function createApp(config: WebLoomConfig): Promise<Application> {
       );
     }
   });
+
+  // ── CRUD routes (before file-based routes) ─────────────────────────────────
+  if (options?.crudGenerator) {
+    for (const model of modelRegistry.getAll()) {
+      if (!model.meta.crud) continue;
+      const router = options.crudGenerator(model);
+      hono.route(model.meta.basePath, router as any);
+    }
+  }
 
   // ── File-based route discovery ────────────────────────────────────────────
 

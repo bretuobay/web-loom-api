@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { readdir, stat, access } from 'node:fs/promises';
+import { readdir, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { WebLoomVariables } from '../types';
 import { filePathToMountPath } from './path-utils';

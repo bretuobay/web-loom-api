@@ -24,12 +24,17 @@
   "license": "MIT",
   "dependencies": {
     "@web-loom/api-core": "*",
-    "@web-loom/api-shared": "*"
+    "@web-loom/api-middleware-auth": "*",
+    "drizzle-orm": "^0.38.4",
+    "hono": "^4.6.20"
   },
   "devDependencies": {
+    "@libsql/client": "^0.14.0",
     "@types/node": "^22.10.5",
+    "drizzle-orm": "^0.38.4",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "zod": "^4.3.6"
   }
 }

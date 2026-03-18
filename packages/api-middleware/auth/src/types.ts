@@ -13,6 +13,8 @@ export interface AuthUser {
 }
 
 // ── Module augmentation — adds c.var.user to every Hono context ─────────────
+// The empty import anchors the augmentation to the resolved module path.
+import type {} from '@web-loom/api-core';
 
 declare module '@web-loom/api-core' {
   interface WebLoomVariables {

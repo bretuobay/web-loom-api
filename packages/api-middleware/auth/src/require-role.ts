@@ -19,6 +19,7 @@ export function requireRole(role: string): MiddlewareHandler {
       );
     }
     await next();
+    return;
   };
 }
 
@@ -41,5 +42,6 @@ export function requirePermission(permission: string): MiddlewareHandler {
       );
     }
     await next();
+    return;
   };
 }

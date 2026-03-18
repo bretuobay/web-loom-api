@@ -55,7 +55,7 @@ export interface SchemaOverrides<
 > {
   insert?: (schema: ZodObject<TInsert>) => ZodObject<ZodRawShape>;
   select?: (schema: ZodObject<TSelect>) => ZodObject<ZodRawShape>;
-  update?: (schema: ZodObject<Partial<TInsert>>) => ZodObject<ZodRawShape>;
+  update?: (schema: ZodObject<ZodRawShape>) => ZodObject<ZodRawShape>;
 }
 
 // ============================================================================

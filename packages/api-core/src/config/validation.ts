@@ -43,9 +43,7 @@ export interface ValidationResult<T> {
  */
 const databaseConfigSchema = z.object({
   url: z.string().min(1, { message: 'Database URL is required' }),
-  driver: z.enum(['neon-serverless', 'libsql', 'pg'], {
-    errorMap: () => ({ message: 'database.driver must be one of: neon-serverless, libsql, pg' }),
-  }),
+  driver: z.enum(['neon-serverless', 'libsql', 'pg']),
   poolSize: z.number().int({ message: 'Pool size must be an integer' }).positive({ message: 'Pool size must be positive' }).optional(),
   connectionTimeout: z.number().int({ message: 'Connection timeout must be an integer' }).positive({ message: 'Connection timeout must be positive' }).optional(),
   ssl: z.boolean().optional(),

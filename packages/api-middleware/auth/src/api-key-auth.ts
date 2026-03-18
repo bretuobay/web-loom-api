@@ -44,5 +44,6 @@ export function apiKeyAuth(options: ApiKeyAuthOptions): MiddlewareHandler {
 
     c.set('user', user);
     await next();
+    return;
   };
 }

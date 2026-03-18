@@ -23,8 +23,8 @@ export interface SessionAuthOptions {
 
 const defaultGetUser = (u: Record<string, unknown>): AuthUser => ({
   id: String(u['id'] ?? ''),
-  email: u['email'] as string | undefined,
-  role: u['role'] as string | undefined,
+  ...(u['email'] !== undefined && { email: u['email'] as string }),
+  ...(u['role'] !== undefined && { role: u['role'] as string }),
 });
 
 /**
@@ -62,5 +62,6 @@ export function sessionAuth(options: SessionAuthOptions): MiddlewareHandler {
 
     c.set('user', getUser(user));
     await next();
+    return;
   };
 }
