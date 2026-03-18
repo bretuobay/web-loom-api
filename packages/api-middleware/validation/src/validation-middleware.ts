@@ -11,7 +11,7 @@
  * @see .kiro/specs/routing-system/
  */
 
-import type { ZodTypeAny, z } from 'zod';
+import type { ZodTypeAny } from 'zod';
 import type { Context, Next } from 'hono';
 
 /**
