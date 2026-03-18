@@ -1,216 +1,329 @@
 /**
  * Generate Client Command
  *
- * Generates TypeScript API client from project routes and models
+ * Generates a typed TypeScript fetch client from an OpenAPI 3.1 document
+ * (--input) or falls back to scanning src/routes when no input file is found.
+ * The generated client uses the native fetch API with zero runtime deps.
  */
 
 import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
-// @ts-ignore - module may not be installed
-import { ClientGenerator } from '@web-loom/api-generator-client';
-// @ts-ignore - module may not be installed
-import type { ModelDefinition, RouteDefinition } from '@web-loom/api-generator-client';
 
-const HTTP_METHODS: RouteDefinition['method'][] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+// ── OpenAPI document shape (minimal) ─────────────────────────────────────────
 
-/**
- * Discover routes from src/routes directory
- */
-function discoverRoutes(projectRoot: string): RouteDefinition[] {
-  const routes: RouteDefinition[] = [];
-  const routesDir = path.join(projectRoot, 'src', 'routes');
+interface OAOperation {
+  operationId?: string;
+}
 
-  if (!fs.existsSync(routesDir)) {
-    return routes;
+interface OAPathItem {
+  get?: OAOperation;
+  post?: OAOperation;
+  put?: OAOperation;
+  patch?: OAOperation;
+  delete?: OAOperation;
+}
+
+interface OADocument {
+  openapi: string;
+  paths?: Record<string, OAPathItem>;
+}
+
+// ── Route discovery ───────────────────────────────────────────────────────────
+
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+function filePathToUrlPath(relativePath: string): string {
+  let urlPath = relativePath
+    .replace(/\.(ts|js|tsx|jsx)$/, '')
+    .replace(/\\/g, '/')
+    .replace(/\[([^\]]+)\]/g, ':$1')
+    .replace(/\/index$/, '')
+    .replace(/^index$/, '');
+  if (!urlPath.startsWith('/')) urlPath = `/${urlPath}`;
+  if (urlPath !== '/' && urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
+  return urlPath || '/';
+}
+
+function readExportedMethods(filePath: string): string[] {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const found = HTTP_METHODS.filter((m) =>
+      new RegExp(`export\\s+(const|function|async)\\s+${m}\\b`).test(content)
+    );
+    return found.length > 0 ? found : ['GET'];
+  } catch {
+    return ['GET'];
   }
+}
 
-  const scanDirectory = (dir: string): void => {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+interface RouteInfo {
+  method: string;
+  path: string;
+  operationId: string;
+  pathParams: string[];
+}
 
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      const relativePath = path.relative(routesDir, fullPath);
+function extractPathParams(urlPath: string): string[] {
+  return (urlPath.match(/:(\w+)/g) ?? []).map((p) => p.slice(1));
+}
 
-      if (entry.isDirectory()) {
-        scanDirectory(fullPath);
-      } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))) {
-        let urlPath = relativePath
-          .replace(/\.(ts|js)$/, '')
-          .replace(/\\/g, '/')
-          .replace(/\[([^\]]+)\]/g, ':$1')
-          .replace(/index$/, '');
+function buildOperationId(method: string, urlPath: string): string {
+  const segments = urlPath
+    .split('/')
+    .filter(Boolean)
+    .map((seg) => {
+      if (seg.startsWith(':')) {
+        return 'By' + seg[1]!.toUpperCase() + seg.slice(2);
+      }
+      return seg[0]!.toUpperCase() + seg.slice(1);
+    });
+  if (segments.length === 0) segments.push('Index');
+  return method.toLowerCase() + segments.join('');
+}
 
-        if (!urlPath.startsWith('/')) {
-          urlPath = `/${urlPath}`;
-        }
+function discoverRoutes(routesDir: string): RouteInfo[] {
+  const routes: RouteInfo[] = [];
+  if (!fs.existsSync(routesDir)) return routes;
 
-        if (urlPath !== '/' && urlPath.endsWith('/')) {
-          urlPath = urlPath.slice(0, -1);
-        }
-
-        const primaryTag = urlPath.split('/')[1] || 'default';
-        for (const method of HTTP_METHODS) {
+  const scan = (dir: string): void => {
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+      const full = path.join(dir, item.name);
+      if (item.isDirectory()) {
+        scan(full);
+      } else if (item.isFile() && /\.(ts|js|tsx|jsx)$/.test(item.name)) {
+        const rel = path.relative(routesDir, full);
+        const urlPath = filePathToUrlPath(rel);
+        const methods = readExportedMethods(full);
+        for (const method of methods) {
           routes.push({
-            path: urlPath,
             method,
-            metadata: {
-              description: `${method} ${urlPath}`,
-              tags: [primaryTag],
-            },
+            path: urlPath,
+            operationId: buildOperationId(method, urlPath),
+            pathParams: extractPathParams(urlPath),
           });
         }
       }
     }
   };
 
-  scanDirectory(routesDir);
+  scan(routesDir);
   return routes;
 }
 
-/**
- * Discover models from src/models directory
- */
-function discoverModels(projectRoot: string): ModelDefinition[] {
-  const models: ModelDefinition[] = [];
-  const modelsDir = path.join(projectRoot, 'src', 'models');
+function routesFromDocument(doc: OADocument): RouteInfo[] {
+  const routes: RouteInfo[] = [];
+  const httpMethods = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
-  if (!fs.existsSync(modelsDir)) {
-    return models;
+  for (const [oaPath, pathItem] of Object.entries(doc.paths ?? {})) {
+    for (const httpMethod of httpMethods) {
+      const op = pathItem[httpMethod];
+      if (!op) continue;
+      const honoPath = oaPath.replace(/\{(\w+)\}/g, ':$1');
+      const operationId = op.operationId ?? buildOperationId(httpMethod.toUpperCase(), honoPath);
+      routes.push({
+        method: httpMethod.toUpperCase(),
+        path: honoPath,
+        operationId,
+        pathParams: extractPathParams(honoPath),
+      });
+    }
   }
 
-  return models;
+  return routes;
 }
+
+// ── Code generation ───────────────────────────────────────────────────────────
+
+function generateTypesFile(): string {
+  return `/**
+ * Generated API types — DO NOT EDIT
+ */
+
+export interface ApiError {
+  error: { code: string; message: string };
+}
+
+export interface RequestOptions extends Omit<RequestInit, 'method' | 'body'> {
+  baseUrl?: string;
+}
+`;
+}
+
+function generateUtilsFile(): string {
+  return `/**
+ * Generated request utilities — DO NOT EDIT
+ */
+
+export async function parseResponse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  if (!res.ok) {
+    let message = text;
+    try {
+      const body = JSON.parse(text) as { error?: { message?: string } };
+      message = body?.error?.message ?? text;
+    } catch { /* not JSON */ }
+    throw new Error(\`HTTP \${res.status}: \${message}\`);
+  }
+  if (!text) return undefined as unknown as T;
+  try { return JSON.parse(text) as T; } catch { return text as unknown as T; }
+}
+`;
+}
+
+function generateErrorsFile(): string {
+  return `/**
+ * Generated error classes — DO NOT EDIT
+ */
+
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly code: string;
+  constructor(status: number, code: string, message: string) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+    this.code = code;
+  }
+}
+`;
+}
+
+function generateHooksFile(className: string): string {
+  return `/**
+ * Generated React hooks stub — DO NOT EDIT
+ * Wire up ${className} to build real hooks.
+ */
+export type {};
+`;
+}
+
+function generateClientMethod(route: RouteInfo): string {
+  const { method, path: routePath, operationId, pathParams } = route;
+  const fetchPath = routePath.replace(/:(\w+)/g, (_: string, p: string) => `\${${p}}`);
+  const paramArgs = pathParams.map((p) => `${p}: string`).join(', ');
+  const hasBody = ['POST', 'PUT', 'PATCH'].includes(method);
+  const bodyArg = hasBody ? (paramArgs ? ', body: unknown' : 'body: unknown') : '';
+  const args = [paramArgs, bodyArg, 'options?: RequestOptions']
+    .filter(Boolean)
+    .join(', ');
+  const bodyPart = hasBody ? '\n      body: JSON.stringify(body),' : '';
+
+  return `
+  async ${operationId}(${args}): Promise<unknown> {
+    const { baseUrl: urlOverride, ...fetchOpts } = options ?? {};
+    const base = urlOverride ?? this.baseUrl;
+    const url = \`\${base.replace(/\\/$/, '')}${fetchPath}\`;
+    const res = await fetch(url, {
+      method: '${method}',
+      headers: { 'Content-Type': 'application/json', ...fetchOpts.headers },${bodyPart}
+      ...fetchOpts,
+    });
+    return parseResponse(res);
+  }`;
+}
+
+function generateClientFile(className: string, baseUrl: string, routes: RouteInfo[]): string {
+  const methods = routes.map(generateClientMethod).join('\n');
+  return `/**
+ * Generated API client — DO NOT EDIT
+ */
+
+import { parseResponse } from './utils.js';
+import type { RequestOptions } from './types.js';
+
+const DEFAULT_BASE_URL = '${baseUrl}';
+
+export class ${className} {
+  private readonly baseUrl: string;
+
+  constructor(options: { baseUrl?: string } = {}) {
+    this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
+  }
+${methods}
+}
+`;
+}
+
+function generateIndexFile(includeErrors: boolean, includeHooks: boolean): string {
+  const lines = [
+    "export * from './types';",
+    "export * from './utils';",
+    "export * from './client';",
+  ];
+  if (includeErrors) lines.push("export * from './errors';");
+  if (includeHooks) lines.push("export * from './hooks';");
+  return `/**\n * Generated API client entry — DO NOT EDIT\n */\n\n${lines.join('\n')}\n`;
+}
+
+// ── Command ───────────────────────────────────────────────────────────────────
 
 export const createGenerateClientCommand = (): Command => {
   return new Command('client')
-    .description('Generate TypeScript API client')
-    .option('-o, --output <path>', 'Output directory path', 'src/generated/client')
-    .option('--base-url <url>', 'Base URL for API requests', '')
-    .option('--class-name <name>', 'Client class name', 'APIClient')
-    .option('--no-hooks', 'Disable React hooks generation')
-    .option('--no-errors', 'Disable error classes generation')
-    .option('--no-interceptors', 'Disable interceptors support')
-    .option('--no-retry', 'Disable retry logic')
-    .option('--format <format>', 'Export format (esm or cjs)', 'esm')
+    .description('Generate a typed TypeScript fetch client')
+    .option('-i, --input <path>', 'Path to OpenAPI JSON file (uses ./openapi.json if it exists)')
+    .option('-o, --output <path>', 'Output directory', 'src/client')
+    .option('--base-url <url>', 'Default base URL baked into the client', '')
+    .option('--class-name <name>', 'Client class name', 'ApiClient')
+    .option('--routes-dir <dir>', 'Routes directory for fallback discovery', 'src/routes')
+    .option('--no-hooks', 'Skip generating React hooks stub')
+    .option('--no-errors', 'Skip generating error classes')
     .action(
       async (options: {
+        input?: string;
         output: string;
         baseUrl: string;
         className: string;
+        routesDir: string;
         hooks: boolean;
         errors: boolean;
-        interceptors: boolean;
-        retry: boolean;
-        format: string;
       }) => {
         try {
-          console.log('?? Generating TypeScript API client...');
-          console.log('');
-
-          if (options.format !== 'esm' && options.format !== 'cjs') {
-            console.error('? Invalid format. Must be "esm" or "cjs"');
-            process.exit(1);
-          }
-
           const projectRoot = process.cwd();
-          const routes = discoverRoutes(projectRoot);
-          const models = discoverModels(projectRoot);
 
-          console.log(`?? Discovered ${routes.length} routes and ${models.length} models`);
-          console.log('');
+          // Resolve routes from OpenAPI file or route discovery
+          let routes: RouteInfo[];
+          const inputPath = options.input
+            ? path.resolve(projectRoot, options.input)
+            : path.join(projectRoot, 'openapi.json');
 
-          const generator = new ClientGenerator({
-            className: options.className,
-            baseUrl: options.baseUrl,
-            generateReactHooks: options.hooks,
-            generateErrors: options.errors,
-            includeInterceptors: options.interceptors,
-            includeRetry: options.retry,
-            exportFormat: options.format,
-          });
-
-          generator.registerRoutes(routes);
-          generator.registerModels(models);
-
-          const generated = generator.generate();
-
-          let outputPath = options.output;
-          if (!path.isAbsolute(outputPath)) {
-            outputPath = path.join(projectRoot, outputPath);
+          if (fs.existsSync(inputPath)) {
+            const raw = fs.readFileSync(inputPath, 'utf-8');
+            routes = routesFromDocument(JSON.parse(raw) as OADocument);
+          } else {
+            const routesDir = path.isAbsolute(options.routesDir)
+              ? options.routesDir
+              : path.join(projectRoot, options.routesDir);
+            routes = discoverRoutes(routesDir);
           }
 
-          if (!fs.existsSync(outputPath)) {
-            fs.mkdirSync(outputPath, { recursive: true });
-          }
+          const outputDir = path.isAbsolute(options.output)
+            ? options.output
+            : path.join(projectRoot, options.output);
+
+          if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
           const files: Array<{ name: string; content: string }> = [
-            { name: 'types.ts', content: generated.types },
-            { name: 'client.ts', content: generated.client },
-            { name: 'utils.ts', content: generated.utils ?? '' },
+            { name: 'types.ts', content: generateTypesFile() },
+            { name: 'utils.ts', content: generateUtilsFile() },
+            { name: 'client.ts', content: generateClientFile(options.className, options.baseUrl, routes) },
           ];
-
-          if (generated.errors !== undefined) {
-            files.push({ name: 'errors.ts', content: generated.errors });
-          }
-
-          if (generated.hooks !== undefined) {
-            files.push({ name: 'hooks.ts', content: generated.hooks });
-          }
-
-          const indexLines: string[] = [
-            '/**',
-            ' * Generated API Client',
-            ' * ',
-            ' * DO NOT EDIT - This file is auto-generated',
-            ' */',
-            '',
-            "export * from './types';",
-            "export * from './client';",
-            "export * from './utils';",
-          ];
-
-          if (generated.errors !== undefined) {
-            indexLines.push("export * from './errors';");
-          }
-
-          if (generated.hooks !== undefined) {
-            indexLines.push("export * from './hooks';");
-          }
-
-          files.push({ name: 'index.ts', content: `${indexLines.join('\n')}\n` });
+          if (options.errors) files.push({ name: 'errors.ts', content: generateErrorsFile() });
+          if (options.hooks) files.push({ name: 'hooks.ts', content: generateHooksFile(options.className) });
+          files.push({ name: 'index.ts', content: generateIndexFile(options.errors, options.hooks) });
 
           for (const file of files) {
-            const filePath = path.join(outputPath, file.name);
-            fs.writeFileSync(filePath, file.content, 'utf-8');
+            fs.writeFileSync(path.join(outputDir, file.name), file.content, 'utf-8');
           }
 
-          console.log('? TypeScript API client generated successfully');
-          console.log('');
-          console.log(`?? Output directory: ${path.relative(projectRoot, outputPath)}`);
-          console.log(`?? Files generated: ${files.length}`);
-          console.log('');
-          console.log('Generated files:');
-          for (const file of files) {
-            console.log(`   � ${file.name}`);
-          }
-          console.log('');
-          console.log('?? Tips:');
-          console.log('   � Import the client: import { APIClient } from "./generated/client"');
-          console.log('   � Initialize: const client = new APIClient({ baseUrl: "https://api.example.com" })');
-          if (options.hooks) {
-            console.log('   � Use React hooks: import { useGetUsers } from "./generated/client"');
-          }
-          console.log('   � Customize with --base-url, --class-name, and other options');
+          const relOut = path.relative(projectRoot, outputDir);
+          console.log(`Client generated in ${relOut}/`);
+          console.log(`  Class:  ${options.className}`);
+          console.log(`  Routes: ${routes.length}`);
+          console.log(`  Files:  ${files.map((f) => f.name).join(', ')}`);
         } catch (error) {
-          console.error('? Error generating TypeScript client:', error instanceof Error ? error.message : error);
-
-          if (error instanceof Error && error.stack) {
-            console.log('');
-            console.log('Stack trace:');
-            console.log(error.stack);
-          }
-
+          console.error('Error generating client:', error instanceof Error ? error.message : error);
           process.exit(1);
         }
       }

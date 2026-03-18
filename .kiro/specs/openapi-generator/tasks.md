@@ -58,7 +58,7 @@
   - `createApp()` accepts `openapiSetup` callback to avoid circular dependency
   - _Requirements: REQ-OG-001 through REQ-OG-005_
 
-- [ ] 8. Implement `generate openapi` CLI command
+- [x] 8. Implement `generate openapi` CLI command
   - In `packages/api-cli/src/commands/generate-openapi.ts`:
     - Import the user's app via the entry point specified in config or `src/index.ts`
     - Call `generateOpenApiDocument()`
@@ -66,7 +66,7 @@
     - Overwrite existing files without prompt
   - _Requirements: REQ-OG-050, REQ-OG-051, REQ-OG-052_
 
-- [ ] 9. Implement `generate client` CLI command
+- [x] 9. Implement `generate client` CLI command
   - In `packages/api-cli/src/commands/generate-client.ts`:
     - Read the OpenAPI document from `--input <path>` or default `./openapi.json`
     - Generate a TypeScript fetch client with typed functions per operation

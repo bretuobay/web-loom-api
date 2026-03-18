@@ -119,8 +119,8 @@ Depends on all previous phases.
 - [x] OG-5: Implement hand-written path items builder from `openApiMeta()` annotations
 - [x] OG-6: Implement `generateOpenApiDocument(models, routeMetas, config)` producing a valid OpenAPI 3.1 document
 - [x] OG-7: Register `/openapi.json`, `/openapi.yaml`, and `/docs` (Swagger or Scalar) in `createApp()`; skip when `config.openapi.enabled === false`
-- [ ] OG-8: Implement `webloom generate openapi` CLI command with `--output` and `--format` flags
-- [ ] OG-9: Implement `webloom generate client` CLI command producing a native-fetch TypeScript client
+- [x] OG-8: Implement `webloom generate openapi` CLI command with `--output` and `--format` flags
+- [x] OG-9: Implement `webloom generate client` CLI command producing a native-fetch TypeScript client
 - [x] OG-10: Pass all OpenAPI generator tests; validate output against OpenAPI 3.1 schema
 
 **Gate:** `GET /openapi.json` returns a valid OpenAPI 3.1 document listing all CRUD and annotated hand-written routes. `webloom generate openapi` writes the file. `webloom generate client` produces a typed TypeScript client.
