@@ -1,47 +1,39 @@
 /**
  * Full-Stack Example — App Configuration
  *
- * Demonstrates a production-ready configuration with all adapters enabled:
- * auth, email, caching, rate limiting, webhooks, background jobs, and file uploads.
+ * Production-ready config. Adapters are no longer declared here — the
+ * database driver is specified directly. Email is optional; when provided
+ * it must implement the EmailAdapter interface.
  */
 import { defineConfig } from '@web-loom/api-core';
-import { honoAdapter } from '@web-loom/api-adapter-hono';
-import { drizzleAdapter } from '@web-loom/api-adapter-drizzle';
-import { zodAdapter } from '@web-loom/api-adapter-zod';
-import { luciaAdapter } from '@web-loom/api-adapter-lucia';
-import { resendAdapter } from '@web-loom/api-adapter-resend';
 
 export default defineConfig({
-  adapters: {
-    api: honoAdapter(),
-    database: drizzleAdapter(),
-    validation: zodAdapter(),
-    auth: luciaAdapter({
-      sessionExpiry: '30d',
-      cookieName: 'session',
-    }),
-    email: resendAdapter({
-      apiKey: process.env.RESEND_API_KEY!,
-      from: 'noreply@example.com',
-    }),
-  },
-
   database: {
     url: process.env.DATABASE_URL!,
+    driver: 'pg',
     poolSize: 10,
-    readReplicas: [process.env.DATABASE_READ_URL!],
+    ssl: true,
+  },
+
+  routes: { dir: './src/routes' },
+
+  openapi: {
+    enabled: true,
+    ui: 'scalar',
+    title: 'Full-Stack API',
+    version: '1.0.0',
   },
 
   security: {
     cors: {
-      origin: [process.env.FRONTEND_URL!],
+      origins: [process.env.FRONTEND_URL!],
       credentials: true,
     },
+    // window accepts: '30s' | '1m' | '1h' | '1d'
     rateLimit: {
-      windowMs: 60_000,
-      max: 100,
+      window: '1m',
+      limit: 100,
     },
-    requestSizeLimit: 10 * 1024 * 1024, // 10 MB for file uploads
   },
 
   features: {

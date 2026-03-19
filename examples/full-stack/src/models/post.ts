@@ -1,80 +1,46 @@
 /**
  * Full-Stack Example — Post Model
  *
- * Post model with a belongsTo relationship to User and a hasMany
- * relationship to Comment. Demonstrates caching and webhook triggers.
+ * Supports draft/published/archived statuses, soft-delete, and a foreign key
+ * to the users table. The slug is generated from the title in the route handler.
  */
+import { pgTable, pgEnum, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 import { defineModel } from '@web-loom/api-core';
+import { usersTable } from './user';
+import { relations } from 'drizzle-orm';
 
-export const Post = defineModel({
+export const postStatusEnum = pgEnum('post_status', ['draft', 'published', 'archived']);
+
+export const postsTable = pgTable('posts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  slug: text('slug').notNull().unique(),
+  status: postStatusEnum('status').notNull().default('draft'),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => usersTable.id),
+  publishedAt: timestamp('published_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'), // soft-delete
+});
+
+export const postsRelations = relations(postsTable, ({ one }) => ({
+  author: one(usersTable, { fields: [postsTable.userId], references: [usersTable.id] }),
+}));
+
+export const PostModel = defineModel(postsTable, {
   name: 'Post',
-  tableName: 'posts',
-
-  fields: [
-    {
-      name: 'id',
-      type: 'uuid',
-      database: { primaryKey: true, default: 'gen_random_uuid()' },
-    },
-    {
-      name: 'title',
-      type: 'string',
-      validation: { required: true, minLength: 1, maxLength: 200 },
-    },
-    {
-      name: 'content',
-      type: 'text',
-      validation: { required: true },
-    },
-    {
-      name: 'slug',
-      type: 'string',
-      database: { unique: true, index: true },
-      // Computed from title on create
-      computed: true,
-    },
-    {
-      name: 'status',
-      type: 'enum',
-      validation: { enum: ['draft', 'published', 'archived'] },
-      default: 'draft',
-    },
-    {
-      name: 'userId',
-      type: 'uuid',
-      validation: { required: true },
-      database: { index: true, references: { model: 'User', field: 'id' } },
-    },
-    {
-      name: 'publishedAt',
-      type: 'datetime',
-    },
-    {
-      name: 'createdAt',
-      type: 'datetime',
-      default: () => new Date(),
-    },
-    {
-      name: 'updatedAt',
-      type: 'datetime',
-      default: () => new Date(),
-    },
-  ],
-
-  relationships: [
-    { type: 'belongsTo', model: 'User', foreignKey: 'userId' },
-    { type: 'hasMany', model: 'Comment', foreignKey: 'postId' },
-  ],
-
-  options: {
-    timestamps: true,
-    softDelete: true,
-    crud: {
-      list: { auth: false, cache: { ttl: 60, tags: ['posts'] } },
-      read: { auth: false, cache: { ttl: 120, tags: ['posts'] } },
-      create: { auth: true },
-      update: { auth: 'owner' },
-      delete: { auth: 'owner' },
-    },
+  basePath: '/posts',
+  crud: {
+    list: { auth: false },
+    create: { auth: true },
+    read: { auth: false },
+    update: { auth: true },
+    delete: { auth: true },
   },
 });
+
+export type Post = typeof postsTable.$inferSelect;
+export type NewPost = typeof postsTable.$inferInsert;

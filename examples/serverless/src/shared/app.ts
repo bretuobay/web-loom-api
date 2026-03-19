@@ -1,83 +1,72 @@
 /**
  * Serverless Example — Shared App Definition
  *
- * Defines the core application once, then wraps it with platform-specific
- * handlers (Vercel, Cloudflare, AWS Lambda). This keeps business logic
- * in one place while supporting multiple deployment targets.
+ * Defines the core application once. Platform-specific entry points
+ * (Vercel, Cloudflare, Lambda) call getApp() and call handleRequest().
  *
- * Cold start optimization tips used here:
- * - Minimal adapter set (no email, no auth for this demo)
- * - Lazy imports where possible
- * - Small model surface area
+ * Cold start tips:
+ *  - Minimal config: no email, no auth, no webhooks
+ *  - poolSize: 1 — one connection per serverless invocation
+ *  - Module-scope promise: app is initialized at most once per container
  */
 import { createApp, defineConfig, defineRoutes } from '@web-loom/api-core';
-import { honoAdapter } from '@web-loom/api-adapter-hono';
-import { drizzleAdapter } from '@web-loom/api-adapter-drizzle';
-import { zodAdapter } from '@web-loom/api-adapter-zod';
-import { Item } from './models/item';
+import { ilike } from 'drizzle-orm';
+import { itemsTable } from './models/item';
 
-// Shared configuration — platform-specific overrides are applied by each handler
 const config = defineConfig({
-  adapters: {
-    api: honoAdapter(),
-    database: drizzleAdapter(),
-    validation: zodAdapter(),
-  },
-
   database: {
     url: process.env.DATABASE_URL!,
-    // Lower pool size for serverless — each invocation gets one connection
+    driver: 'neon-serverless', // edge-friendly HTTP driver
     poolSize: 1,
     connectionTimeout: 5_000,
   },
 
+  routes: { dir: './src/shared/routes' },
+
   security: {
     cors: {
-      origin: ['*'],
+      origins: ['*'],
       credentials: false,
     },
   },
 
-  features: {
-    crud: true,
-  },
+  features: { crud: true },
 
   observability: {
     logging: { level: 'warn', format: 'json' },
   },
 });
 
-// Custom routes alongside auto-generated CRUD
-const routes = defineRoutes((router) => {
-  // GET /api/health — Lightweight health check (no DB hit)
-  router.get('/api/health', {
-    handler: async (ctx) => {
-      return ctx.json({ status: 'ok', timestamp: Date.now() });
-    },
-  });
+// Inline routes registered alongside the auto-discovered CRUD
+const extraRoutes = defineRoutes();
 
-  // GET /api/items/search — Search items by name
-  router.get('/api/items/search', {
-    validation: {
-      query: { q: { type: 'string', required: true, minLength: 1 } },
-    },
-    handler: async (ctx) => {
-      const items = await ctx.db.select(Item).where('name', 'ilike', `%${ctx.query.q}%`).limit(10);
+// GET /health — Lightweight liveness check (no DB hit)
+extraRoutes.get('/health', (c) => c.json({ status: 'ok', timestamp: Date.now() }));
 
-      return ctx.json({ items });
-    },
-  });
+// GET /items/search?q=... — Full-text search
+extraRoutes.get('/items/search', async (c) => {
+  const q = c.req.query('q');
+  if (!q) return c.json({ error: 'q is required' }, 400);
+
+  const items = await c.var.db
+    .select()
+    .from(itemsTable)
+    .where(ilike(itemsTable.name, `%${q}%`))
+    .limit(10);
+
+  return c.json({ items });
 });
 
-/**
- * Create and cache the app instance. In serverless environments, the module
- * scope persists across warm invocations, so the app is only initialized once.
- */
-let appPromise: ReturnType<typeof createApp> | null = null;
+// Module-level promise — reused across warm invocations
+let _appPromise: ReturnType<typeof createApp> | null = null;
 
 export function getApp() {
-  if (!appPromise) {
-    appPromise = createApp(config, { routes });
+  if (!_appPromise) {
+    _appPromise = createApp(config).then((app) => {
+      // Mount extra inline routes under /api
+      app.hono.route('/api', extraRoutes);
+      return app;
+    });
   }
-  return appPromise;
+  return _appPromise;
 }

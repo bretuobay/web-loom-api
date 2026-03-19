@@ -1,11 +1,20 @@
 /**
  * Full-Stack Example — Post Created Webhook
  *
- * Defines a webhook that fires when a new post is created.
- * External services can subscribe to this event to receive real-time
- * notifications (e.g., a Slack bot, analytics pipeline, or CMS).
+ * Uses WebhookManager from @web-loom/api-webhooks directly.
+ * `defineWebhook` does not exist — create a WebhookManager instance,
+ * register subscribers, and call manager.dispatch() from route handlers.
+ *
+ * Constructor options: { webhookStore, logStore, transport, deliveryOptions }
+ * Dispatch method: manager.dispatch(event, payload)
+ * Register method: manager.create(options)  ← WebhookCreateOptions
  */
-import { defineWebhook } from '@web-loom/api-core';
+import { WebhookManager, MemoryWebhookStore, MemoryDeliveryLogStore } from '@web-loom/api-webhooks';
+
+export const webhookManager = new WebhookManager({
+  webhookStore: new MemoryWebhookStore(),
+  logStore: new MemoryDeliveryLogStore(),
+});
 
 interface PostCreatedPayload {
   postId: string;
@@ -13,34 +22,32 @@ interface PostCreatedPayload {
   authorId: string;
 }
 
-export default defineWebhook<PostCreatedPayload>({
-  // Event name — matches the key used in ctx.webhooks.dispatch()
-  event: 'post.created',
-
-  // Optional: transform the payload before sending to subscribers
-  transform: (payload) => ({
+/**
+ * Dispatch a post.created event. Call this from POST /posts after insert.
+ * Returns delivery results for each registered subscriber.
+ */
+export async function dispatchPostCreated(payload: PostCreatedPayload) {
+  return webhookManager.dispatch('post.created', {
     event: 'post.created',
     timestamp: new Date().toISOString(),
-    data: {
-      postId: payload.postId,
-      title: payload.title,
-      authorId: payload.authorId,
-    },
-  }),
+    data: payload,
+  });
+}
 
-  // Optional: filter which subscribers receive this event
-  filter: (subscriber, payload) => {
-    // Only send to subscribers that have opted into post events
-    return subscriber.events.includes('post.created') || subscriber.events.includes('*');
-  },
-
-  // Delivery configuration
-  delivery: {
-    // Retry failed deliveries up to 5 times
-    retries: 5,
-    // Timeout per delivery attempt
-    timeout: 10_000,
-    // Sign payloads with HMAC-SHA256 so subscribers can verify authenticity
-    signing: { algorithm: 'sha256', header: 'X-Webhook-Signature' },
-  },
-});
+/**
+ * Register a webhook subscriber (call at startup or load from DB in production).
+ *
+ * Example:
+ *   await registerSubscriber({
+ *     url: 'https://hooks.example.com/endpoint',
+ *     secret: process.env.WEBHOOK_SECRET!,
+ *     events: ['post.created'],
+ *   });
+ */
+export async function registerSubscriber(opts: { url: string; secret?: string; events: string[] }) {
+  return webhookManager.create({
+    url: opts.url,
+    events: opts.events,
+    secret: opts.secret,
+  });
+}
