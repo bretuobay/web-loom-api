@@ -62,7 +62,11 @@
     }
   },
   "devDependencies": {
+    "@hono/node-server": "^1.19.11",
+    "@libsql/client": "^0.14.0",
+    "@neondatabase/serverless": "^0.10.4",
     "@types/node": "^22.10.5",
-    "@types/pg": "^8.11.10"
+    "@types/pg": "^8.11.10",
+    "pg": "^8.13.0"
   }
 }
