@@ -10,14 +10,14 @@
  * Or add to vercel.json:
  *   { "functions": { "api/**": { "runtime": "edge" } } }
  */
-import { createVercelHandler } from "@web-loom/api-deployment-vercel";
-import { getApp } from "../shared/app";
+import { createVercelHandler } from '@web-loom/api-deployment-vercel';
+import { getApp } from '../shared/app';
 
 // Export the edge config so Vercel uses the edge runtime
 export const config = {
-  runtime: "edge",
+  runtime: 'edge',
   // Regions close to your database for lowest latency
-  regions: ["iad1", "sfo1", "cdg1"],
+  regions: ['iad1', 'sfo1', 'cdg1'],
 };
 
 /**

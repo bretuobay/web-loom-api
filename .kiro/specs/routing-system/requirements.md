@@ -51,13 +51,13 @@ The Web_Loom_API shall scan the directory specified by `config.routes.dir` (defa
 **REQ-RS-011**
 The Web_Loom_API shall map route file paths to URL mount paths using the following convention:
 
-| File path | Mount path |
-|---|---|
-| `src/routes/users.ts` | `/users` |
-| `src/routes/users/[id].ts` | `/users/:id` |
-| `src/routes/posts/[...slug].ts` | `/posts/*` |
-| `src/routes/index.ts` | `/` |
-| `src/routes/api/v1/health.ts` | `/api/v1/health` |
+| File path                       | Mount path       |
+| ------------------------------- | ---------------- |
+| `src/routes/users.ts`           | `/users`         |
+| `src/routes/users/[id].ts`      | `/users/:id`     |
+| `src/routes/posts/[...slug].ts` | `/posts/*`       |
+| `src/routes/index.ts`           | `/`              |
+| `src/routes/api/v1/health.ts`   | `/api/v1/health` |
 
 **REQ-RS-012**
 The Web_Loom_API shall expect each route file to export a `Hono` instance as its default export. If a file's default export is not a `Hono` instance, the Web_Loom_API shall throw a `RouteLoadError` identifying the offending file.
@@ -100,6 +100,7 @@ The Web_Loom_API shall register Hono's built-in `compress()` middleware when `co
 
 **REQ-RS-040**
 The Web_Loom_API shall register a global Hono `onError` handler that formats all unhandled errors into the standard error response shape:
+
 ```json
 {
   "error": {

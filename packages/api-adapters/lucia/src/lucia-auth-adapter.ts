@@ -94,7 +94,7 @@ export class LuciaAuthAdapter implements AuthAdapter {
     if (options.cleanupIntervalMs && options.cleanupIntervalMs > 0) {
       this.cleanupTimer = setInterval(
         () => this.cleanupExpiredSessions(),
-        options.cleanupIntervalMs,
+        options.cleanupIntervalMs
       );
       // Allow the process to exit even if the timer is still running
       if (this.cleanupTimer.unref) {
@@ -115,10 +115,7 @@ export class LuciaAuthAdapter implements AuthAdapter {
   // Session management (Requirement 2.4, 14.1, 14.2)
   // -----------------------------------------------------------------------
 
-  async createSession(
-    userId: string,
-    attributes: Record<string, unknown> = {},
-  ): Promise<Session> {
+  async createSession(userId: string, attributes: Record<string, unknown> = {}): Promise<Session> {
     const user = this.users.get(userId);
     if (!user) {
       throw new NotFoundError(`User not found: ${userId}`, 'user');
@@ -363,9 +360,7 @@ export class LuciaAuthAdapter implements AuthAdapter {
 
     const profile = (await userInfoResponse.json()) as Record<string, unknown>;
 
-    const email = (
-      (profile.email as string | undefined) ?? ''
-    ).toLowerCase().trim();
+    const email = ((profile.email as string | undefined) ?? '').toLowerCase().trim();
 
     if (!email) {
       throw new AuthenticationError('OAuth provider did not return an email');
@@ -477,7 +472,7 @@ export class LuciaAuthAdapter implements AuthAdapter {
     password: string,
     salt: Buffer,
     iterations: number,
-    keyLength: number,
+    keyLength: number
   ): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
       nodePbkdf2(password, salt, iterations, keyLength, 'sha512', (err, key) => {

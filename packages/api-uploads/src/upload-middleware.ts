@@ -94,7 +94,7 @@ export interface FileUploadError {
 export function parseMultipart(
   body: Buffer,
   boundary: string,
-  options: ResolvedFileUploadOptions,
+  options: ResolvedFileUploadOptions
 ): { result?: FileUploadResult; error?: FileUploadError } {
   const delimiter = Buffer.from(`--${boundary}`);
   const closeDelimiter = Buffer.from(`--${boundary}--`);
@@ -113,8 +113,12 @@ export function parseMultipart(
 
   while (offset < body.length) {
     // Check for close delimiter
-    if (body.subarray(offset - delimiter.length - 2, offset - 2 + closeDelimiter.length)
-      .toString().includes(`--${boundary}--`)) {
+    if (
+      body
+        .subarray(offset - delimiter.length - 2, offset - 2 + closeDelimiter.length)
+        .toString()
+        .includes(`--${boundary}--`)
+    ) {
       break;
     }
 
@@ -158,10 +162,7 @@ export function parseMultipart(
 
       const mimeType = headers.get('content-type') ?? 'application/octet-stream';
 
-      if (
-        options.allowedMimeTypes.length > 0 &&
-        !options.allowedMimeTypes.includes(mimeType)
-      ) {
+      if (options.allowedMimeTypes.length > 0 && !options.allowedMimeTypes.includes(mimeType)) {
         return {
           error: {
             code: 'INVALID_MIME_TYPE',
@@ -209,7 +210,7 @@ export function fileUpload(options?: FileUploadOptions) {
     // Resolve content-type header
     const contentType =
       request.headers instanceof Headers
-        ? request.headers.get('content-type') ?? ''
+        ? (request.headers.get('content-type') ?? '')
         : (request.headers['content-type'] ?? '');
 
     const boundary = extractBoundary(contentType);
@@ -233,7 +234,10 @@ export function fileUpload(options?: FileUploadOptions) {
       // Web standard Request — stream into buffer
       const ab = await request.arrayBuffer();
       bodyBuffer = Buffer.from(ab);
-    } else if (request.body && typeof (request.body as ReadableStream<Uint8Array>).getReader === 'function') {
+    } else if (
+      request.body &&
+      typeof (request.body as ReadableStream<Uint8Array>).getReader === 'function'
+    ) {
       bodyBuffer = await streamToBuffer(request.body as ReadableStream<Uint8Array>);
     } else {
       return { result: { files: [], fields: {} } };

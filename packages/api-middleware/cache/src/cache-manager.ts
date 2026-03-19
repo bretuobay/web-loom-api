@@ -81,7 +81,7 @@ export class CacheManager {
   async getOrSet<T>(
     key: string,
     factory: () => Promise<T> | T,
-    options?: CacheEntryOptions,
+    options?: CacheEntryOptions
   ): Promise<T> {
     const ttl = options?.ttl ?? this.defaultTtl;
     const tags = options?.tags ?? [];
@@ -227,10 +227,10 @@ export class CacheManager {
       key: string;
       factory: () => Promise<unknown> | unknown;
       options?: CacheEntryOptions;
-    }>,
+    }>
   ): Promise<void> {
     await Promise.all(
-      entries.map((entry) => this.getOrSet(entry.key, entry.factory, entry.options)),
+      entries.map((entry) => this.getOrSet(entry.key, entry.factory, entry.options))
     );
   }
 
@@ -252,7 +252,7 @@ export class CacheManager {
     store: CacheStore,
     key: string,
     wrapped: CachedValue,
-    ttlMs: number,
+    ttlMs: number
   ): Promise<void> {
     // Wrap CachedValue inside CachedResponse shape for store compatibility
     const entry: CachedResponse = {

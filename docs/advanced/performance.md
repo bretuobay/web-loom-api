@@ -12,7 +12,7 @@ The email adapter is optional and initialized only when `c.var.email` is first a
 
 ```typescript
 defineConfig({
-  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
+  database: { url: process.env.DATABASE_URL!, driver: 'neon-serverless' },
   // email: omit unless needed — zero cold start cost when absent
 });
 ```
@@ -41,7 +41,6 @@ Keep your bundle small:
 - With Hono: < 65KB gzipped
 - With Drizzle: < 80KB gzipped
 - Full stack: < 150KB gzipped
-
 
 ### Bundle Analysis
 
@@ -97,8 +96,8 @@ database: {
 ### Route-Level Caching
 
 ```typescript
-router.get("/api/posts", {
-  cache: { ttl: 60, tags: ["posts"] },
+router.get('/api/posts', {
+  cache: { ttl: 60, tags: ['posts'] },
   handler: async (ctx) => {
     const posts = await ctx.db.select(Post).limit(20);
     return ctx.json({ posts });
@@ -111,10 +110,10 @@ router.get("/api/posts", {
 Invalidate cached responses when data changes:
 
 ```typescript
-router.post("/api/posts", {
+router.post('/api/posts', {
   handler: async (ctx) => {
     const post = await ctx.db.insert(Post, ctx.body);
-    await ctx.cache.invalidate(["posts"]); // Clear all post caches
+    await ctx.cache.invalidate(['posts']); // Clear all post caches
     return ctx.json({ post }, 201);
   },
 });
@@ -134,14 +133,11 @@ Avoid N+1 queries by eager-loading relationships:
 // Bad: N+1 queries
 const posts = await ctx.db.select(Post).limit(20);
 for (const post of posts) {
-  post.author = await ctx.db.select(User).where("id", "=", post.userId).first();
+  post.author = await ctx.db.select(User).where('id', '=', post.userId).first();
 }
 
 // Good: Single query with JOIN
-const posts = await ctx.db
-  .select(Post)
-  .with("author")
-  .limit(20);
+const posts = await ctx.db.select(Post).with('author').limit(20);
 ```
 
 ### Cursor-Based Pagination
@@ -207,14 +203,14 @@ observability: {
 
 Available metrics:
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `http_requests_total` | Counter | Requests by method, path, status |
-| `http_request_duration_seconds` | Histogram | Response time percentiles |
-| `db_queries_total` | Counter | Queries by operation type |
-| `db_query_duration_seconds` | Histogram | Query time percentiles |
-| `cache_hits_total` | Counter | Cache hits |
-| `cache_misses_total` | Counter | Cache misses |
+| Metric                          | Type      | Description                      |
+| ------------------------------- | --------- | -------------------------------- |
+| `http_requests_total`           | Counter   | Requests by method, path, status |
+| `http_request_duration_seconds` | Histogram | Response time percentiles        |
+| `db_queries_total`              | Counter   | Queries by operation type        |
+| `db_query_duration_seconds`     | Histogram | Query time percentiles           |
+| `cache_hits_total`              | Counter   | Cache hits                       |
+| `cache_misses_total`            | Counter   | Cache misses                     |
 
 ### Profiling
 

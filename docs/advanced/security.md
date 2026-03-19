@@ -38,12 +38,13 @@ security: {
 Stricter limits for sensitive endpoints:
 
 ```typescript
-router.post("/api/auth/login", {
+router.post('/api/auth/login', {
   rateLimit: { windowMs: 60_000, max: 5 },
-  handler: async (ctx) => { /* ... */ },
+  handler: async (ctx) => {
+    /* ... */
+  },
 });
 ```
-
 
 ### Per-User Limits
 
@@ -62,13 +63,16 @@ rateLimit: {
 ### Session-Based Auth
 
 ```typescript
-import { sessionAuth } from "@web-loom/api-middleware-auth";
+import { sessionAuth } from '@web-loom/api-middleware-auth';
 
 // In your route file or global middleware
-app.use("/*", sessionAuth({
-  lucia: luciaInstance,
-  cookieName: "session",
-}));
+app.use(
+  '/*',
+  sessionAuth({
+    lucia: luciaInstance,
+    cookieName: 'session',
+  })
+);
 ```
 
 ### API Key Auth
@@ -76,7 +80,7 @@ app.use("/*", sessionAuth({
 For machine-to-machine communication:
 
 ```typescript
-router.get("/api/data", {
+router.get('/api/data', {
   middleware: [apiKeyAuth],
   handler: async (ctx) => {
     // ctx.apiKey.scopes contains ["read", "write"]
@@ -88,20 +92,20 @@ router.get("/api/data", {
 
 ```typescript
 // Generate authorization URL
-router.get("/api/auth/github", {
+router.get('/api/auth/github', {
   handler: async (ctx) => {
-    const url = ctx.auth.getOAuthAuthorizationUrl("github", state);
+    const url = ctx.auth.getOAuthAuthorizationUrl('github', state);
     return ctx.redirect(url);
   },
 });
 
 // Handle callback
-router.get("/api/auth/github/callback", {
+router.get('/api/auth/github/callback', {
   handler: async (ctx) => {
-    const user = await ctx.auth.handleOAuthCallback("github", ctx.query.code);
+    const user = await ctx.auth.handleOAuthCallback('github', ctx.query.code);
     const session = await ctx.auth.createSession(user.id);
-    ctx.setCookie("session", session.id, { httpOnly: true, secure: true });
-    return ctx.redirect("/");
+    ctx.setCookie('session', session.id, { httpOnly: true, secure: true });
+    return ctx.redirect('/');
   },
 });
 ```
@@ -130,13 +134,13 @@ The Validation Adapter sanitizes inputs by default:
 
 Applied automatically to all responses:
 
-| Header | Value | Purpose |
-|--------|-------|---------|
-| `X-Content-Type-Options` | `nosniff` | Prevent MIME sniffing |
-| `X-Frame-Options` | `DENY` | Prevent clickjacking |
-| `X-XSS-Protection` | `1; mode=block` | XSS filter |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Force HTTPS |
-| `Content-Security-Policy` | `default-src 'self'` | Content restrictions |
+| Header                      | Value                                 | Purpose               |
+| --------------------------- | ------------------------------------- | --------------------- |
+| `X-Content-Type-Options`    | `nosniff`                             | Prevent MIME sniffing |
+| `X-Frame-Options`           | `DENY`                                | Prevent clickjacking  |
+| `X-XSS-Protection`          | `1; mode=block`                       | XSS filter            |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Force HTTPS           |
+| `Content-Security-Policy`   | `default-src 'self'`                  | Content restrictions  |
 
 ### Custom Headers
 
@@ -162,10 +166,12 @@ security: {
 Per-route overrides for file uploads:
 
 ```typescript
-router.post("/api/uploads", {
+router.post('/api/uploads', {
   rateLimit: { max: 10 },
   // File upload routes can have larger limits
-  handler: async (ctx) => { /* ... */ },
+  handler: async (ctx) => {
+    /* ... */
+  },
 });
 ```
 
@@ -177,12 +183,10 @@ The Database Adapter uses parameterized queries for all user input:
 
 ```typescript
 // Safe — parameterized
-const users = await ctx.db
-  .select(User)
-  .where("email", "=", ctx.query.email);
+const users = await ctx.db.select(User).where('email', '=', ctx.query.email);
 
 // Also safe — raw queries are parameterized
-await ctx.db.query("SELECT * FROM users WHERE email = $1", [ctx.query.email]);
+await ctx.db.query('SELECT * FROM users WHERE email = $1', [ctx.query.email]);
 ```
 
 Never interpolate user input into SQL strings.
@@ -225,14 +229,14 @@ Use `.env.local` for local secrets (gitignored by default).
 
 Web Loom automatically adjusts security based on `NODE_ENV`:
 
-| Feature | Development | Production |
-|---------|-------------|------------|
-| Stack traces in errors | Yes | No |
-| CORS | All origins | Configured origins only |
-| Secure cookies | Optional | Required |
-| SQL query logging | Yes | No |
-| API docs at /docs | Yes | No |
-| Detailed error messages | Yes | Generic messages |
+| Feature                 | Development | Production              |
+| ----------------------- | ----------- | ----------------------- |
+| Stack traces in errors  | Yes         | No                      |
+| CORS                    | All origins | Configured origins only |
+| Secure cookies          | Optional    | Required                |
+| SQL query logging       | Yes         | No                      |
+| API docs at /docs       | Yes         | No                      |
+| Detailed error messages | Yes         | Generic messages        |
 
 Never set `NODE_ENV=development` in production. Web Loom detects the environment automatically.
 

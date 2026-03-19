@@ -1,6 +1,6 @@
 /**
  * Basic Usage Example
- * 
+ *
  * Demonstrates basic TypeScript client generation and usage
  */
 
@@ -46,7 +46,7 @@ const routes: RouteDefinition[] = [
   { path: '/users/:id', method: 'GET', metadata: { description: 'Get user by ID' } },
   { path: '/users/:id', method: 'PUT', metadata: { description: 'Update user' } },
   { path: '/users/:id', method: 'DELETE', metadata: { description: 'Delete user' } },
-  
+
   // Post routes
   { path: '/posts', method: 'GET', metadata: { description: 'List all posts' } },
   { path: '/posts', method: 'POST', metadata: { description: 'Create a new post' } },

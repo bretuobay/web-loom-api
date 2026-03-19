@@ -51,20 +51,19 @@ docker run -p 3000:3000 \
   my-api
 ```
 
-
 ## Docker Compose
 
 For local development with a database:
 
 ```yaml
 # docker-compose.yml
-version: "3.8"
+version: '3.8'
 
 services:
   api:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/myapp
       NODE_ENV: development
@@ -72,7 +71,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./src:/app/src  # Hot reload in dev
+      - ./src:/app/src # Hot reload in dev
 
   db:
     image: postgres:16-alpine
@@ -81,11 +80,11 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: myapp
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -145,12 +144,12 @@ CMD ["node", "dist/index.js"]
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `NODE_ENV` | Yes | `production` or `development` |
-| `PORT` | No | Server port (default: 3000) |
-| `RESEND_API_KEY` | If email enabled | Resend API key |
+| Variable         | Required         | Description                   |
+| ---------------- | ---------------- | ----------------------------- |
+| `DATABASE_URL`   | Yes              | PostgreSQL connection string  |
+| `NODE_ENV`       | Yes              | `production` or `development` |
+| `PORT`           | No               | Server port (default: 3000)   |
+| `RESEND_API_KEY` | If email enabled | Resend API key                |
 
 Pass via `-e` flags, `.env` file, or Docker Compose `environment` section.
 

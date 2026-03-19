@@ -34,7 +34,7 @@ const DEFAULT_METHODS = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'];
  */
 async function resolveOrigin(
   requestOrigin: string | null,
-  option: CorsOrigin,
+  option: CorsOrigin
 ): Promise<string | null> {
   if (!requestOrigin) return null;
 
@@ -43,7 +43,6 @@ async function resolveOrigin(
   if (typeof option === 'string') {
     return option === requestOrigin ? requestOrigin : null;
   }
-
 
   if (option instanceof RegExp) {
     return option.test(requestOrigin) ? requestOrigin : null;
@@ -75,7 +74,7 @@ async function resolveOrigin(
  * @returns Middleware function
  */
 export function cors(
-  options: CorsOptions = {},
+  options: CorsOptions = {}
 ): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
   const {
     origin: originOption = '*',
@@ -102,8 +101,7 @@ export function cors(
     }
 
     const isPreflight =
-      ctx.request.method === 'OPTIONS' &&
-      ctx.request.headers.has('Access-Control-Request-Method');
+      ctx.request.method === 'OPTIONS' && ctx.request.headers.has('Access-Control-Request-Method');
 
     if (isPreflight) {
       return handlePreflight(ctx, next, {
@@ -126,7 +124,6 @@ export function cors(
   };
 }
 
-
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -143,7 +140,7 @@ interface PreflightParams {
 function handlePreflight(
   ctx: RequestContext,
   next: NextFunction,
-  params: PreflightParams,
+  params: PreflightParams
 ): Promise<Response> | Response {
   const headers = new Headers();
 
@@ -153,7 +150,7 @@ function handlePreflight(
   // Reflect requested headers if none explicitly configured
   const reqHeaders = params.allowedHeaders
     ? params.allowedHeaders.join(', ')
-    : ctx.request.headers.get('Access-Control-Request-Headers') ?? '';
+    : (ctx.request.headers.get('Access-Control-Request-Headers') ?? '');
   if (reqHeaders) {
     headers.set('Access-Control-Allow-Headers', reqHeaders);
   }
@@ -214,7 +211,7 @@ function appendCorsHeaders(response: Response, params: ActualParams): Response {
 function setOriginHeader(
   headers: Headers,
   resolvedOrigin: string | null,
-  credentials: boolean,
+  credentials: boolean
 ): void {
   if (!resolvedOrigin) return;
 

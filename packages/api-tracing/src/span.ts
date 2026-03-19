@@ -47,7 +47,6 @@ export class Span implements SpanData, SpanMethods {
   public attributes: Record<string, SpanAttributeValue>;
   public events: SpanEvent[];
 
-
   private ended = false;
   private readonly onEnd?: (span: SpanData) => void;
 
@@ -58,7 +57,10 @@ export class Span implements SpanData, SpanMethods {
     this.name = name;
     this.startTime = Date.now();
     this.status = { code: SpanStatusCode.UNSET };
-    this.attributes = (options?.attributes ? { ...options.attributes } : {}) as Record<string, SpanAttributeValue>;
+    this.attributes = (options?.attributes ? { ...options.attributes } : {}) as Record<
+      string,
+      SpanAttributeValue
+    >;
     this.events = [];
     if (options?.onEnd !== undefined) this.onEnd = options.onEnd;
   }

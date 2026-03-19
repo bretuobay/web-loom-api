@@ -151,10 +151,8 @@ describe('createValidation', () => {
 
   it('calls next when all schemas pass', async () => {
     const app = new Hono();
-    app.post(
-      '/test',
-      createValidation({ body: bodySchema, query: querySchema }),
-      (c) => c.json({ ok: true })
+    app.post('/test', createValidation({ body: bodySchema, query: querySchema }), (c) =>
+      c.json({ ok: true })
     );
     const res = await app.fetch(
       new Request('http://localhost/test?page=1', {
@@ -171,10 +169,8 @@ describe('createValidation', () => {
     const strictParams = z.object({ id: z.string().uuid() });
 
     const app = new Hono();
-    app.post(
-      '/test/:id',
-      createValidation({ body: strictBody, params: strictParams }),
-      (c) => c.json({ ok: true })
+    app.post('/test/:id', createValidation({ body: strictBody, params: strictParams }), (c) =>
+      c.json({ ok: true })
     );
 
     const res = await app.fetch(

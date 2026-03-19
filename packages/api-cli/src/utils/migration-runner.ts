@@ -178,9 +178,7 @@ export class MigrationRunner {
 
     const allFiles = await this.getMigrationFiles();
     const appliedMigrations = await this.tracker.getAppliedMigrations();
-    const appliedMap = new Map<string, MigrationRecord>(
-      appliedMigrations.map((m) => [m.name, m])
-    );
+    const appliedMap = new Map<string, MigrationRecord>(appliedMigrations.map((m) => [m.name, m]));
 
     const migrations = allFiles.map((file) => {
       const applied = appliedMap.get(file);

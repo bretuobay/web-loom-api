@@ -4,28 +4,28 @@
  * Demonstrates background job processing. This job is enqueued when a new
  * post is created and sends email notifications to followers.
  */
-import { defineJob } from "@web-loom/api-core";
-import { User } from "../models/user";
-import { Post } from "../models/post";
+import { defineJob } from '@web-loom/api-core';
+import { User } from '../models/user';
+import { Post } from '../models/post';
 
 interface EmailNotificationPayload {
-  type: "new-post";
+  type: 'new-post';
   postId: string;
   authorName: string;
 }
 
 export default defineJob<EmailNotificationPayload>({
-  name: "email-notification",
+  name: 'email-notification',
 
   // Retry up to 3 times with exponential backoff
   retries: 3,
-  backoff: "exponential",
+  backoff: 'exponential',
 
   handler: async (payload, ctx) => {
     const { postId, authorName } = payload;
 
     // Fetch the post
-    const post = await ctx.db.select(Post).where("id", "=", postId).first();
+    const post = await ctx.db.select(Post).where('id', '=', postId).first();
     if (!post) {
       ctx.logger.warn(`Post ${postId} not found, skipping notification`);
       return;
@@ -39,7 +39,7 @@ export default defineJob<EmailNotificationPayload>({
     const emails = users
       .filter((u) => u.id !== post.userId) // Don't notify the author
       .map((u) => ({
-        from: "noreply@example.com",
+        from: 'noreply@example.com',
         to: u.email,
         subject: `New post by ${authorName}: ${post.title}`,
         html: `

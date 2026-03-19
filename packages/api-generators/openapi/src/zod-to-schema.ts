@@ -16,9 +16,7 @@ export function zodToSchema(schema: ZodSchema, name: string): Record<string, unk
     delete result['$schema'];
     return result;
   } catch {
-    console.warn(
-      `[openapi] Cannot convert schema "${name}" to JSON Schema — using any-type ({})`
-    );
+    console.warn(`[openapi] Cannot convert schema "${name}" to JSON Schema — using any-type ({})`);
     return {};
   }
 }

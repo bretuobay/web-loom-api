@@ -37,6 +37,7 @@ The Web_Loom_API shall mount each `Generated_Router` on the `Hono_App` using `ap
 
 **REQ-CG-010**
 The `List_Route` shall accept the following query parameters:
+
 - `page: number` (default: `1`, minimum: `1`)
 - `limit: number` (default: `20`, minimum: `1`, maximum: `100`)
 - `sort: string` — comma-separated field names, prefixed with `-` for descending (e.g., `sort=-createdAt,name`)
@@ -45,6 +46,7 @@ The `List_Route` shall accept the following query parameters:
 
 **REQ-CG-011**
 The `List_Route` shall return a paginated response with:
+
 ```json
 {
   "data": [...],
@@ -67,6 +69,7 @@ The `List_Route` shall support equality filtering via additional query parameter
 
 **REQ-CG-014**
 The `List_Route` shall support comparison operators via bracketed query parameters:
+
 - `?age[gte]=18` → `gte(table.age, 18)`
 - `?age[lte]=65` → `lte(table.age, 65)`
 - `?name[like]=alice%` → `like(table.name, 'alice%')`

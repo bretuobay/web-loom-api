@@ -57,7 +57,7 @@ function extractIp(request: Request): string {
 }
 
 function defaultKeyGenerator(
-  strategy: 'ip' | 'user',
+  strategy: 'ip' | 'user'
 ): (request: Request, user?: unknown) => string {
   if (strategy === 'user') {
     return (_request: Request, user?: unknown) => {
@@ -84,9 +84,7 @@ function resolveOptions(opts: RateLimitOptions = {}): ResolvedRateLimitOptions {
   let keyGenerator: (request: Request, user?: unknown) => string;
   if (keyStrategy === 'custom') {
     if (!opts.keyGenerator) {
-      throw new Error(
-        'rateLimit: keyGenerator function is required when keyStrategy is "custom"',
-      );
+      throw new Error('rateLimit: keyGenerator function is required when keyStrategy is "custom"');
     }
     keyGenerator = opts.keyGenerator;
   } else {
@@ -118,7 +116,7 @@ function resolveOptions(opts: RateLimitOptions = {}): ResolvedRateLimitOptions {
 function refillBucket(
   state: TokenBucketState,
   now: number,
-  config: ResolvedRateLimitOptions,
+  config: ResolvedRateLimitOptions
 ): TokenBucketState {
   const elapsed = now - state.lastRefillTime;
   if (elapsed <= 0) return state;
@@ -142,7 +140,7 @@ function refillBucket(
 function consumeToken(
   state: TokenBucketState,
   now: number,
-  config: ResolvedRateLimitOptions,
+  config: ResolvedRateLimitOptions
 ): { state: TokenBucketState; allowed: boolean; info: RateLimitInfo } {
   const refilled = refillBucket(state, now, config);
 
@@ -156,10 +154,7 @@ function consumeToken(
 
   // Calculate reset time: when the bucket would be fully refilled
   const tokensNeeded = config.maxTokens - newTokens;
-  const msToFull =
-    tokensNeeded > 0
-      ? (tokensNeeded / config.refillRate) * config.windowMs
-      : 0;
+  const msToFull = tokensNeeded > 0 ? (tokensNeeded / config.refillRate) * config.windowMs : 0;
   const resetTimestamp = Math.ceil((now + msToFull) / 1000);
 
   const info: RateLimitInfo = {
@@ -198,7 +193,7 @@ function consumeToken(
  * @returns Middleware function
  */
 export function rateLimit(
-  options: RateLimitOptions = {},
+  options: RateLimitOptions = {}
 ): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
   const config = resolveOptions(options);
 
@@ -252,7 +247,7 @@ export function rateLimit(
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': String(info.reset),
           },
-        },
+        }
       );
     }
 

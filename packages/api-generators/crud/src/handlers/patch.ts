@@ -30,8 +30,13 @@ export function buildPatchHandler<TTable extends Table>(model: Model<TTable>): M
 
     if (fields.length === 0) {
       return c.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Request body must contain at least one field' } },
-        400,
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Request body must contain at least one field',
+          },
+        },
+        400
       );
     }
 

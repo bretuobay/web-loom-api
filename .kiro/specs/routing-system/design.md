@@ -54,14 +54,11 @@ app.get('/', async (c) => {
   return c.json({ users });
 });
 
-app.post('/',
-  zValidator('json', User.insertSchema),
-  async (c) => {
-    const data = c.req.valid('json');  // fully typed
-    const [user] = await c.var.db.insert(usersTable).values(data).returning();
-    return c.json({ user }, 201);
-  }
-);
+app.post('/', zValidator('json', User.insertSchema), async (c) => {
+  const data = c.req.valid('json'); // fully typed
+  const [user] = await c.var.db.insert(usersTable).values(data).returning();
+  return c.json({ user }, 201);
+});
 
 export default app;
 ```
@@ -87,7 +84,10 @@ export async function discoverAndMountRoutes(
     const router: unknown = module.default;
 
     if (!(router instanceof Hono)) {
-      throw new RouteLoadError(filePath, 'default export must be a Hono instance from defineRoutes()');
+      throw new RouteLoadError(
+        filePath,
+        'default export must be a Hono instance from defineRoutes()'
+      );
     }
 
     const mountPath = filePathToMountPath(filePath, routesDir);
@@ -98,10 +98,10 @@ export async function discoverAndMountRoutes(
 /** Converts src/routes/users/[id].ts → /users/:id */
 function filePathToMountPath(filePath: string, baseDir: string): string {
   const rel = relative(baseDir, filePath)
-    .replace(/\.ts$/, '')           // remove extension
-    .replace(/\/index$/, '')        // index.ts → /
-    .replace(/\[\.\.\.(\w+)\]/g, '*')   // [...slug] → *
-    .replace(/\[(\w+)\]/g, ':$1');  // [id] → :id
+    .replace(/\.ts$/, '') // remove extension
+    .replace(/\/index$/, '') // index.ts → /
+    .replace(/\[\.\.\.(\w+)\]/g, '*') // [...slug] → *
+    .replace(/\[(\w+)\]/g, ':$1'); // [id] → :id
 
   return '/' + rel || '/';
 }
@@ -109,13 +109,13 @@ function filePathToMountPath(filePath: string, baseDir: string): string {
 
 ## Path Convention Table
 
-| File | Mount Path | Note |
-|---|---|---|
-| `routes/users.ts` | `/users` | flat |
-| `routes/users/index.ts` | `/users` | directory index |
-| `routes/users/[id].ts` | `/users/:id` | dynamic segment |
-| `routes/posts/[...slug].ts` | `/posts/*` | catch-all |
-| `routes/api/v1/health.ts` | `/api/v1/health` | nested |
+| File                        | Mount Path       | Note            |
+| --------------------------- | ---------------- | --------------- |
+| `routes/users.ts`           | `/users`         | flat            |
+| `routes/users/index.ts`     | `/users`         | directory index |
+| `routes/users/[id].ts`      | `/users/:id`     | dynamic segment |
+| `routes/posts/[...slug].ts` | `/posts/*`       | catch-all       |
+| `routes/api/v1/health.ts`   | `/api/v1/health` | nested          |
 
 ## Global Error Handler
 
@@ -131,17 +131,50 @@ export const globalErrorHandler: ErrorHandler = (err, c) => {
 
   // Known application errors
   if (err instanceof NotFoundError) {
-    return c.json({ error: { code: 'NOT_FOUND', message: err.message, requestId, path, timestamp: new Date().toISOString() } }, 404);
+    return c.json(
+      {
+        error: {
+          code: 'NOT_FOUND',
+          message: err.message,
+          requestId,
+          path,
+          timestamp: new Date().toISOString(),
+        },
+      },
+      404
+    );
   }
   if (err instanceof ConflictError) {
-    return c.json({ error: { code: 'CONFLICT', message: err.message, requestId, path, timestamp: new Date().toISOString() } }, 409);
+    return c.json(
+      {
+        error: {
+          code: 'CONFLICT',
+          message: err.message,
+          requestId,
+          path,
+          timestamp: new Date().toISOString(),
+        },
+      },
+      409
+    );
   }
 
   // Unknown errors — hide details in production
   const message = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
   console.error(`[${requestId}]`, err);
 
-  return c.json({ error: { code: 'INTERNAL_ERROR', message, requestId, path, timestamp: new Date().toISOString() } }, 500);
+  return c.json(
+    {
+      error: {
+        code: 'INTERNAL_ERROR',
+        message,
+        requestId,
+        path,
+        timestamp: new Date().toISOString(),
+      },
+    },
+    500
+  );
 };
 ```
 
@@ -157,34 +190,35 @@ import { zValidator } from '@hono/zod-validator';
 import type { ZodSchema } from 'zod';
 
 /** Wrapper around zValidator that formats errors into the standard shape */
-export function validate<T extends keyof ValidationTargets>(
-  target: T,
-  schema: ZodSchema
-) {
+export function validate<T extends keyof ValidationTargets>(target: T, schema: ZodSchema) {
   return zValidator(target, schema, (result, c) => {
     if (!result.success) {
       const requestId = crypto.randomUUID();
-      return c.json({
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Request validation failed',
-          requestId,
-          timestamp: new Date().toISOString(),
-          details: {
-            fields: result.error.issues.map((issue) => ({
-              path: issue.path.map(String),
-              message: issue.message,
-              code: issue.code,
-            })),
+      return c.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Request validation failed',
+            requestId,
+            timestamp: new Date().toISOString(),
+            details: {
+              fields: result.error.issues.map((issue) => ({
+                path: issue.path.map(String),
+                message: issue.message,
+                code: issue.code,
+              })),
+            },
           },
         },
-      }, 400);
+        400
+      );
     }
   });
 }
 ```
 
 Usage in route files:
+
 ```typescript
 import { validate } from '@web-loom/api-core';
 

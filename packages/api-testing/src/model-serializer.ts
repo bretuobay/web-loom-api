@@ -56,7 +56,6 @@ function serializeValue(value: unknown, fieldDef: FieldDef): unknown {
       }
       return value;
 
-
     case 'buffer':
       if (Buffer.isBuffer(value)) {
         return { __type: 'buffer', value: value.toString('base64') };
@@ -123,10 +122,7 @@ function deserializeValue(value: unknown, fieldDef: FieldDef): unknown {
         '__type' in value &&
         (value as Record<string, unknown>).__type === 'buffer'
       ) {
-        return Buffer.from(
-          (value as Record<string, unknown>).value as string,
-          'base64',
-        );
+        return Buffer.from((value as Record<string, unknown>).value as string, 'base64');
       }
       return value;
 
@@ -148,11 +144,7 @@ function deserializeValue(value: unknown, fieldDef: FieldDef): unknown {
 /**
  * Validate a value matches the expected field type.
  */
-function validateFieldType(
-  value: unknown,
-  fieldDef: FieldDef,
-  fieldName: string,
-): void {
+function validateFieldType(value: unknown, fieldDef: FieldDef, fieldName: string): void {
   if (value === null || value === undefined) {
     return;
   }
@@ -160,58 +152,42 @@ function validateFieldType(
   switch (fieldDef.type) {
     case 'string':
       if (typeof value !== 'string') {
-        throw new ValidationError(
-          `Field "${fieldName}" expected string, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected string, got ${typeof value}`);
       }
       break;
     case 'number':
       if (typeof value !== 'number') {
-        throw new ValidationError(
-          `Field "${fieldName}" expected number, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected number, got ${typeof value}`);
       }
       break;
     case 'boolean':
       if (typeof value !== 'boolean') {
-        throw new ValidationError(
-          `Field "${fieldName}" expected boolean, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected boolean, got ${typeof value}`);
       }
       break;
     case 'date':
       if (!(value instanceof Date)) {
-        throw new ValidationError(
-          `Field "${fieldName}" expected Date, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected Date, got ${typeof value}`);
       }
       break;
     case 'bigint':
       if (typeof value !== 'bigint') {
-        throw new ValidationError(
-          `Field "${fieldName}" expected bigint, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected bigint, got ${typeof value}`);
       }
       break;
     case 'buffer':
       if (!Buffer.isBuffer(value)) {
-        throw new ValidationError(
-          `Field "${fieldName}" expected Buffer, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected Buffer, got ${typeof value}`);
       }
       break;
     case 'object':
       if (typeof value !== 'object') {
-        throw new ValidationError(
-          `Field "${fieldName}" expected object, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected object, got ${typeof value}`);
       }
       break;
     case 'array':
       if (!Array.isArray(value)) {
-        throw new ValidationError(
-          `Field "${fieldName}" expected array, got ${typeof value}`,
-        );
+        throw new ValidationError(`Field "${fieldName}" expected array, got ${typeof value}`);
       }
       break;
   }
@@ -236,10 +212,7 @@ export function serialize(model: Record<string, unknown>, schema: ModelSchema): 
  * Deserialize a JSON string back to a model object using the given schema.
  * Validates the result against the schema.
  */
-export function deserialize(
-  json: string,
-  schema: ModelSchema,
-): Record<string, unknown> {
+export function deserialize(json: string, schema: ModelSchema): Record<string, unknown> {
   const parsed = JSON.parse(json) as Record<string, unknown>;
   const result: Record<string, unknown> = {};
 
@@ -265,10 +238,7 @@ export function deserialize(
  * Validate deserialized data against a schema.
  * Throws ValidationError if data doesn't match.
  */
-export function validateDeserialized(
-  data: Record<string, unknown>,
-  schema: ModelSchema,
-): void {
+export function validateDeserialized(data: Record<string, unknown>, schema: ModelSchema): void {
   for (const [key, fieldDef] of Object.entries(schema.fields)) {
     if (fieldDef.required && !(key in data)) {
       throw new ValidationError(`Missing required field "${key}"`);
@@ -278,4 +248,3 @@ export function validateDeserialized(
     }
   }
 }
-

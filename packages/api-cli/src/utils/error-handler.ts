@@ -1,6 +1,6 @@
 /**
  * CLI Error Handler
- * 
+ *
  * Centralized error handling for CLI commands.
  * Formats errors and exits with appropriate status codes.
  */

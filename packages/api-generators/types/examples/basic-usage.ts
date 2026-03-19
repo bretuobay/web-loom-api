@@ -1,6 +1,6 @@
 /**
  * Basic Usage Example
- * 
+ *
  * Demonstrates basic type generation from model definitions
  */
 

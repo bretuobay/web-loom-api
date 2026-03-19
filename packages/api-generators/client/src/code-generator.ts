@@ -11,23 +11,23 @@ export function fieldTypeToTS(fieldType: string): string {
     case 'uuid':
     case 'enum':
       return 'string';
-    
+
     case 'number':
     case 'decimal':
       return 'number';
-    
+
     case 'boolean':
       return 'boolean';
-    
+
     case 'date':
       return 'Date | string';
-    
+
     case 'json':
       return 'Record<string, unknown>';
-    
+
     case 'array':
       return 'unknown[]';
-    
+
     default:
       return 'unknown';
   }
@@ -49,14 +49,14 @@ export function modelToInterfaceName(modelName: string): string {
  */
 export function pathToMethodName(path: string, method: string): string {
   const methodPrefix = method.toLowerCase();
-  
+
   // Remove leading slash and split by /
   const parts = path.replace(/^\//, '').split('/');
-  
+
   // Filter out parameter segments and convert to camelCase
   const nameParts: string[] = [];
   let hasParam = false;
-  
+
   for (const part of parts) {
     if (part.startsWith(':')) {
       hasParam = true;
@@ -67,9 +67,9 @@ export function pathToMethodName(path: string, method: string): string {
       nameParts.push(capitalize(part));
     }
   }
-  
+
   let methodName = methodPrefix + nameParts.join('');
-  
+
   // Handle special cases
   if (methodPrefix === 'get' && !hasParam && nameParts.length > 0) {
     // getUsers, getPosts (already plural)
@@ -86,7 +86,7 @@ export function pathToMethodName(path: string, method: string): string {
     // deleteUserById
     methodName = 'delete' + nameParts.join('');
   }
-  
+
   return methodName;
 }
 
@@ -106,45 +106,49 @@ export function capitalize(str: string): string {
 export function extractPathParams(path: string): Array<{ name: string; type: string }> {
   const params: Array<{ name: string; type: string }> = [];
   const matches = path.match(/:([a-zA-Z0-9_]+)/g);
-  
+
   if (matches) {
     for (const match of matches) {
       const paramName = match.substring(1);
       params.push({ name: paramName, type: 'string' });
     }
   }
-  
+
   return params;
 }
 
 /**
  * Generate JSDoc comment
  */
-export function generateJSDoc(description?: string, params?: Array<{ name: string; description?: string }>, returns?: string): string {
+export function generateJSDoc(
+  description?: string,
+  params?: Array<{ name: string; description?: string }>,
+  returns?: string
+): string {
   const lines: string[] = ['/**'];
-  
+
   if (description) {
     lines.push(` * ${description}`);
     if (params && params.length > 0) {
       lines.push(' *');
     }
   }
-  
+
   if (params) {
     for (const param of params) {
       lines.push(` * @param ${param.name}${param.description ? ' - ' + param.description : ''}`);
     }
   }
-  
+
   if (returns) {
     if (params && params.length > 0) {
       lines.push(' *');
     }
     lines.push(` * @returns ${returns}`);
   }
-  
+
   lines.push(' */');
-  
+
   return lines.join('\n');
 }
 
@@ -153,7 +157,10 @@ export function generateJSDoc(description?: string, params?: Array<{ name: strin
  */
 export function indent(code: string, level: number): string {
   const spaces = '  '.repeat(level);
-  return code.split('\n').map(line => line ? spaces + line : line).join('\n');
+  return code
+    .split('\n')
+    .map((line) => (line ? spaces + line : line))
+    .join('\n');
 }
 
 /**

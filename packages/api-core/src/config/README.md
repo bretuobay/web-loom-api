@@ -225,6 +225,7 @@ The configuration schema validates:
 Loads and validates configuration with full environment support.
 
 **Parameters:**
+
 - `options.config` - Configuration object or file path
 - `options.envOptions` - Environment loading options
 - `options.validate` - Whether to validate (default: true)
@@ -237,6 +238,7 @@ Loads and validates configuration with full environment support.
 Validates configuration and returns result.
 
 **Parameters:**
+
 - `config` - Configuration object to validate
 
 **Returns:** `ValidationResult<WebLoomConfig>` with success flag, data, or errors
@@ -246,6 +248,7 @@ Validates configuration and returns result.
 Validates configuration and throws on failure.
 
 **Parameters:**
+
 - `config` - Configuration object to validate
 
 **Returns:** Validated `WebLoomConfig`
@@ -257,6 +260,7 @@ Validates configuration and throws on failure.
 Loads .env files with environment-specific overrides.
 
 **Parameters:**
+
 - `options.cwd` - Base directory (default: `process.cwd()`)
 - `options.environment` - Environment name (default: `process.env.NODE_ENV`)
 - `options.override` - Override existing env vars (default: false)

@@ -13,12 +13,12 @@ function expectValidationError(fn: () => void, messagePattern: RegExp): void {
   } catch (error: any) {
     expect(error).toBeInstanceOf(ValidationError);
     expect(error.fields).toBeDefined();
-    
+
     // Check if any field error message matches the pattern
-    const hasMatchingMessage = error.fields.some((field: any) => 
+    const hasMatchingMessage = error.fields.some((field: any) =>
       messagePattern.test(field.message)
     );
-    
+
     if (!hasMatchingMessage) {
       const messages = error.fields.map((f: any) => f.message).join(', ');
       throw new Error(
@@ -37,8 +37,18 @@ describe('ModelRegistry - Validation', () => {
 
   describe('Field Type Validation', () => {
     it('should accept all valid field types', () => {
-      const validTypes = ['string', 'number', 'boolean', 'date', 'uuid', 'enum', 'json', 'array', 'decimal'];
-      
+      const validTypes = [
+        'string',
+        'number',
+        'boolean',
+        'date',
+        'uuid',
+        'enum',
+        'json',
+        'array',
+        'decimal',
+      ];
+
       validTypes.forEach((type) => {
         const model: ModelDefinition = {
           name: `Model${type}`,
@@ -59,23 +69,16 @@ describe('ModelRegistry - Validation', () => {
     it('should reject invalid field types', () => {
       const model: ModelDefinition = {
         name: 'User',
-        fields: [
-          { name: 'field', type: 'invalid_type' as any },
-        ],
+        fields: [{ name: 'field', type: 'invalid_type' as any }],
       };
 
-      expectValidationError(
-        () => registry.register(model),
-        /Field type must be one of/
-      );
+      expectValidationError(() => registry.register(model), /Field type must be one of/);
     });
 
     it('should reject missing field type', () => {
       const model: ModelDefinition = {
         name: 'User',
-        fields: [
-          { name: 'field' } as any,
-        ],
+        fields: [{ name: 'field' } as any],
       };
 
       expect(() => registry.register(model)).toThrow(ValidationError);
@@ -242,10 +245,7 @@ describe('ModelRegistry - Validation', () => {
         ],
       };
 
-      expectValidationError(
-        () => registry.register(model),
-        /Pattern must be a string/
-      );
+      expectValidationError(() => registry.register(model), /Pattern must be a string/);
     });
   });
 
@@ -542,10 +542,7 @@ describe('ModelRegistry - Validation', () => {
         ],
       };
 
-      expectValidationError(
-        () => registry.register(model),
-        /Enum values must be unique/
-      );
+      expectValidationError(() => registry.register(model), /Enum values must be unique/);
     });
   });
 
@@ -558,9 +555,7 @@ describe('ModelRegistry - Validation', () => {
       const profile: ModelDefinition = {
         name: 'Profile',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'hasOne', model: 'User' },
-        ],
+        relationships: [{ type: 'hasOne', model: 'User' }],
       };
 
       registry.register(user);
@@ -571,9 +566,7 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'hasMany', model: 'Post' },
-        ],
+        relationships: [{ type: 'hasMany', model: 'Post' }],
       };
 
       expect(() => registry.register(user)).not.toThrow();
@@ -583,9 +576,7 @@ describe('ModelRegistry - Validation', () => {
       const post: ModelDefinition = {
         name: 'Post',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'User' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'User' }],
       };
 
       expect(() => registry.register(post)).not.toThrow();
@@ -595,9 +586,7 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'manyToMany', model: 'Role', through: 'user_roles' },
-        ],
+        relationships: [{ type: 'manyToMany', model: 'Role', through: 'user_roles' }],
       };
 
       expect(() => registry.register(user)).not.toThrow();
@@ -607,9 +596,7 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'manyToMany', model: 'Role' },
-        ],
+        relationships: [{ type: 'manyToMany', model: 'Role' }],
       };
 
       expectValidationError(
@@ -622,9 +609,7 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'manyToMany', model: 'Role', through: '' },
-        ],
+        relationships: [{ type: 'manyToMany', model: 'Role', through: '' }],
       };
 
       expectValidationError(
@@ -637,39 +622,27 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'manyToMany', model: 'Role', through: 'UserRoles' },
-        ],
+        relationships: [{ type: 'manyToMany', model: 'Role', through: 'UserRoles' }],
       };
 
-      expectValidationError(
-        () => registry.register(user),
-        /Through table name must be snake_case/
-      );
+      expectValidationError(() => registry.register(user), /Through table name must be snake_case/);
     });
 
     it('should reject invalid relationship type', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'invalidType' as any, model: 'Post' },
-        ],
+        relationships: [{ type: 'invalidType' as any, model: 'Post' }],
       };
 
-      expectValidationError(
-        () => registry.register(user),
-        /Relationship type must be one of/
-      );
+      expectValidationError(() => registry.register(user), /Relationship type must be one of/);
     });
 
     it('should reject relationship with missing model', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'hasMany' } as any,
-        ],
+        relationships: [{ type: 'hasMany' } as any],
       };
 
       expectValidationError(
@@ -682,9 +655,7 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'hasMany', model: 'post' },
-        ],
+        relationships: [{ type: 'hasMany', model: 'post' }],
       };
 
       expectValidationError(
@@ -697,9 +668,7 @@ describe('ModelRegistry - Validation', () => {
       const post: ModelDefinition = {
         name: 'Post',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'User', foreignKey: 'userId' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'User', foreignKey: 'userId' }],
       };
 
       expect(() => registry.register(post)).not.toThrow();
@@ -709,24 +678,17 @@ describe('ModelRegistry - Validation', () => {
       const post: ModelDefinition = {
         name: 'Post',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'User', foreignKey: 'user_id' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'User', foreignKey: 'user_id' }],
       };
 
-      expectValidationError(
-        () => registry.register(post),
-        /Foreign key must be camelCase/
-      );
+      expectValidationError(() => registry.register(post), /Foreign key must be camelCase/);
     });
 
     it('should reject empty foreignKey', () => {
       const post: ModelDefinition = {
         name: 'Post',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'User', foreignKey: '' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'User', foreignKey: '' }],
       };
 
       expectValidationError(
@@ -739,9 +701,7 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'hasMany', model: 'Post', localKey: 'id' },
-        ],
+        relationships: [{ type: 'hasMany', model: 'Post', localKey: 'id' }],
       };
 
       expect(() => registry.register(user)).not.toThrow();
@@ -751,24 +711,17 @@ describe('ModelRegistry - Validation', () => {
       const user: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'hasMany', model: 'Post', localKey: 'user_id' },
-        ],
+        relationships: [{ type: 'hasMany', model: 'Post', localKey: 'user_id' }],
       };
 
-      expectValidationError(
-        () => registry.register(user),
-        /Local key must be camelCase/
-      );
+      expectValidationError(() => registry.register(user), /Local key must be camelCase/);
     });
 
     it('should accept valid relationship alias', () => {
       const post: ModelDefinition = {
         name: 'Post',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'User', as: 'author' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'User', as: 'author' }],
       };
 
       expect(() => registry.register(post)).not.toThrow();
@@ -778,24 +731,17 @@ describe('ModelRegistry - Validation', () => {
       const post: ModelDefinition = {
         name: 'Post',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'User', as: 'PostAuthor' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'User', as: 'PostAuthor' }],
       };
 
-      expectValidationError(
-        () => registry.register(post),
-        /Relationship alias must be camelCase/
-      );
+      expectValidationError(() => registry.register(post), /Relationship alias must be camelCase/);
     });
 
     it('should reject empty alias', () => {
       const post: ModelDefinition = {
         name: 'Post',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'User', as: '' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'User', as: '' }],
       };
 
       expectValidationError(

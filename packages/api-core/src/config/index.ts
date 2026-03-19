@@ -1,9 +1,9 @@
 /**
  * Configuration management module
- * 
+ *
  * Provides type-safe configuration schema, environment variable interpolation,
  * validation, and configuration utilities for the Web Loom API Framework.
- * 
+ *
  * @module config
  */
 

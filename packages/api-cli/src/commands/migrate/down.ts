@@ -1,6 +1,6 @@
 /**
  * Migration Down Command
- * 
+ *
  * Reverts the last applied migration
  */
 
@@ -18,7 +18,7 @@ export const downCommand = new Command('down')
       console.log('');
 
       const migrationsDir = path.resolve(process.cwd(), options.dir);
-      
+
       // Check if migrations directory exists
       if (!fs.existsSync(migrationsDir)) {
         console.log('No migrations directory found.');
@@ -35,9 +35,7 @@ export const downCommand = new Command('down')
 
       // Determine how many migrations to revert
       const stepsToRevert = parseInt(options.steps, 10);
-      const migrationsToRevert = appliedMigrations
-        .slice(-stepsToRevert)
-        .reverse();
+      const migrationsToRevert = appliedMigrations.slice(-stepsToRevert).reverse();
 
       console.log(`Found ${appliedMigrations.length} applied migration(s)`);
       console.log(`Reverting ${migrationsToRevert.length} migration(s):`);
@@ -49,10 +47,10 @@ export const downCommand = new Command('down')
       // Revert migrations
       for (const file of migrationsToRevert) {
         const filePath = path.join(migrationsDir, file);
-        
+
         try {
           console.log(`→ Reverting: ${file}`);
-          
+
           // Check if migration file still exists
           if (!fs.existsSync(filePath)) {
             console.warn(`  ⚠ Warning: Migration file not found: ${file}`);
@@ -60,7 +58,7 @@ export const downCommand = new Command('down')
           } else {
             // Validate the file has down() method
             const content = fs.readFileSync(filePath, 'utf-8');
-            
+
             if (!content.includes('async down(')) {
               throw new Error('Migration file must have a down() method');
             }
@@ -78,7 +76,7 @@ export const downCommand = new Command('down')
             appliedMigrations.splice(index, 1);
           }
           saveAppliedMigrations(migrationsDir, appliedMigrations);
-          
+
           console.log(`  ✓ Reverted: ${file}`);
         } catch (error) {
           console.error(`  ✗ Failed: ${file}`);
@@ -105,7 +103,7 @@ export const downCommand = new Command('down')
  */
 function loadAppliedMigrations(migrationsDir: string): string[] {
   const trackingFile = path.join(migrationsDir, '.migrations.json');
-  
+
   if (!fs.existsSync(trackingFile)) {
     return [];
   }
@@ -128,6 +126,6 @@ function saveAppliedMigrations(migrationsDir: string, applied: string[]): void {
     applied,
     lastUpdated: new Date().toISOString(),
   };
-  
+
   fs.writeFileSync(trackingFile, JSON.stringify(data, null, 2), 'utf-8');
 }

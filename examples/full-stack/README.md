@@ -82,6 +82,7 @@ Both strategies resolve to the same `ctx.user` object in route handlers.
 ### Background Jobs
 
 When a post is created, an `email-notification` job is enqueued. The job:
+
 1. Fetches the post and all users
 2. Sends batch email notifications via the Resend adapter
 3. Retries up to 3 times with exponential backoff on failure
@@ -92,17 +93,17 @@ The `post.created` webhook fires when a new post is created. Subscribers receive
 
 ## API Endpoints
 
-| Method | Path                        | Auth     | Description                |
-|--------|-----------------------------|----------|----------------------------|
-| POST   | `/api/users`                | None     | Sign up                    |
-| POST   | `/api/auth/login`           | None     | Log in                     |
-| POST   | `/api/auth/logout`          | Required | Log out                    |
-| GET    | `/api/users`                | Admin    | List all users             |
-| POST   | `/api/users/:id/api-key`    | Owner    | Generate API key           |
-| GET    | `/api/posts`                | None     | List published posts       |
-| GET    | `/api/posts/:id`            | None     | Get post with comments     |
-| POST   | `/api/posts`                | Required | Create a post              |
-| PUT    | `/api/posts/:id`            | Owner    | Update a post              |
-| DELETE | `/api/posts/:id`            | Owner    | Delete a post              |
-| POST   | `/api/uploads/avatar`       | Required | Upload avatar              |
-| DELETE | `/api/uploads/avatar`       | Required | Remove avatar              |
+| Method | Path                     | Auth     | Description            |
+| ------ | ------------------------ | -------- | ---------------------- |
+| POST   | `/api/users`             | None     | Sign up                |
+| POST   | `/api/auth/login`        | None     | Log in                 |
+| POST   | `/api/auth/logout`       | Required | Log out                |
+| GET    | `/api/users`             | Admin    | List all users         |
+| POST   | `/api/users/:id/api-key` | Owner    | Generate API key       |
+| GET    | `/api/posts`             | None     | List published posts   |
+| GET    | `/api/posts/:id`         | None     | Get post with comments |
+| POST   | `/api/posts`             | Required | Create a post          |
+| PUT    | `/api/posts/:id`         | Owner    | Update a post          |
+| DELETE | `/api/posts/:id`         | Owner    | Delete a post          |
+| POST   | `/api/uploads/avatar`    | Required | Upload avatar          |
+| DELETE | `/api/uploads/avatar`    | Required | Remove avatar          |

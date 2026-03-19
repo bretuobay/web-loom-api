@@ -12,7 +12,7 @@ describe('RouteDiscovery', () => {
   beforeEach(() => {
     registry = new RouteRegistry();
     discovery = new RouteDiscovery(registry);
-    
+
     // Create a temporary test directory
     testDir = path.join(process.cwd(), 'test-routes-' + Date.now());
     fs.mkdirSync(testDir, { recursive: true });
@@ -35,10 +35,7 @@ describe('RouteDiscovery', () => {
     it('should discover routes from index.ts file', async () => {
       // Create index.ts with GET handler
       const indexFile = path.join(testDir, 'index.ts');
-      fs.writeFileSync(
-        indexFile,
-        `export async function GET() { return new Response('Home'); }`
-      );
+      fs.writeFileSync(indexFile, `export async function GET() { return new Response('Home'); }`);
 
       await discovery.discover(testDir);
 
@@ -179,10 +176,7 @@ describe('RouteDiscovery', () => {
     it('should ignore test files', async () => {
       // Create users.test.ts
       const testFile = path.join(testDir, 'users.test.ts');
-      fs.writeFileSync(
-        testFile,
-        `export async function GET() { return new Response('Test'); }`
-      );
+      fs.writeFileSync(testFile, `export async function GET() { return new Response('Test'); }`);
 
       await discovery.discover(testDir);
 
@@ -192,10 +186,7 @@ describe('RouteDiscovery', () => {
     it('should ignore spec files', async () => {
       // Create users.spec.ts
       const specFile = path.join(testDir, 'users.spec.ts');
-      fs.writeFileSync(
-        specFile,
-        `export async function GET() { return new Response('Spec'); }`
-      );
+      fs.writeFileSync(specFile, `export async function GET() { return new Response('Spec'); }`);
 
       await discovery.discover(testDir);
 
@@ -225,10 +216,7 @@ describe('RouteDiscovery', () => {
     it('should handle files with no HTTP method exports', async () => {
       // Create utils.ts with no HTTP methods
       const utilsFile = path.join(testDir, 'utils.ts');
-      fs.writeFileSync(
-        utilsFile,
-        `export function helper() { return 'helper'; }`
-      );
+      fs.writeFileSync(utilsFile, `export function helper() { return 'helper'; }`);
 
       // Should not throw, but should warn
       await discovery.discover(testDir);
@@ -241,9 +229,7 @@ describe('RouteDiscovery', () => {
       const invalidFile = path.join(testDir, 'invalid.ts');
       fs.writeFileSync(invalidFile, `export async function GET() { invalid syntax`);
 
-      await expect(discovery.discover(testDir)).rejects.toThrow(
-        'Failed to process route file'
-      );
+      await expect(discovery.discover(testDir)).rejects.toThrow('Failed to process route file');
     });
 
     it('should discover multiple routes from multiple files', async () => {

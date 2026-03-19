@@ -34,6 +34,7 @@ The `defineModel()` function shall derive `updateSchema` as `insertSchema.partia
 
 **REQ-MS-005**
 The `Model<TTable>` returned by `defineModel()` shall expose the following properties with full TypeScript type inference:
+
 - `table`: the original Drizzle table (type `TTable`)
 - `insertSchema`: `ZodObject` inferred from the table's insert columns
 - `selectSchema`: `ZodObject` inferred from the table's select columns
@@ -54,12 +55,14 @@ If a model with the same name is registered twice, the Web_Loom_API shall throw 
 
 **REQ-MS-010**
 The `ModelMeta` interface shall contain:
+
 - `name: string` — PascalCase model name (e.g., `"User"`)
 - `crud?: boolean | CrudOptions` — whether to auto-generate CRUD routes (default: `false`)
 - `basePath?: string` — URL prefix for CRUD routes (default: `"/" + name.toLowerCase() + "s"`)
 
 **REQ-MS-011**
 The `CrudOptions` interface shall contain per-operation auth configuration:
+
 - `list?: CrudOperationOptions`
 - `read?: CrudOperationOptions`
 - `create?: CrudOperationOptions`
@@ -68,6 +71,7 @@ The `CrudOptions` interface shall contain per-operation auth configuration:
 
 **REQ-MS-012**
 The `CrudOperationOptions` interface shall contain:
+
 - `auth?: boolean | string` — `false` for public, `true` for any authenticated user, or a role string (e.g., `"admin"`)
 - `cache?: { ttl: number; tags?: string[] }`
 
@@ -80,6 +84,7 @@ The Web_Loom_API shall maintain a singleton `ModelRegistry` instance within `@we
 
 **REQ-MS-021**
 The `ModelRegistry` shall expose:
+
 - `register(model: Model<AnyTable>): void`
 - `get(name: string): Model<AnyTable> | undefined`
 - `getAll(): Model<AnyTable>[]`
@@ -118,6 +123,7 @@ The Web_Loom_API shall export a `InferModel<TModel>` utility type that extracts 
 
 **REQ-MS-050**
 The Web_Loom_API shall serialise model data to JSON with the following type coercions:
+
 - `Date` → ISO 8601 string
 - `BigInt` → string
 - `Buffer` → base64 string

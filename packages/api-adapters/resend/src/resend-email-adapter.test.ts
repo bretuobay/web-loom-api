@@ -50,7 +50,6 @@ describe('ResendEmailAdapter', () => {
       adapter = new ResendEmailAdapter({ testMode: true, defaultFrom: 'default@example.com' });
     });
 
-
     it('sends an email and returns a result with id', async () => {
       const result = await adapter.send(makeEmail());
       expect(result.success).toBe(true);
@@ -194,7 +193,6 @@ describe('ResendEmailAdapter', () => {
     });
   });
 
-
   // -----------------------------------------------------------------------
   // Live-mode with mocked fetch (send)
   // -----------------------------------------------------------------------
@@ -211,10 +209,13 @@ describe('ResendEmailAdapter', () => {
     });
 
     it('calls Resend API and returns success', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 'resend_abc123' }),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: 'resend_abc123' }),
+        })
+      );
 
       const result = await adapter.send(makeEmail());
       expect(result.success).toBe(true);
@@ -224,7 +225,9 @@ describe('ResendEmailAdapter', () => {
       const [url, init] = vi.mocked(fetch).mock.calls[0]!;
       expect(url).toBe('https://api.resend.com/emails');
       expect(init!.method).toBe('POST');
-      expect((init!.headers as Record<string, string>)['Authorization']).toBe('Bearer test_key_123');
+      expect((init!.headers as Record<string, string>)['Authorization']).toBe(
+        'Bearer test_key_123'
+      );
 
       const body = JSON.parse(init!.body as string);
       expect(body.from).toBe('sender@example.com');
@@ -233,11 +236,14 @@ describe('ResendEmailAdapter', () => {
     });
 
     it('returns failure result on API error', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        status: 422,
-        text: async () => '{"message":"Invalid email"}',
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 422,
+          text: async () => '{"message":"Invalid email"}',
+        })
+      );
 
       const result = await adapter.send(makeEmail());
       expect(result.success).toBe(false);
@@ -245,20 +251,27 @@ describe('ResendEmailAdapter', () => {
     });
 
     it('maps cc, bcc, replyTo, tags, and attachments correctly', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 'resend_full' }),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: 'resend_full' }),
+        })
+      );
 
-      await adapter.send(makeEmail({
-        cc: 'cc@example.com',
-        bcc: ['bcc1@example.com', 'bcc2@example.com'],
-        replyTo: 'reply@example.com',
-        tags: { campaign: 'welcome' },
-        attachments: [{ filename: 'doc.pdf', content: 'base64data', contentType: 'application/pdf' }],
-      }));
+      await adapter.send(
+        makeEmail({
+          cc: 'cc@example.com',
+          bcc: ['bcc1@example.com', 'bcc2@example.com'],
+          replyTo: 'reply@example.com',
+          tags: { campaign: 'welcome' },
+          attachments: [
+            { filename: 'doc.pdf', content: 'base64data', contentType: 'application/pdf' },
+          ],
+        })
+      );
 
-      const body = JSON.parse((vi.mocked(fetch).mock.calls[0]![1]!.body) as string);
+      const body = JSON.parse(vi.mocked(fetch).mock.calls[0]![1]!.body as string);
       expect(body.cc).toEqual(['cc@example.com']);
       expect(body.bcc).toEqual(['bcc1@example.com', 'bcc2@example.com']);
       expect(body.reply_to).toBe('reply@example.com');
@@ -283,10 +296,13 @@ describe('ResendEmailAdapter', () => {
     });
 
     it('calls batch endpoint and returns results', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ data: [{ id: 'b1' }, { id: 'b2' }] }),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ data: [{ id: 'b1' }, { id: 'b2' }] }),
+        })
+      );
 
       const results = await adapter.sendBatch([makeEmail(), makeEmail()]);
       expect(results).toHaveLength(2);
@@ -298,11 +314,14 @@ describe('ResendEmailAdapter', () => {
     });
 
     it('returns failure for all emails on batch API error', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-        text: async () => 'Server error',
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          text: async () => 'Server error',
+        })
+      );
 
       const results = await adapter.sendBatch([makeEmail(), makeEmail()]);
       expect(results).toHaveLength(2);
@@ -320,17 +339,20 @@ describe('ResendEmailAdapter', () => {
     });
 
     it('returns verified domain with records', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          id: 'dom_1',
-          name: 'example.com',
-          status: 'verified',
-          records: [
-            { record: 'TXT', name: '_resend.example.com', value: 'v=spf1', status: 'verified' },
-          ],
-        }),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            id: 'dom_1',
+            name: 'example.com',
+            status: 'verified',
+            records: [
+              { record: 'TXT', name: '_resend.example.com', value: 'v=spf1', status: 'verified' },
+            ],
+          }),
+        })
+      );
 
       const adapter = new ResendEmailAdapter({ apiKey: 'key' });
       const result = await adapter.verifyDomain('example.com');
@@ -341,11 +363,14 @@ describe('ResendEmailAdapter', () => {
     });
 
     it('returns unverified on API error', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        status: 400,
-        text: async () => 'Bad request',
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 400,
+          text: async () => 'Bad request',
+        })
+      );
 
       const adapter = new ResendEmailAdapter({ apiKey: 'key' });
       const result = await adapter.verifyDomain('bad.com');

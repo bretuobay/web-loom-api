@@ -13,7 +13,10 @@ describe('createGenerateOpenAPICommand', () => {
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'webloom-openapi-'));
     fs.mkdirSync(path.join(tempDir, 'src', 'routes', 'users'), { recursive: true });
-    fs.writeFileSync(path.join(tempDir, 'src', 'routes', 'users', '[id].ts'), 'export const GET = true;');
+    fs.writeFileSync(
+      path.join(tempDir, 'src', 'routes', 'users', '[id].ts'),
+      'export const GET = true;'
+    );
     process.chdir(tempDir);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);

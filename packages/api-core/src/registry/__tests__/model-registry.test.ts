@@ -56,9 +56,7 @@ describe('ModelRegistry', () => {
     it('should validate field names are camelCase', () => {
       const model: ModelDefinition = {
         name: 'User',
-        fields: [
-          { name: 'FirstName', type: 'string' },
-        ],
+        fields: [{ name: 'FirstName', type: 'string' }],
       };
 
       expect(() => registry.register(model)).toThrow(ValidationError);
@@ -79,9 +77,7 @@ describe('ModelRegistry', () => {
     it('should validate field types', () => {
       const model: ModelDefinition = {
         name: 'User',
-        fields: [
-          { name: 'id', type: 'invalid' as any },
-        ],
+        fields: [{ name: 'id', type: 'invalid' as any }],
       };
 
       expect(() => registry.register(model)).toThrow(ValidationError);
@@ -90,9 +86,7 @@ describe('ModelRegistry', () => {
     it('should require enum values for enum fields', () => {
       const model: ModelDefinition = {
         name: 'User',
-        fields: [
-          { name: 'role', type: 'enum' },
-        ],
+        fields: [{ name: 'role', type: 'enum' }],
       };
 
       expect(() => registry.register(model)).toThrow(ValidationError);
@@ -139,9 +133,7 @@ describe('ModelRegistry', () => {
       const model: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'invalid' as any, model: 'Post' },
-        ],
+        relationships: [{ type: 'invalid' as any, model: 'Post' }],
       };
 
       expect(() => registry.register(model)).toThrow(ValidationError);
@@ -151,9 +143,7 @@ describe('ModelRegistry', () => {
       const model: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'manyToMany', model: 'Role' },
-        ],
+        relationships: [{ type: 'manyToMany', model: 'Role' }],
       };
 
       expect(() => registry.register(model)).toThrow(ValidationError);
@@ -163,9 +153,7 @@ describe('ModelRegistry', () => {
       const model: ModelDefinition = {
         name: 'User',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'manyToMany', model: 'Role', through: 'user_roles' },
-        ],
+        relationships: [{ type: 'manyToMany', model: 'Role', through: 'user_roles' }],
       };
 
       registry.register(model);
@@ -306,9 +294,7 @@ describe('ModelRegistry', () => {
       const model: ModelDefinition = {
         name: 'Category',
         fields: [{ name: 'id', type: 'uuid' }],
-        relationships: [
-          { type: 'belongsTo', model: 'Category', as: 'parent' },
-        ],
+        relationships: [{ type: 'belongsTo', model: 'Category', as: 'parent' }],
       };
 
       registry.register(model);
@@ -489,7 +475,7 @@ describe('ModelRegistry', () => {
       registry.register(comment);
 
       const order = registry.resolveDependencyOrder();
-      
+
       // Organization and Category have no dependencies, so they come first
       expect(order.indexOf('Organization')).toBeLessThan(order.indexOf('User'));
       expect(order.indexOf('User')).toBeLessThan(order.indexOf('Post'));
@@ -526,12 +512,14 @@ describe('ModelRegistry', () => {
       }));
 
       // Register all models concurrently
-      await Promise.all(models.map((model) => {
-        return new Promise<void>((resolve) => {
-          registry.register(model);
-          resolve();
-        });
-      }));
+      await Promise.all(
+        models.map((model) => {
+          return new Promise<void>((resolve) => {
+            registry.register(model);
+            resolve();
+          });
+        })
+      );
 
       // All models should be registered
       expect(registry.getAll()).toHaveLength(10);

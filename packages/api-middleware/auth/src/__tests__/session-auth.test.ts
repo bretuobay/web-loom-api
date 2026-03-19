@@ -7,9 +7,14 @@ const MOCK_SESSION = { id: 's1' };
 
 function makeLucia(overrides: Partial<LuciaLike> = {}): LuciaLike {
   return {
-    validateSession: vi.fn().mockResolvedValue({ session: MOCK_SESSION, user: { id: 'u1', email: 'test@example.com', role: 'user' } }),
+    validateSession: vi.fn().mockResolvedValue({
+      session: MOCK_SESSION,
+      user: { id: 'u1', email: 'test@example.com', role: 'user' },
+    }),
     createSessionCookie: vi.fn().mockReturnValue({ name: 'session', value: 's1', attributes: {} }),
-    createBlankSessionCookie: vi.fn().mockReturnValue({ name: 'session', value: '', attributes: {} }),
+    createBlankSessionCookie: vi
+      .fn()
+      .mockReturnValue({ name: 'session', value: '', attributes: {} }),
     ...overrides,
   };
 }
@@ -107,7 +112,7 @@ describe('sessionAuth', () => {
       sessionAuth({
         lucia,
         getUser: (u) => ({ id: String(u.userId), email: u.emailAddress as string }),
-      }),
+      })
     );
     app.get('/test', (c) => c.json({ userId: c.var.user?.id }));
 

@@ -10,11 +10,11 @@
  * - Lazy imports where possible
  * - Small model surface area
  */
-import { createApp, defineConfig, defineRoutes } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
-import { Item } from "./models/item";
+import { createApp, defineConfig, defineRoutes } from '@web-loom/api-core';
+import { honoAdapter } from '@web-loom/api-adapter-hono';
+import { drizzleAdapter } from '@web-loom/api-adapter-drizzle';
+import { zodAdapter } from '@web-loom/api-adapter-zod';
+import { Item } from './models/item';
 
 // Shared configuration — platform-specific overrides are applied by each handler
 const config = defineConfig({
@@ -33,7 +33,7 @@ const config = defineConfig({
 
   security: {
     cors: {
-      origin: ["*"],
+      origin: ['*'],
       credentials: false,
     },
   },
@@ -43,29 +43,26 @@ const config = defineConfig({
   },
 
   observability: {
-    logging: { level: "warn", format: "json" },
+    logging: { level: 'warn', format: 'json' },
   },
 });
 
 // Custom routes alongside auto-generated CRUD
 const routes = defineRoutes((router) => {
   // GET /api/health — Lightweight health check (no DB hit)
-  router.get("/api/health", {
+  router.get('/api/health', {
     handler: async (ctx) => {
-      return ctx.json({ status: "ok", timestamp: Date.now() });
+      return ctx.json({ status: 'ok', timestamp: Date.now() });
     },
   });
 
   // GET /api/items/search — Search items by name
-  router.get("/api/items/search", {
+  router.get('/api/items/search', {
     validation: {
-      query: { q: { type: "string", required: true, minLength: 1 } },
+      query: { q: { type: 'string', required: true, minLength: 1 } },
     },
     handler: async (ctx) => {
-      const items = await ctx.db
-        .select(Item)
-        .where("name", "ilike", `%${ctx.query.q}%`)
-        .limit(10);
+      const items = await ctx.db.select(Item).where('name', 'ilike', `%${ctx.query.q}%`).limit(10);
 
       return ctx.json({ items });
     },

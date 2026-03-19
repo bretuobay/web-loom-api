@@ -1,6 +1,6 @@
 /**
  * Core Runtime Usage Example
- * 
+ *
  * Demonstrates how to initialize and use the CoreRuntime for bootstrapping
  * a Web Loom API application.
  */
@@ -289,10 +289,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
 
-export {
-  basicExample,
-  adapterExample,
-  registryExample,
-  errorHandlingExample,
-  lifecycleExample,
-};
+export { basicExample, adapterExample, registryExample, errorHandlingExample, lifecycleExample };

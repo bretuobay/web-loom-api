@@ -22,21 +22,11 @@ export interface S3Client {
     ContentType: string;
   }): Promise<void>;
 
-  getObject(params: {
-    Bucket: string;
-    Key: string;
-  }): Promise<{ Body: Buffer } | undefined>;
+  getObject(params: { Bucket: string; Key: string }): Promise<{ Body: Buffer } | undefined>;
 
-  deleteObject(params: {
-    Bucket: string;
-    Key: string;
-  }): Promise<void>;
+  deleteObject(params: { Bucket: string; Key: string }): Promise<void>;
 
-  getSignedUrl(params: {
-    Bucket: string;
-    Key: string;
-    Expires: number;
-  }): Promise<string>;
+  getSignedUrl(params: { Bucket: string; Key: string; Expires: number }): Promise<string>;
 }
 
 export interface S3FileStoreOptions {

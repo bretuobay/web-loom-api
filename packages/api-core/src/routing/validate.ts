@@ -18,10 +18,7 @@ import type { ZodSchema } from 'zod';
  * });
  * ```
  */
-export function validate<T extends keyof ValidationTargets>(
-  target: T,
-  schema: ZodSchema,
-) {
+export function validate<T extends keyof ValidationTargets>(target: T, schema: ZodSchema) {
   return zValidator(target, schema, (result, c) => {
     if (!result.success) {
       const requestId = crypto.randomUUID();
@@ -41,7 +38,7 @@ export function validate<T extends keyof ValidationTargets>(
             },
           },
         },
-        400,
+        400
       );
     }
     return undefined;

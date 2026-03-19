@@ -9,10 +9,7 @@ The core package provides the runtime, model system, routing, validation, OpenAP
 Creates and initializes a Web Loom application.
 
 ```typescript
-function createApp(
-  config: WebLoomConfig,
-  options?: CreateAppOptions,
-): Promise<Application>;
+function createApp(config: WebLoomConfig, options?: CreateAppOptions): Promise<Application>;
 
 interface CreateAppOptions {
   /**
@@ -29,7 +26,7 @@ interface CreateAppOptions {
     hono: Hono<any>,
     models: AnyModel[],
     routeMetas: unknown[],
-    config: OpenApiConfig,
+    config: OpenApiConfig
   ) => Promise<void>;
 }
 ```
@@ -37,9 +34,9 @@ interface CreateAppOptions {
 **Usage:**
 
 ```typescript
-import { createApp } from "@web-loom/api-core";
-import config from "../webloom.config";
-import "./schema"; // ensure models are registered before createApp
+import { createApp } from '@web-loom/api-core';
+import config from '../webloom.config';
+import './schema'; // ensure models are registered before createApp
 
 const app = await createApp(config);
 await app.start(3000);
@@ -103,15 +100,15 @@ Throws `ConfigurationError` if `database.url` is missing or any field fails vali
 **Usage:**
 
 ```typescript
-import { defineConfig } from "@web-loom/api-core";
+import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: "neon-serverless",
+    driver: 'neon-serverless',
   },
-  routes: { dir: "./src/routes" },
-  openapi: { enabled: true, title: "My API", version: "1.0.0" },
+  routes: { dir: './src/routes' },
+  openapi: { enabled: true, title: 'My API', version: '1.0.0' },
 });
 ```
 
@@ -127,20 +124,20 @@ Registers a Drizzle table as a Web Loom model. Derives Zod schemas via `drizzle-
 function defineModel<TTable extends Table>(
   table: TTable,
   meta: ModelMeta,
-  overrides?: SchemaOverrides,
+  overrides?: SchemaOverrides
 ): Model<TTable>;
 
 interface ModelMeta {
-  name: string;           // PascalCase, e.g. "User"
-  basePath?: string;      // URL prefix; default: "/" + name.toLowerCase() + "s"
+  name: string; // PascalCase, e.g. "User"
+  basePath?: string; // URL prefix; default: "/" + name.toLowerCase() + "s"
   crud?: boolean | CrudOptions;
 }
 
 interface CrudOptions {
-  timestamps?: boolean;       // inject createdAt/updatedAt on write
-  softDelete?: boolean;       // DELETE sets deletedAt; List/Read filter it out
-  list?:   CrudOperationOptions;
-  read?:   CrudOperationOptions;
+  timestamps?: boolean; // inject createdAt/updatedAt on write
+  softDelete?: boolean; // DELETE sets deletedAt; List/Read filter it out
+  list?: CrudOperationOptions;
+  read?: CrudOperationOptions;
   create?: CrudOperationOptions;
   update?: CrudOperationOptions;
   delete?: CrudOperationOptions;
@@ -162,29 +159,29 @@ interface SchemaOverrides {
 ```typescript
 interface Model<TTable extends Table> {
   table: TTable;
-  insertSchema: ZodObject<ZodRawShape>;  // POST / PUT body
-  selectSchema: ZodObject<ZodRawShape>;  // response shape
-  updateSchema: ZodObject<ZodRawShape>;  // PATCH body (all fields optional)
+  insertSchema: ZodObject<ZodRawShape>; // POST / PUT body
+  selectSchema: ZodObject<ZodRawShape>; // response shape
+  updateSchema: ZodObject<ZodRawShape>; // PATCH body (all fields optional)
   meta: Required<ModelMeta>;
-  $inferSelect: TTable['$inferSelect'];  // TypeScript row type
-  $inferInsert: TTable['$inferInsert'];  // TypeScript insert type
+  $inferSelect: TTable['$inferSelect']; // TypeScript row type
+  $inferInsert: TTable['$inferInsert']; // TypeScript insert type
 }
 ```
 
 **Example:**
 
 ```typescript
-import { pgTable, uuid, text } from "drizzle-orm/pg-core";
-import { defineModel } from "@web-loom/api-core";
+import { pgTable, uuid, text } from 'drizzle-orm/pg-core';
+import { defineModel } from '@web-loom/api-core';
 
-export const usersTable = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
+export const usersTable = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
 });
 
 export const User = defineModel(usersTable, {
-  name: "User",
+  name: 'User',
   crud: { list: { auth: false }, create: { auth: true } },
 });
 ```
@@ -203,12 +200,12 @@ function defineRoutes(): Hono<{ Variables: WebLoomVariables }>;
 
 ```typescript
 // src/routes/users.ts
-import { defineRoutes } from "@web-loom/api-core";
-import { usersTable } from "../schema";
+import { defineRoutes } from '@web-loom/api-core';
+import { usersTable } from '../schema';
 
 const app = defineRoutes();
 
-app.get("/", async (c) => {
+app.get('/', async (c) => {
   const users = await c.var.db.select().from(usersTable);
   return c.json({ users });
 });
@@ -225,7 +222,7 @@ Validation middleware built on `@hono/zod-validator`. Formats Zod errors into th
 ```typescript
 function validate<T extends keyof ValidationTargets>(
   target: T,
-  schema: ZodSchema,
+  schema: ZodSchema
 ): MiddlewareHandler;
 ```
 
@@ -234,16 +231,16 @@ Validation targets: `"json"` | `"query"` | `"param"` | `"form"` | `"header"`
 **Example:**
 
 ```typescript
-import { validate } from "@web-loom/api-core";
-import { z } from "zod";
+import { validate } from '@web-loom/api-core';
+import { z } from 'zod';
 
 app.post(
-  "/",
-  validate("json", z.object({ name: z.string(), email: z.string().email() })),
+  '/',
+  validate('json', z.object({ name: z.string(), email: z.string().email() })),
   async (c) => {
-    const data = c.req.valid("json"); // fully typed
+    const data = c.req.valid('json'); // fully typed
     // ...
-  },
+  }
 );
 ```
 
@@ -268,10 +265,13 @@ interface RouteMeta {
     params?: ZodSchema;
     headers?: ZodSchema;
   };
-  responses?: Record<number, {
-    description: string;
-    schema?: ZodSchema;
-  }>;
+  responses?: Record<
+    number,
+    {
+      description: string;
+      schema?: ZodSchema;
+    }
+  >;
 }
 ```
 
@@ -312,9 +312,9 @@ The Hono context variable map injected by the framework:
 
 ```typescript
 interface WebLoomVariables {
-  db: AnyDrizzleDB;       // Drizzle ORM instance
-  email?: EmailAdapter;   // email adapter (when config.email is set)
-  user?: AuthUser;        // set by auth middleware (augmented by @web-loom/api-middleware-auth)
+  db: AnyDrizzleDB; // Drizzle ORM instance
+  email?: EmailAdapter; // email adapter (when config.email is set)
+  user?: AuthUser; // set by auth middleware (augmented by @web-loom/api-middleware-auth)
 }
 ```
 
@@ -338,9 +338,9 @@ Throws `DuplicateModelError` on double-registration.
 ## Error Types
 
 ```typescript
-class ConfigurationError extends Error { }   // invalid or missing config
-class DuplicateModelError extends Error { }  // model registered twice
-class RouteConflictError extends Error { }   // two files map to the same route
+class ConfigurationError extends Error {} // invalid or missing config
+class DuplicateModelError extends Error {} // model registered twice
+class RouteConflictError extends Error {} // two files map to the same route
 ```
 
 ---
@@ -360,11 +360,11 @@ interface ErrorResponse {
 }
 ```
 
-| Status | Code |
-|--------|------|
-| 400 | `VALIDATION_ERROR` |
-| 401 | `UNAUTHORIZED` |
-| 403 | `FORBIDDEN` |
-| 404 | `NOT_FOUND` |
-| 409 | `CONFLICT` |
-| 500 | `INTERNAL_ERROR` |
+| Status | Code               |
+| ------ | ------------------ |
+| 400    | `VALIDATION_ERROR` |
+| 401    | `UNAUTHORIZED`     |
+| 403    | `FORBIDDEN`        |
+| 404    | `NOT_FOUND`        |
+| 409    | `CONFLICT`         |
+| 500    | `INTERNAL_ERROR`   |

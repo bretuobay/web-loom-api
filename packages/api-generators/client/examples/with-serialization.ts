@@ -1,6 +1,6 @@
 /**
  * Serialization/Deserialization Example
- * 
+ *
  * Demonstrates automatic handling of Date objects and other special types
  */
 

@@ -1,6 +1,6 @@
 /**
  * Migration Create Command
- * 
+ *
  * Creates a new migration file
  */
 
@@ -24,7 +24,11 @@ export const createCommand = new Command('create')
       }
 
       // Generate timestamp
-      const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '_');
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\..+/, '')
+        .replace('T', '_');
       const fileName = `${timestamp}_${name}.ts`;
       const filePath = path.join(migrationsDir, fileName);
 
@@ -58,7 +62,7 @@ export const createCommand = new Command('create')
 function generateMigrationTemplate(name: string): string {
   const className = name
     .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join('');
 
   return `/**

@@ -34,7 +34,7 @@ export function buildCreateHandler<TTable extends Table>(model: Model<TTable>): 
       if (isUniqueConstraintError(err)) {
         return c.json(
           { error: { code: 'CONFLICT', message: 'A record with this value already exists' } },
-          409,
+          409
         );
       }
       throw err;

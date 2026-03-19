@@ -8,9 +8,9 @@ All deployment targets use the same `Application.handleRequest(request)` method,
 
 ```typescript
 // src/app.ts — shared across all platforms
-import { createApp } from "@web-loom/api-core";
-import config from "../webloom.config";
-import "./schema"; // register models
+import { createApp } from '@web-loom/api-core';
+import config from '../webloom.config';
+import './schema'; // register models
 
 let _app: Awaited<ReturnType<typeof createApp>> | null = null;
 
@@ -26,10 +26,10 @@ export async function getApp() {
 
 ```typescript
 // src/index.ts
-import { getApp } from "./app";
+import { getApp } from './app';
 
 const app = await getApp();
-await app.start(parseInt(process.env.PORT ?? "3000"));
+await app.start(parseInt(process.env.PORT ?? '3000'));
 ```
 
 `app.start()` uses `@hono/node-server` internally.
@@ -42,9 +42,9 @@ Thin wrapper that calls `app.handleRequest()` on each Vercel Edge invocation.
 
 ```typescript
 // api/index.ts (or app/api/[...route]/route.ts)
-import { getApp } from "../src/app";
+import { getApp } from '../src/app';
 
-export const config = { runtime: "edge" };
+export const config = { runtime: 'edge' };
 
 export default async function handler(request: Request) {
   const app = await getApp();
@@ -55,7 +55,7 @@ export default async function handler(request: Request) {
 For Vercel Serverless Functions (Node.js runtime), the same pattern works:
 
 ```typescript
-export const config = { runtime: "nodejs" };
+export const config = { runtime: 'nodejs' };
 
 export default async function handler(req: Request) {
   const app = await getApp();
@@ -71,9 +71,9 @@ Cloudflare Workers receive a `Request` and return a `Response` natively — no c
 
 ```typescript
 // src/worker.ts
-import { createApp } from "@web-loom/api-core";
-import config from "../webloom.config";
-import "./schema";
+import { createApp } from '@web-loom/api-core';
+import config from '../webloom.config';
+import './schema';
 
 interface Env {
   DATABASE_URL: string;
@@ -101,16 +101,14 @@ AWS Lambda with API Gateway HTTP API (payload format v2).
 
 ```typescript
 // src/lambda.ts
-import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
-import { getApp } from "./app";
+import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { getApp } from './app';
 
-export async function handler(
-  event: APIGatewayProxyEventV2,
-): Promise<APIGatewayProxyResultV2> {
+export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
   const app = await getApp();
 
   const url = `https://${event.requestContext.domainName}${event.rawPath}${
-    event.rawQueryString ? "?" + event.rawQueryString : ""
+    event.rawQueryString ? '?' + event.rawQueryString : ''
   }`;
 
   const request = new Request(url, {
@@ -122,7 +120,9 @@ export async function handler(
   const response = await app.handleRequest(request);
 
   const headers: Record<string, string> = {};
-  response.headers.forEach((v, k) => { headers[k] = v; });
+  response.headers.forEach((v, k) => {
+    headers[k] = v;
+  });
 
   return {
     statusCode: response.status,

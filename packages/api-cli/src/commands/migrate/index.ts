@@ -1,6 +1,6 @@
 /**
  * Migration Commands
- * 
+ *
  * Database migration management commands
  */
 

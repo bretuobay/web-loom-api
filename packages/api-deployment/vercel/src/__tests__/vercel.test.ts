@@ -11,10 +11,11 @@ import type { WebLoomApp, VercelKVClient } from '../types';
 function createMockApp(response?: Response): WebLoomApp {
   return {
     handleRequest: vi.fn().mockResolvedValue(
-      response ?? new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      response ??
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
     ),
   };
 }

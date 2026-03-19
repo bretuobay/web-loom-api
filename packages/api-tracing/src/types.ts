@@ -52,8 +52,6 @@ export interface SpanData {
   events: SpanEvent[];
 }
 
-
-
 export interface TracerOptions {
   serviceName?: string;
   sampler?: Sampler;
@@ -66,7 +64,11 @@ export interface SamplingResult {
 }
 
 export interface Sampler {
-  shouldSample(traceId: string, spanName: string, attributes?: Record<string, SpanAttributeValue>): SamplingResult;
+  shouldSample(
+    traceId: string,
+    spanName: string,
+    attributes?: Record<string, SpanAttributeValue>
+  ): SamplingResult;
 }
 
 export interface TraceContext {

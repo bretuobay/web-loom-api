@@ -22,9 +22,7 @@ export interface DiscoveredPlugin {
  * Discover npm packages that declare "webloom-plugin" in their keywords.
  * Scans the given node_modules directory.
  */
-export async function discoverNpmPlugins(
-  nodeModulesPath: string,
-): Promise<DiscoveredPlugin[]> {
+export async function discoverNpmPlugins(nodeModulesPath: string): Promise<DiscoveredPlugin[]> {
   const results: DiscoveredPlugin[] = [];
 
   let entries: string[];
@@ -62,15 +60,12 @@ export async function discoverNpmPlugins(
   return results;
 }
 
-
 /**
  * Discover local plugin files/directories from the given paths.
  * Each path should point to a directory containing plugin modules
  * (files exporting a Plugin object).
  */
-export async function discoverLocalPlugins(
-  dirs: string[],
-): Promise<DiscoveredPlugin[]> {
+export async function discoverLocalPlugins(dirs: string[]): Promise<DiscoveredPlugin[]> {
   const results: DiscoveredPlugin[] = [];
 
   for (const dir of dirs) {

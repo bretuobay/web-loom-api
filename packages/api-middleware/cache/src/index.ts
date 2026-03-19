@@ -19,10 +19,6 @@ export { MemoryCacheStore } from './stores/memory-store';
 export { RedisCacheStore } from './stores/redis-store';
 
 // Types
-export type {
-  CacheOptions,
-  CacheStore,
-  CachedResponse,
-} from './types';
+export type { CacheOptions, CacheStore, CachedResponse } from './types';
 export type { MemoryCacheStoreOptions } from './stores/memory-store';
 export type { RedisCacheClient, RedisCacheStoreOptions } from './stores/redis-store';

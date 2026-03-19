@@ -8,10 +8,10 @@ Register middleware that runs on every request via `app.hono` after `createApp()
 
 ```typescript
 // src/index.ts
-import { createApp } from "@web-loom/api-core";
-import type { MiddlewareHandler } from "hono";
-import config from "../webloom.config";
-import "./schema";
+import { createApp } from '@web-loom/api-core';
+import type { MiddlewareHandler } from 'hono';
+import config from '../webloom.config';
+import './schema';
 
 const app = await createApp(config);
 
@@ -19,11 +19,11 @@ const app = await createApp(config);
 const requestTimer: MiddlewareHandler = async (c, next) => {
   const start = Date.now();
   await next();
-  c.res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
+  c.res.headers.set('X-Response-Time', `${Date.now() - start}ms`);
 };
 
 // Apply globally
-app.hono.use("/*", requestTimer);
+app.hono.use('/*', requestTimer);
 
 await app.start(3000);
 ```
@@ -32,13 +32,13 @@ For reuse across projects, package middleware as a plain function and import it:
 
 ```typescript
 // packages/timing-middleware/src/index.ts
-import type { MiddlewareHandler } from "hono";
+import type { MiddlewareHandler } from 'hono';
 
 export function timingMiddleware(): MiddlewareHandler {
   return async (c, next) => {
     const start = Date.now();
     await next();
-    c.res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
+    c.res.headers.set('X-Response-Time', `${Date.now() - start}ms`);
   };
 }
 ```
@@ -51,13 +51,13 @@ For routes that need to be shared across projects, export the Hono app and mount
 
 ```typescript
 // packages/health-routes/src/index.ts
-import { Hono } from "hono";
+import { Hono } from 'hono';
 
 export function createHealthRoutes(): Hono {
   const app = new Hono();
 
-  app.get("/health", (c) => c.json({ status: "ok" }));
-  app.get("/ready", (c) => c.json({ status: "ready" }));
+  app.get('/health', (c) => c.json({ status: 'ok' }));
+  app.get('/ready', (c) => c.json({ status: 'ready' }));
 
   return app;
 }
@@ -65,10 +65,10 @@ export function createHealthRoutes(): Hono {
 
 ```typescript
 // src/index.ts
-import { createHealthRoutes } from "@myorg/health-routes";
+import { createHealthRoutes } from '@myorg/health-routes';
 
 const app = await createApp(config);
-app.hono.route("/", createHealthRoutes());
+app.hono.route('/', createHealthRoutes());
 ```
 
 ## Adding Models
@@ -77,27 +77,27 @@ Call `defineModel()` anywhere before `createApp()`. Models register themselves i
 
 ```typescript
 // src/schema/audit-log.ts
-import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
-import { defineModel } from "@web-loom/api-core";
+import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import { defineModel } from '@web-loom/api-core';
 
-export const auditLogsTable = pgTable("audit_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: text("user_id"),
-  action: text("action").notNull(),
-  resource: text("resource").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+export const auditLogsTable = pgTable('audit_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id'),
+  action: text('action').notNull(),
+  resource: text('resource').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // No CRUD routes — just a registry entry for the OpenAPI generator
 export const AuditLog = defineModel(auditLogsTable, {
-  name: "AuditLog",
+  name: 'AuditLog',
   crud: false,
 });
 ```
 
 ```typescript
 // src/index.ts
-import "./schema/audit-log"; // import to register
+import './schema/audit-log'; // import to register
 ```
 
 ## Audit Logging Pattern
@@ -106,15 +106,15 @@ A common "plugin-like" pattern: a self-contained module that exports a middlewar
 
 ```typescript
 // src/audit/index.ts
-import { defineRoutes } from "@web-loom/api-core";
-import { auditLogsTable } from "./schema";
-import type { MiddlewareHandler } from "hono";
+import { defineRoutes } from '@web-loom/api-core';
+import { auditLogsTable } from './schema';
+import type { MiddlewareHandler } from 'hono';
 
 export const auditMiddleware: MiddlewareHandler = async (c, next) => {
   await next();
 
   const method = c.req.method;
-  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
     await c.var.db.insert(auditLogsTable).values({
       userId: c.var.user?.id ?? null,
       action: method,
@@ -126,10 +126,10 @@ export const auditMiddleware: MiddlewareHandler = async (c, next) => {
 
 ```typescript
 // src/index.ts
-import { auditMiddleware } from "./audit";
+import { auditMiddleware } from './audit';
 
 const app = await createApp(config);
-app.hono.use("/api/*", auditMiddleware);
+app.hono.use('/api/*', auditMiddleware);
 ```
 
 ## Lifecycle Hooks
@@ -140,13 +140,13 @@ There is no formal lifecycle hook system. Use standard Node.js process events fo
 const app = await createApp(config);
 await app.start(3000);
 
-process.on("SIGTERM", async () => {
-  console.log("SIGTERM received — shutting down gracefully");
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received — shutting down gracefully');
   await app.shutdown(10_000);
   process.exit(0);
 });
 
-process.on("SIGINT", async () => {
+process.on('SIGINT', async () => {
   await app.shutdown(5_000);
   process.exit(0);
 });
@@ -159,12 +159,7 @@ process.on("SIGINT", async () => {
 Extend authentication by composing strategies from `@web-loom/api-middleware-auth`:
 
 ```typescript
-import {
-  jwtAuth,
-  apiKeyAuth,
-  composeAuth,
-  requireRole,
-} from "@web-loom/api-middleware-auth";
+import { jwtAuth, apiKeyAuth, composeAuth, requireRole } from '@web-loom/api-middleware-auth';
 
 // Custom API key lookup
 const apiKeyStrategy = apiKeyAuth({
@@ -179,16 +174,13 @@ const apiKeyStrategy = apiKeyAuth({
 });
 
 // Accept either JWT or API key
-const multiAuth = composeAuth(
-  jwtAuth({ secret: process.env.JWT_SECRET! }),
-  apiKeyStrategy,
-);
+const multiAuth = composeAuth(jwtAuth({ secret: process.env.JWT_SECRET! }), apiKeyStrategy);
 
 // Apply globally
-app.hono.use("/api/*", multiAuth);
+app.hono.use('/api/*', multiAuth);
 
 // Restrict a specific path to admins
-app.hono.use("/api/admin/*", multiAuth, requireRole("admin"));
+app.hono.use('/api/admin/*', multiAuth, requireRole('admin'));
 ```
 
 ## Packaging Reusable Extensions
@@ -215,10 +207,10 @@ export "./schema"; // register models as a side effect on import
 Consumer usage:
 
 ```typescript
-import { myMiddleware, createMyRoutes } from "@myorg/my-extension";
-import "@myorg/my-extension/schema"; // or import the package to trigger model registration
+import { myMiddleware, createMyRoutes } from '@myorg/my-extension';
+import '@myorg/my-extension/schema'; // or import the package to trigger model registration
 
 const app = await createApp(config);
-app.hono.use("/*", myMiddleware);
-app.hono.route("/extension", createMyRoutes());
+app.hono.use('/*', myMiddleware);
+app.hono.route('/extension', createMyRoutes());
 ```

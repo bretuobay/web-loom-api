@@ -9,19 +9,16 @@
  */
 
 import { PluginContextImpl } from './plugin-context';
-import type {
-  Plugin,
-  PluginRecord,
-  PluginState,
-  PluginSystemConfig,
-} from './types';
+import type { Plugin, PluginRecord, PluginState, PluginSystemConfig } from './types';
 
 export class PluginManager {
   private readonly _plugins = new Map<string, PluginRecord>();
   private readonly _context: PluginContextImpl;
   private readonly _config: PluginSystemConfig;
 
-  get config(): PluginSystemConfig { return this._config; }
+  get config(): PluginSystemConfig {
+    return this._config;
+  }
 
   constructor(config: PluginSystemConfig = {}, appConfig: Record<string, unknown> = {}) {
     this._config = config;
@@ -51,7 +48,6 @@ export class PluginManager {
   async registerPlugin(resolve: string): Promise<void> {
     const plugin = await this._resolveModule(resolve);
     this._validatePlugin(plugin);
-
 
     if (this._plugins.has(plugin.name)) {
       throw new Error(`Plugin "${plugin.name}" is already loaded`);
@@ -156,7 +152,6 @@ export class PluginManager {
     return this._plugins.get(name);
   }
 
-
   // -- Private helpers --------------------------------------------------
 
   /**
@@ -214,7 +209,7 @@ export class PluginManager {
       const record = this._plugins.get(name);
       if (!record) {
         throw new Error(
-          `Plugin "${chain[chain.length - 1]}" depends on "${name}" which is not loaded`,
+          `Plugin "${chain[chain.length - 1]}" depends on "${name}" which is not loaded`
         );
       }
 

@@ -34,14 +34,14 @@ import type { Table } from 'drizzle-orm';
 import type { ZodObject, ZodRawShape } from 'zod';
 
 export interface CrudOperationOptions {
-  auth?: boolean | string;   // false = public, true = any authed, "admin" = role check
+  auth?: boolean | string; // false = public, true = any authed, "admin" = role check
   cache?: { ttl: number; tags?: string[] };
-  softDelete?: boolean;      // only relevant on delete operation
+  softDelete?: boolean; // only relevant on delete operation
 }
 
 export interface CrudOptions {
-  timestamps?: boolean;      // auto-manage createdAt/updatedAt
-  softDelete?: boolean;      // global soft-delete for the model
+  timestamps?: boolean; // auto-manage createdAt/updatedAt
+  softDelete?: boolean; // global soft-delete for the model
   list?: CrudOperationOptions;
   read?: CrudOperationOptions;
   create?: CrudOperationOptions;
@@ -50,8 +50,8 @@ export interface CrudOptions {
 }
 
 export interface ModelMeta {
-  name: string;                     // PascalCase, e.g. "User"
-  basePath?: string;                // default: "/" + name.toLowerCase() + "s"
+  name: string; // PascalCase, e.g. "User"
+  basePath?: string; // default: "/" + name.toLowerCase() + "s"
   crud?: boolean | CrudOptions;
 }
 
@@ -113,8 +113,8 @@ export function defineModel<TTable extends Table>(
       basePath: meta.basePath ?? '/' + meta.name.toLowerCase() + 's',
       crud: meta.crud ?? false,
     },
-    $inferSelect: undefined as TTable['$inferSelect'],  // type-only, no runtime value
-    $inferInsert: undefined as TTable['$inferInsert'],  // type-only, no runtime value
+    $inferSelect: undefined as TTable['$inferSelect'], // type-only, no runtime value
+    $inferInsert: undefined as TTable['$inferInsert'], // type-only, no runtime value
   };
 
   // Auto-register with the global model registry
@@ -135,7 +135,9 @@ export const usersTable = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  role: text('role', { enum: ['user', 'admin'] }).default('user').notNull(),
+  role: text('role', { enum: ['user', 'admin'] })
+    .default('user')
+    .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -144,8 +146,8 @@ export const User = defineModel(usersTable, {
   name: 'User',
   crud: {
     timestamps: true,
-    list:   { auth: false },
-    read:   { auth: false },
+    list: { auth: false },
+    read: { auth: false },
     create: { auth: true },
     update: { auth: 'admin' },
     delete: { auth: 'admin' },

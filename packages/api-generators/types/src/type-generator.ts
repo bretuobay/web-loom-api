@@ -1,6 +1,6 @@
 /**
  * TypeScript Type Generator
- * 
+ *
  * Generates TypeScript types from model definitions
  */
 
@@ -146,7 +146,7 @@ export class TypeGenerator {
         const optional = !field.required;
         const readonly = this.options.readonly ? 'readonly ' : '';
         const tsType = this.fieldTypeToTS(field);
-        
+
         lines.push(`  ${readonly}${field.name}${optional ? '?' : ''}: ${tsType};`);
       }
 
@@ -157,14 +157,18 @@ export class TypeGenerator {
       lines.push(`/**`);
       lines.push(` * Create input for ${name}`);
       lines.push(` */`);
-      lines.push(`export type Create${name} = Omit<${name}, 'id'${model.metadata?.timestamps ? " | 'createdAt' | 'updatedAt'" : ''}>;`);
+      lines.push(
+        `export type Create${name} = Omit<${name}, 'id'${model.metadata?.timestamps ? " | 'createdAt' | 'updatedAt'" : ''}>;`
+      );
       lines.push('');
 
       // Generate Update type (all fields optional except id)
       lines.push(`/**`);
       lines.push(` * Update input for ${name}`);
       lines.push(` */`);
-      lines.push(`export type Update${name} = Partial<Omit<${name}, 'id'${model.metadata?.timestamps ? " | 'createdAt'" : ''}>>;`);
+      lines.push(
+        `export type Update${name} = Partial<Omit<${name}, 'id'${model.metadata?.timestamps ? " | 'createdAt'" : ''}>>;`
+      );
       lines.push('');
     }
 
@@ -295,7 +299,7 @@ export class TypeGenerator {
       if (!modelName || !this.models.has(modelName)) continue;
 
       const typeName = `${modelName}${this.capitalize(route.method)}`;
-      
+
       if (generatedTypes.has(typeName)) continue;
       generatedTypes.add(typeName);
 
@@ -304,7 +308,7 @@ export class TypeGenerator {
         lines.push(`/**`);
         lines.push(` * ${route.method} ${route.path} request body`);
         lines.push(` */`);
-        
+
         if (route.method === 'POST') {
           lines.push(`export type ${typeName}Request = Create${modelName};`);
         } else {
@@ -317,7 +321,7 @@ export class TypeGenerator {
       lines.push(`/**`);
       lines.push(` * ${route.method} ${route.path} response`);
       lines.push(` */`);
-      
+
       if (route.method === 'GET' && !route.path.includes(':')) {
         lines.push(`export type ${typeName}Response = PaginatedResponse<${modelName}>;`);
       } else if (route.method === 'DELETE') {
@@ -407,33 +411,33 @@ export class TypeGenerator {
       case 'string':
       case 'uuid':
         return 'string';
-      
+
       case 'number':
       case 'decimal':
         return 'number';
-      
+
       case 'boolean':
         return 'boolean';
-      
+
       case 'date':
         return 'Date';
-      
+
       case 'enum':
         if (field.enum && field.enum.length > 0) {
-          return field.enum.map(v => `'${v}'`).join(' | ');
+          return field.enum.map((v) => `'${v}'`).join(' | ');
         }
         return 'string';
-      
+
       case 'json':
         return 'Record<string, unknown>';
-      
+
       case 'array':
         if (field.arrayItemType) {
           const itemType = this.fieldTypeToTS({ ...field, type: field.arrayItemType });
           return `${itemType}[]`;
         }
         return 'unknown[]';
-      
+
       default:
         return 'unknown';
     }
@@ -444,14 +448,14 @@ export class TypeGenerator {
    */
   private inferModelFromPath(path: string): string | null {
     const parts = path.split('/').filter(Boolean);
-    
+
     for (const part of parts) {
       if (!part.startsWith(':') && !part.match(/^(api|v\d+)$/i)) {
         const singular = part.endsWith('s') ? part.slice(0, -1) : part;
         return this.capitalize(singular);
       }
     }
-    
+
     return null;
   }
 
@@ -492,19 +496,19 @@ export class TypeGenerator {
     indexLines.push(' */');
     indexLines.push('');
     indexLines.push(`export * from './models';`);
-    
+
     if (generated.enums) {
       indexLines.push(`export * from './enums';`);
     }
-    
+
     if (generated.requestResponse) {
       indexLines.push(`export * from './api';`);
     }
-    
+
     if (generated.utils) {
       indexLines.push(`export * from './utils';`);
     }
-    
+
     indexLines.push('');
 
     files.set('index.ts', indexLines.join('\n'));

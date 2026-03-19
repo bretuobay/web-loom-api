@@ -84,9 +84,9 @@ function buildOperationId(method: string, urlPath: string): string {
     .filter(Boolean)
     .map((seg) => {
       if (seg.startsWith(':')) {
-        return 'By' + seg[1]!.toUpperCase() + seg.slice(2);
+        return 'By' + seg.charAt(1).toUpperCase() + seg.slice(2);
       }
-      return seg[0]!.toUpperCase() + seg.slice(1);
+      return seg.charAt(0).toUpperCase() + seg.slice(1);
     });
 
   if (segments.length === 0) segments.push('Index');
@@ -152,9 +152,7 @@ export const createGenerateOpenAPICommand = (): Command => {
           }
 
           const content =
-            options.format === 'yaml'
-              ? yaml.stringify(doc)
-              : JSON.stringify(doc, null, 2);
+            options.format === 'yaml' ? yaml.stringify(doc) : JSON.stringify(doc, null, 2);
 
           fs.writeFileSync(outputPath, content, 'utf-8');
 
@@ -163,9 +161,8 @@ export const createGenerateOpenAPICommand = (): Command => {
           const opCount = Object.values(doc.paths).reduce(
             (n, item) =>
               n +
-              Object.keys(item).filter((k) =>
-                ['get', 'post', 'put', 'patch', 'delete'].includes(k)
-              ).length,
+              Object.keys(item).filter((k) => ['get', 'post', 'put', 'patch', 'delete'].includes(k))
+                .length,
             0
           );
 

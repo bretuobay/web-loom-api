@@ -150,9 +150,7 @@ function generateIAMTokenPlaceholder(
  * - RDS_USE_IAM_AUTH: Whether to use IAM auth ('true'/'false')
  * - AWS_REGION: AWS region for IAM auth
  */
-export function createRDSProxyConfig(
-  overrides?: Partial<RDSProxyConfig>
-): RDSProxyConfig {
+export function createRDSProxyConfig(overrides?: Partial<RDSProxyConfig>): RDSProxyConfig {
   const host = overrides?.host || process.env.RDS_PROXY_ENDPOINT;
   if (!host) {
     throw new Error(
@@ -162,16 +160,12 @@ export function createRDSProxyConfig(
 
   const database = overrides?.database || process.env.RDS_DB_NAME;
   if (!database) {
-    throw new Error(
-      'Database name not configured. Set RDS_DB_NAME environment variable.'
-    );
+    throw new Error('Database name not configured. Set RDS_DB_NAME environment variable.');
   }
 
   const username = overrides?.username || process.env.RDS_USERNAME;
   if (!username) {
-    throw new Error(
-      'Database username not configured. Set RDS_USERNAME environment variable.'
-    );
+    throw new Error('Database username not configured. Set RDS_USERNAME environment variable.');
   }
 
   return {

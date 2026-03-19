@@ -35,11 +35,11 @@ interface ResendBatchResponse {
 }
 
 interface ResendDomainRecord {
-  record: string;   // "TXT" | "CNAME" | "MX"
+  record: string; // "TXT" | "CNAME" | "MX"
   name: string;
   value: string;
   priority?: number;
-  status: string;    // "verified" | "not_started" | etc.
+  status: string; // "verified" | "not_started" | etc.
 }
 
 interface ResendDomainResponse {
@@ -48,7 +48,6 @@ interface ResendDomainResponse {
   status: string;
   records: ResendDomainRecord[];
 }
-
 
 // --------------------------------------------------------------------------
 // Test-mode in-memory store
@@ -132,7 +131,6 @@ export class ResendEmailAdapter implements EmailAdapter {
     }
   }
 
-
   // -----------------------------------------------------------------------
   // EmailAdapter — sendTemplate
   // Requirement 22.1
@@ -141,7 +139,7 @@ export class ResendEmailAdapter implements EmailAdapter {
   async sendTemplate(
     templateId: string,
     to: string,
-    variables: Record<string, unknown>,
+    variables: Record<string, unknown>
   ): Promise<EmailResult> {
     // Resend doesn't have a first-class server-side template API.
     // We interpolate variables into a minimal HTML wrapper keyed by templateId.
@@ -163,9 +161,7 @@ export class ResendEmailAdapter implements EmailAdapter {
       return {
         domain,
         verified: false,
-        records: [
-          { type: 'TXT', name: `_resend.${domain}`, value: 'test-verification-value' },
-        ],
+        records: [{ type: 'TXT', name: `_resend.${domain}`, value: 'test-verification-value' }],
         message: 'Test mode — domain not actually verified',
       };
     }
@@ -288,7 +284,7 @@ export class ResendEmailAdapter implements EmailAdapter {
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.apiKey}`,
       'Content-Type': 'application/json',
     };
 

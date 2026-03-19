@@ -99,10 +99,7 @@ export function jwtAuth(options: JwtAuthOptions): MiddlewareHandler {
         await next();
         return;
       }
-      return c.json(
-        { error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } },
-        401
-      );
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } }, 401);
     }
   };
 }
@@ -133,7 +130,10 @@ export function sessionAuth(options: SessionAuthOptions): MiddlewareHandler {
     const { session, user } = await options.lucia.validateSession(sessionId);
     if (!session) {
       deleteCookie(c, cookieName);
-      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid or expired session' } }, 401);
+      return c.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Invalid or expired session' } },
+        401
+      );
     }
 
     // Refresh session cookie
@@ -154,7 +154,7 @@ export function sessionAuth(options: SessionAuthOptions): MiddlewareHandler {
 
 export interface ApiKeyAuthOptions {
   validate: (key: string) => AuthUser | null | Promise<AuthUser | null>;
-  header?: string;   // default: 'X-API-Key'
+  header?: string; // default: 'X-API-Key'
 }
 
 export function apiKeyAuth(options: ApiKeyAuthOptions): MiddlewareHandler {
@@ -192,8 +192,10 @@ export function apiKeyAuth(options: ApiKeyAuthOptions): MiddlewareHandler {
 export function requireRole(role: string): MiddlewareHandler {
   return async (c, next) => {
     const user = c.var.user;
-    if (!user) return c.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, 401);
-    if (user.role !== role) return c.json({ error: { code: 'FORBIDDEN', message: `Requires role: ${role}` } }, 403);
+    if (!user)
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, 401);
+    if (user.role !== role)
+      return c.json({ error: { code: 'FORBIDDEN', message: `Requires role: ${role}` } }, 403);
     await next();
   };
 }
@@ -201,9 +203,13 @@ export function requireRole(role: string): MiddlewareHandler {
 export function requirePermission(permission: string): MiddlewareHandler {
   return async (c, next) => {
     const user = c.var.user;
-    if (!user) return c.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, 401);
+    if (!user)
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, 401);
     if (!user.permissions?.includes(permission)) {
-      return c.json({ error: { code: 'FORBIDDEN', message: `Requires permission: ${permission}` } }, 403);
+      return c.json(
+        { error: { code: 'FORBIDDEN', message: `Requires permission: ${permission}` } },
+        403
+      );
     }
     await next();
   };
@@ -225,7 +231,9 @@ export function composeAuth(...middlewares: MiddlewareHandler[]): MiddlewareHand
       let succeeded = false;
       let response: Response | undefined;
 
-      await middleware(c, async () => { succeeded = true; });
+      await middleware(c, async () => {
+        succeeded = true;
+      });
 
       if (succeeded && c.var.user) {
         await next();
@@ -241,10 +249,13 @@ Usage:
 
 ```typescript
 // Accept either JWT or API key
-app.use('/api/*', composeAuth(
-  jwtAuth({ secret: env.JWT_SECRET, optional: true }),
-  apiKeyAuth({ validate: (key) => db.query.apiKeys.findFirst({ where: eq(apiKeys.key, key) }) })
-));
+app.use(
+  '/api/*',
+  composeAuth(
+    jwtAuth({ secret: env.JWT_SECRET, optional: true }),
+    apiKeyAuth({ validate: (key) => db.query.apiKeys.findFirst({ where: eq(apiKeys.key, key) }) })
+  )
+);
 ```
 
 ## Usage Patterns
@@ -254,11 +265,7 @@ app.use('/api/*', composeAuth(
 app.use('/api/*', jwtAuth({ secret: env.JWT_SECRET }));
 
 // Single route requires admin role
-app.delete('/api/users/:id',
-  jwtAuth({ secret: env.JWT_SECRET }),
-  requireRole('admin'),
-  handler
-);
+app.delete('/api/users/:id', jwtAuth({ secret: env.JWT_SECRET }), requireRole('admin'), handler);
 
 // Session auth for web routes
 app.use('/dashboard/*', sessionAuth({ lucia }));

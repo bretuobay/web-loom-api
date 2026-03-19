@@ -34,7 +34,7 @@ describe('Property 2: Model Serialization Round-Trip', () => {
         const result = deserialize(serialize(model, schema), schema);
         expect(result.field).toBe(value);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -50,10 +50,9 @@ describe('Property 2: Model Serialization Round-Trip', () => {
         const result = deserialize(serialize(model, schema), schema);
         expect(result.field).toBe(value);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
-
 
   it('boolean fields survive round-trip', () => {
     fc.assert(
@@ -63,7 +62,7 @@ describe('Property 2: Model Serialization Round-Trip', () => {
         const result = deserialize(serialize(model, schema), schema);
         expect(result.field).toBe(value);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -83,7 +82,7 @@ describe('Property 2: Model Serialization Round-Trip', () => {
         const result = deserialize(serialize(model, schema), schema);
         expect(result).toEqual(model);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -95,16 +94,18 @@ describe('Property 3: Special Type Round-Trip Handling', () => {
   it('Date values round-trip correctly (same timestamp)', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('1970-01-01'), max: new Date('2100-01-01') }).filter(d => !isNaN(d.getTime())),
+        fc
+          .date({ min: new Date('1970-01-01'), max: new Date('2100-01-01') })
+          .filter((d) => !isNaN(d.getTime())),
         (value) => {
           const schema = makeSchema({ field: { type: 'date' } });
           const model = { field: value };
           const result = deserialize(serialize(model, schema), schema);
           expect(result.field).toBeInstanceOf(Date);
           expect((result.field as Date).getTime()).toBe(value.getTime());
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -116,24 +117,21 @@ describe('Property 3: Special Type Round-Trip Handling', () => {
         const result = deserialize(serialize(model, schema), schema);
         expect(result.field).toBe(value);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it('Buffer values round-trip correctly (same bytes)', () => {
     fc.assert(
-      fc.property(
-        fc.uint8Array({ minLength: 0, maxLength: 256 }),
-        (bytes) => {
-          const value = Buffer.from(bytes);
-          const schema = makeSchema({ field: { type: 'buffer' } });
-          const model = { field: value };
-          const result = deserialize(serialize(model, schema), schema);
-          expect(Buffer.isBuffer(result.field)).toBe(true);
-          expect(Buffer.compare(result.field as Buffer, value)).toBe(0);
-        },
-      ),
-      { numRuns: 100 },
+      fc.property(fc.uint8Array({ minLength: 0, maxLength: 256 }), (bytes) => {
+        const value = Buffer.from(bytes);
+        const schema = makeSchema({ field: { type: 'buffer' } });
+        const model = { field: value };
+        const result = deserialize(serialize(model, schema), schema);
+        expect(Buffer.isBuffer(result.field)).toBe(true);
+        expect(Buffer.compare(result.field as Buffer, value)).toBe(0);
+      }),
+      { numRuns: 100 }
     );
   });
 
@@ -155,9 +153,9 @@ describe('Property 3: Special Type Round-Trip Handling', () => {
           expect((result.created as Date).getTime()).toBe(d.getTime());
           expect(result.id).toBe(bi);
           expect(Buffer.compare(result.data as Buffer, buf)).toBe(0);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -178,7 +176,7 @@ describe('Property 22: Deserialized Data Validation', () => {
         const json = JSON.stringify({ name });
         expect(() => deserialize(json, schema)).toThrow(ValidationError);
       }),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 
@@ -193,51 +191,42 @@ describe('Property 22: Deserialized Data Validation', () => {
         const json = JSON.stringify({ count: value });
         expect(() => deserialize(json, schema)).toThrow(ValidationError);
       }),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 
   it('validateDeserialized rejects objects missing required fields', () => {
     fc.assert(
-      fc.property(
-        fc.string(),
-        fc.string(),
-        (fieldName, otherField) => {
-          // Ensure distinct field names
-          const reqField = 'required_' + fieldName.slice(0, 10);
-          const schema = makeSchema({
-            [reqField]: { type: 'string', required: true },
-          });
-          // Provide an object without the required field
-          const data: Record<string, unknown> = {};
-          if (otherField !== reqField) {
-            data[otherField] = 'value';
-          }
-          expect(() => validateDeserialized(data, schema)).toThrow(
-            ValidationError,
-          );
-        },
-      ),
-      { numRuns: 50 },
+      fc.property(fc.string(), fc.string(), (fieldName, otherField) => {
+        // Ensure distinct field names
+        const reqField = 'required_' + fieldName.slice(0, 10);
+        const schema = makeSchema({
+          [reqField]: { type: 'string', required: true },
+        });
+        // Provide an object without the required field
+        const data: Record<string, unknown> = {};
+        if (otherField !== reqField) {
+          data[otherField] = 'value';
+        }
+        expect(() => validateDeserialized(data, schema)).toThrow(ValidationError);
+      }),
+      { numRuns: 50 }
     );
   });
 
   it('validateDeserialized rejects objects with wrong field types', () => {
     fc.assert(
-      fc.property(
-        fc.double({ noNaN: true, noDefaultInfinity: true }),
-        (numValue) => {
-          const schema = makeSchema({
-            label: { type: 'string', required: true },
-          });
-          // Provide a number where string is expected
-          const data = { label: numValue };
-          expect(() =>
-            validateDeserialized(data as unknown as Record<string, unknown>, schema),
-          ).toThrow(ValidationError);
-        },
-      ),
-      { numRuns: 50 },
+      fc.property(fc.double({ noNaN: true, noDefaultInfinity: true }), (numValue) => {
+        const schema = makeSchema({
+          label: { type: 'string', required: true },
+        });
+        // Provide a number where string is expected
+        const data = { label: numValue };
+        expect(() =>
+          validateDeserialized(data as unknown as Record<string, unknown>, schema)
+        ).toThrow(ValidationError);
+      }),
+      { numRuns: 50 }
     );
   });
 });

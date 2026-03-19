@@ -53,7 +53,6 @@ describe('TestClient', () => {
     expect(json.body.name).toBe('Alice');
   });
 
-
   it('should make PUT, PATCH, DELETE requests', async () => {
     const client = new TestClient(createHandler());
 
@@ -100,13 +99,15 @@ describe('TestClient', () => {
   });
 
   it('should chain assertions', async () => {
-    const client = new TestClient(createHandler({
-      'GET /health': {
-        status: 200,
-        headers: { 'content-type': 'application/json', 'x-version': '1.0' },
-        body: JSON.stringify({ status: 'ok' }),
-      },
-    }));
+    const client = new TestClient(
+      createHandler({
+        'GET /health': {
+          status: 200,
+          headers: { 'content-type': 'application/json', 'x-version': '1.0' },
+          body: JSON.stringify({ status: 'ok' }),
+        },
+      })
+    );
 
     const res = await client.get('/health');
     res
@@ -118,37 +119,45 @@ describe('TestClient', () => {
   });
 
   it('should throw on failed status assertion', async () => {
-    const client = new TestClient(createHandler({
-      'GET /fail': { status: 404, headers: {}, body: 'not found' },
-    }));
+    const client = new TestClient(
+      createHandler({
+        'GET /fail': { status: 404, headers: {}, body: 'not found' },
+      })
+    );
     const res = await client.get('/fail');
     expect(() => res.expectStatus(200)).toThrow('Expected status 200, got 404');
   });
 
   it('should throw on failed header assertion', async () => {
-    const client = new TestClient(createHandler({
-      'GET /test': { status: 200, headers: { 'x-foo': 'bar' }, body: '' },
-    }));
+    const client = new TestClient(
+      createHandler({
+        'GET /test': { status: 200, headers: { 'x-foo': 'bar' }, body: '' },
+      })
+    );
     const res = await client.get('/test');
     expect(() => res.expectHeader('x-foo', 'baz')).toThrow();
   });
 
   it('should throw on failed body contains assertion', async () => {
-    const client = new TestClient(createHandler({
-      'GET /test': { status: 200, headers: {}, body: 'hello world' },
-    }));
+    const client = new TestClient(
+      createHandler({
+        'GET /test': { status: 200, headers: {}, body: 'hello world' },
+      })
+    );
     const res = await client.get('/test');
     expect(() => res.expectBodyContains('missing')).toThrow();
   });
 
   it('should validate schema', async () => {
-    const client = new TestClient(createHandler({
-      'GET /data': {
-        status: 200,
-        headers: {},
-        body: JSON.stringify({ name: 'test', age: 25 }),
-      },
-    }));
+    const client = new TestClient(
+      createHandler({
+        'GET /data': {
+          status: 200,
+          headers: {},
+          body: JSON.stringify({ name: 'test', age: 25 }),
+        },
+      })
+    );
     const res = await client.get('/data');
 
     const goodSchema = {
@@ -192,7 +201,6 @@ describe('TestClient', () => {
     expect(json2.headers['x-api-key']).toBe('key-1');
   });
 });
-
 
 // ---- Factory & Seeding ----
 
@@ -374,7 +382,6 @@ describe('generators', () => {
     expect(sequence('post')).toBe('post-3');
   });
 });
-
 
 // ---- Mock Database ----
 

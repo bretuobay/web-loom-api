@@ -42,10 +42,7 @@ export function createVercelHandler(
   app: WebLoomApp,
   options: VercelHandlerOptions = {}
 ): (req: Request) => Promise<Response> {
-  const {
-    streaming = false,
-    envPrefix,
-  } = options;
+  const { streaming = false, envPrefix } = options;
 
   // Pre-load environment config
   const vercelEnv = loadVercelEnv(envPrefix);

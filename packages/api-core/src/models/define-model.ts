@@ -29,7 +29,7 @@ import type { Model, ModelMeta, SchemaOverrides } from './types';
 export function defineModel<TTable extends Table>(
   table: TTable,
   meta: ModelMeta,
-  overrides?: SchemaOverrides,
+  overrides?: SchemaOverrides
 ): Model<TTable> {
   // Derive schemas from the Drizzle table via drizzle-zod
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

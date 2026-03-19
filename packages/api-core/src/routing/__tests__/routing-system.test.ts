@@ -91,7 +91,7 @@ describe('validate()', () => {
       })
     );
     expect(res.status).toBe(400);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.error.code).toBe('VALIDATION_ERROR');
     expect(body.error.message).toBe('Request validation failed');
     expect(body.error.requestId).toBeDefined();
@@ -147,7 +147,9 @@ describe('defineRoutes()', () => {
 describe('globalErrorHandler', () => {
   function buildErrorApp(throwFn: () => Error) {
     const app = new Hono();
-    app.get('/boom', () => { throw throwFn(); });
+    app.get('/boom', () => {
+      throw throwFn();
+    });
     app.onError(globalErrorHandler);
     return app;
   }
@@ -156,7 +158,7 @@ describe('globalErrorHandler', () => {
     const app = buildErrorApp(() => new Error('boom'));
     const res = await app.fetch(new Request('http://localhost/boom'));
     expect(res.status).toBe(500);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.error.code).toBe('INTERNAL_ERROR');
     expect(body.error.requestId).toBeDefined();
     expect(body.error.timestamp).toBeDefined();
@@ -168,7 +170,7 @@ describe('globalErrorHandler', () => {
     const app = buildErrorApp(() => new NotFoundError('not found'));
     const res = await app.fetch(new Request('http://localhost/boom'));
     expect(res.status).toBe(404);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.error.code).toBe('NOT_FOUND');
   });
 
@@ -177,7 +179,7 @@ describe('globalErrorHandler', () => {
     const app = buildErrorApp(() => new ConflictError('conflict'));
     const res = await app.fetch(new Request('http://localhost/boom'));
     expect(res.status).toBe(409);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.error.code).toBe('CONFLICT');
   });
 });

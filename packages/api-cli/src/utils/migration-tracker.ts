@@ -7,7 +7,6 @@
  */
 
 export interface MigrationDB {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query<T = unknown>(sql: string, params: unknown[]): Promise<T[]>;
   execute(sql: string, params: unknown[]): Promise<void>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,10 +83,10 @@ export class MigrationTracker {
   }
 
   async recordMigration(name: string, batch: number): Promise<void> {
-    await this.db.execute(
-      `INSERT INTO ${this.tableName} (name, batch) VALUES ($1, $2)`,
-      [name, batch]
-    );
+    await this.db.execute(`INSERT INTO ${this.tableName} (name, batch) VALUES ($1, $2)`, [
+      name,
+      batch,
+    ]);
   }
 
   async removeMigration(name: string): Promise<void> {
@@ -120,10 +119,9 @@ export class MigrationTracker {
       name: string;
       applied_at: Date;
       batch: number;
-    }>(
-      `SELECT id, name, applied_at, batch FROM ${this.tableName} ORDER BY id DESC LIMIT $1`,
-      [count]
-    );
+    }>(`SELECT id, name, applied_at, batch FROM ${this.tableName} ORDER BY id DESC LIMIT $1`, [
+      count,
+    ]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.map((row: any) => ({

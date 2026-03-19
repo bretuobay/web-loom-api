@@ -92,9 +92,7 @@ export function parseAPIGatewayV1Event(
 
   const reqInit: RequestInit = { method, headers };
   if (hasBody) {
-    reqInit.body = event.isBase64Encoded
-      ? Buffer.from(event.body!, 'base64')
-      : event.body!;
+    reqInit.body = event.isBase64Encoded ? Buffer.from(event.body!, 'base64') : event.body!;
   }
   return new Request(url, reqInit);
 }
@@ -102,10 +100,7 @@ export function parseAPIGatewayV1Event(
 /**
  * Parse an API Gateway v2 (HTTP API) event into a Web Standards Request
  */
-export function parseAPIGatewayV2Event(
-  event: APIGatewayV2Event,
-  stripBasePath?: string
-): Request {
+export function parseAPIGatewayV2Event(event: APIGatewayV2Event, stripBasePath?: string): Request {
   let path = event.rawPath || '/';
   if (stripBasePath && path.startsWith(stripBasePath)) {
     path = path.slice(stripBasePath.length) || '/';
@@ -128,9 +123,7 @@ export function parseAPIGatewayV2Event(
 
   const reqInit: RequestInit = { method, headers };
   if (hasBody) {
-    reqInit.body = event.isBase64Encoded
-      ? Buffer.from(event.body!, 'base64')
-      : event.body!;
+    reqInit.body = event.isBase64Encoded ? Buffer.from(event.body!, 'base64') : event.body!;
   }
   return new Request(url, reqInit);
 }
@@ -164,9 +157,7 @@ export function parseFunctionURLEvent(
 
   const reqInit: RequestInit = { method, headers };
   if (hasBody) {
-    reqInit.body = event.isBase64Encoded
-      ? Buffer.from(event.body!, 'base64')
-      : event.body!;
+    reqInit.body = event.isBase64Encoded ? Buffer.from(event.body!, 'base64') : event.body!;
   }
   return new Request(url, reqInit);
 }

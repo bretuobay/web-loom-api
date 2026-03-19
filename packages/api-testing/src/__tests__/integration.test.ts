@@ -46,7 +46,6 @@ describe('CRUD Workflow Integration', () => {
       return Object.values(store);
     });
 
-
     db.onQuery(/UPDATE users/, (_sql, params) => {
       const id = params?.[0] as string;
       const name = params?.[1] as string;
@@ -78,7 +77,10 @@ describe('CRUD Workflow Integration', () => {
         const id = `usr_${++idCounter}`;
         const createdAt = new Date().toISOString();
         const record = db.query('INSERT INTO users VALUES (?, ?, ?, ?)', [
-          id, body.name, body.email, createdAt,
+          id,
+          body.name,
+          body.email,
+          createdAt,
         ]);
         return {
           status: 201,
@@ -92,15 +94,27 @@ describe('CRUD Workflow Integration', () => {
       if (method === 'GET' && singleMatch) {
         const record = db.query('SELECT * FROM users WHERE id = ?', [singleMatch[1]]);
         if (!record) {
-          return { status: 404, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Not found' }) };
+          return {
+            status: 404,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ error: 'Not found' }),
+          };
         }
-        return { status: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify(record) };
+        return {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(record),
+        };
       }
 
       // GET /users — list
       if (method === 'GET' && url === '/users') {
         const records = db.query('SELECT * FROM users');
-        return { status: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify(records) };
+        return {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(records),
+        };
       }
 
       // PUT /users/:id — update
@@ -108,13 +122,23 @@ describe('CRUD Workflow Integration', () => {
       if (method === 'PUT' && updateMatch) {
         const body = JSON.parse(req.body ?? '{}');
         const result = db.execute('UPDATE users SET name = ?, email = ? WHERE id = ?', [
-          updateMatch[1], body.name, body.email,
+          updateMatch[1],
+          body.name,
+          body.email,
         ]);
         if (result.affectedRows === 0) {
-          return { status: 404, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Not found' }) };
+          return {
+            status: 404,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ error: 'Not found' }),
+          };
         }
         const updated = db.query('SELECT * FROM users WHERE id = ?', [updateMatch[1]]);
-        return { status: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify(updated) };
+        return {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(updated),
+        };
       }
 
       // DELETE /users/:id — delete
@@ -122,7 +146,11 @@ describe('CRUD Workflow Integration', () => {
       if (method === 'DELETE' && deleteMatch) {
         const result = db.execute('DELETE FROM users WHERE id = ?', [deleteMatch[1]]);
         if (result.affectedRows === 0) {
-          return { status: 404, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Not found' }) };
+          return {
+            status: 404,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ error: 'Not found' }),
+          };
         }
         return { status: 204, headers: {}, body: '' };
       }
@@ -137,7 +165,12 @@ describe('CRUD Workflow Integration', () => {
     // CREATE
     const createRes = await client.post('/users', { name: 'Alice', email: 'alice@test.com' });
     createRes.expectStatus(201);
-    const created = createRes.json<{ id: string; name: string; email: string; createdAt: string }>();
+    const created = createRes.json<{
+      id: string;
+      name: string;
+      email: string;
+      createdAt: string;
+    }>();
     expect(created.name).toBe('Alice');
     expect(created.email).toBe('alice@test.com');
     expect(created.id).toBeTruthy();
@@ -149,7 +182,10 @@ describe('CRUD Workflow Integration', () => {
     getRes.expectJsonMatch({ name: 'Alice', email: 'alice@test.com' });
 
     // UPDATE
-    const updateRes = await client.put(`/users/${created.id}`, { name: 'Alice Updated', email: 'alice2@test.com' });
+    const updateRes = await client.put(`/users/${created.id}`, {
+      name: 'Alice Updated',
+      email: 'alice2@test.com',
+    });
     updateRes.expectStatus(200);
     const updated = updateRes.json<{ name: string; email: string }>();
     expect(updated.name).toBe('Alice Updated');
@@ -181,7 +217,6 @@ describe('CRUD Workflow Integration', () => {
     expect(list.length).toBe(2);
   });
 });
-
 
 // ============================================================
 // 2. Authentication Flow Integration Test
@@ -226,7 +261,11 @@ describe('Authentication Flow Integration', () => {
         const users = auth.getUsers();
         const user = users.find((u) => u.email === body.email);
         if (!user) {
-          return { status: 401, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Invalid credentials' }) };
+          return {
+            status: 401,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ error: 'Invalid credentials' }),
+          };
         }
         const session = auth.createSession(user.id);
         return {
@@ -241,7 +280,11 @@ describe('Authentication Flow Integration', () => {
         const sessionId = extractSessionId(req.headers);
         const session = sessionId ? auth.validateSession(sessionId) : null;
         if (!session) {
-          return { status: 401, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Unauthorized' }) };
+          return {
+            status: 401,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ error: 'Unauthorized' }),
+          };
         }
         const body = JSON.parse(req.body ?? '{}');
         const key = `wl_${Math.random().toString(36).slice(2, 18)}`;
@@ -262,7 +305,11 @@ describe('Authentication Flow Integration', () => {
             return {
               status: 200,
               headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ message: 'Access granted', userId: session.userId, authMethod: 'session' }),
+              body: JSON.stringify({
+                message: 'Access granted',
+                userId: session.userId,
+                authMethod: 'session',
+              }),
             };
           }
         }
@@ -271,10 +318,18 @@ describe('Authentication Flow Integration', () => {
           return {
             status: 200,
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ message: 'Access granted', userId: apiKeys[apiKey].userId, authMethod: 'api-key' }),
+            body: JSON.stringify({
+              message: 'Access granted',
+              userId: apiKeys[apiKey].userId,
+              authMethod: 'api-key',
+            }),
           };
         }
-        return { status: 401, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Unauthorized' }) };
+        return {
+          status: 401,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ error: 'Unauthorized' }),
+        };
       }
 
       return { status: 404, headers: {}, body: 'Not found' };
@@ -284,7 +339,10 @@ describe('Authentication Flow Integration', () => {
   });
 
   it('should complete register → login → access protected route flow', async () => {
-    const registerRes = await client.post('/auth/register', { email: 'alice@test.com', name: 'Alice' });
+    const registerRes = await client.post('/auth/register', {
+      email: 'alice@test.com',
+      name: 'Alice',
+    });
     registerRes.expectStatus(201);
 
     const loginRes = await client.post('/auth/login', { email: 'alice@test.com' });
@@ -333,7 +391,6 @@ describe('Authentication Flow Integration', () => {
     res.expectStatus(401);
   });
 });
-
 
 // ============================================================
 // 3. Code Generation Workflow Integration Test
@@ -453,9 +510,7 @@ describe('Code Generation Workflow Integration', () => {
     });
 
     const result = await testContract(handler, openApiSpec);
-    const schemaChecks = result.results
-      .flatMap((r) => r.checks)
-      .filter((c) => c.type === 'schema');
+    const schemaChecks = result.results.flatMap((r) => r.checks).filter((c) => c.type === 'schema');
     expect(schemaChecks.length).toBeGreaterThan(0);
     expect(schemaChecks.some((c) => !c.passed)).toBe(true);
   });
@@ -504,9 +559,7 @@ describe('Code Generation Workflow Integration', () => {
     });
 
     const result = await testContract(handler, openApiSpec);
-    const statusChecks = result.results
-      .flatMap((r) => r.checks)
-      .filter((c) => c.type === 'status');
+    const statusChecks = result.results.flatMap((r) => r.checks).filter((c) => c.type === 'status');
     expect(statusChecks.some((c) => !c.passed)).toBe(true);
   });
 });

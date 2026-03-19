@@ -42,19 +42,25 @@ export function buildDeleteHandler<TTable extends Table>(model: Model<TTable>): 
       if (opts.softDelete && 'deletedAt' in model.table) {
         // Soft delete: check the record exists first (and isn't already deleted)
         const conditions = [pkCondition, isNull((model.table as any).deletedAt)];
-        const existing = await db.select().from(model.table).where(and(...conditions));
+        const existing = await db
+          .select()
+          .from(model.table)
+          .where(and(...conditions));
         if (!existing[0]) {
-          return c.json({ error: { code: 'NOT_FOUND', message: `${model.meta.name} not found` } }, 404);
+          return c.json(
+            { error: { code: 'NOT_FOUND', message: `${model.meta.name} not found` } },
+            404
+          );
         }
-        await db
-          .update(model.table)
-          .set({ deletedAt: new Date() })
-          .where(pkCondition);
+        await db.update(model.table).set({ deletedAt: new Date() }).where(pkCondition);
       } else {
         // Hard delete
         const deleted = await db.delete(model.table).where(pkCondition).returning();
         if (!deleted[0]) {
-          return c.json({ error: { code: 'NOT_FOUND', message: `${model.meta.name} not found` } }, 404);
+          return c.json(
+            { error: { code: 'NOT_FOUND', message: `${model.meta.name} not found` } },
+            404
+          );
         }
       }
 
@@ -62,8 +68,13 @@ export function buildDeleteHandler<TTable extends Table>(model: Model<TTable>): 
     } catch (err) {
       if (isForeignKeyError(err)) {
         return c.json(
-          { error: { code: 'CONFLICT', message: 'Cannot delete: record is referenced by other records' } },
-          409,
+          {
+            error: {
+              code: 'CONFLICT',
+              message: 'Cannot delete: record is referenced by other records',
+            },
+          },
+          409
         );
       }
       throw err;

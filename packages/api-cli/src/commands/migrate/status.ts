@@ -1,6 +1,6 @@
 /**
  * Migration Status Command
- * 
+ *
  * Shows the status of all migrations
  */
 
@@ -14,7 +14,7 @@ export const statusCommand = new Command('status')
   .action(async (options: { dir: string }) => {
     try {
       const migrationsDir = path.resolve(process.cwd(), options.dir);
-      
+
       console.log('Migration Status');
       console.log('================');
       console.log('');
@@ -29,9 +29,10 @@ export const statusCommand = new Command('status')
       }
 
       // Get all migration files
-      const files = fs.readdirSync(migrationsDir)
-        .filter(file => file.endsWith('.ts') || file.endsWith('.js'))
-        .filter(file => file !== '.migrations.json')
+      const files = fs
+        .readdirSync(migrationsDir)
+        .filter((file) => file.endsWith('.ts') || file.endsWith('.js'))
+        .filter((file) => file !== '.migrations.json')
         .sort();
 
       if (files.length === 0) {
@@ -53,15 +54,15 @@ export const statusCommand = new Command('status')
 
       console.log('Migrations:');
       console.log('-----------');
-      
+
       files.forEach((file, _index) => {
         const isApplied = appliedSet.has(file);
         const status = isApplied ? '✓ Applied' : '○ Pending';
         const statusColor = isApplied ? '\x1b[32m' : '\x1b[33m'; // Green or Yellow
         const resetColor = '\x1b[0m';
-        
+
         console.log(`${statusColor}${status}${resetColor}  ${file}`);
-        
+
         // Show when it was applied
         if (isApplied) {
           const appliedIndex = appliedMigrations.indexOf(file);
@@ -89,7 +90,10 @@ export const statusCommand = new Command('status')
       console.log('Note: This is a simulation using a local tracking file.');
       console.log('In production, migration status would be tracked in your database.');
     } catch (error) {
-      console.error('Error checking migration status:', error instanceof Error ? error.message : error);
+      console.error(
+        'Error checking migration status:',
+        error instanceof Error ? error.message : error
+      );
       process.exit(1);
     }
   });
@@ -99,7 +103,7 @@ export const statusCommand = new Command('status')
  */
 function loadAppliedMigrations(migrationsDir: string): string[] {
   const trackingFile = path.join(migrationsDir, '.migrations.json');
-  
+
   if (!fs.existsSync(trackingFile)) {
     return [];
   }
@@ -118,7 +122,7 @@ function loadAppliedMigrations(migrationsDir: string): string[] {
  */
 function getAppliedDate(migrationsDir: string, _fileName: string): string | null {
   const trackingFile = path.join(migrationsDir, '.migrations.json');
-  
+
   if (!fs.existsSync(trackingFile)) {
     return null;
   }
@@ -126,7 +130,7 @@ function getAppliedDate(migrationsDir: string, _fileName: string): string | null
   try {
     const content = fs.readFileSync(trackingFile, 'utf-8');
     const data = JSON.parse(content);
-    
+
     // For now, just return the last updated date
     // In a real implementation, each migration would have its own timestamp
     return data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : null;

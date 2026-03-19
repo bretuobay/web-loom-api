@@ -31,7 +31,10 @@ export function buildReadHandler<TTable extends Table>(model: Model<TTable>): Mi
       conditions.push(isNull((model.table as any).deletedAt));
     }
 
-    const rows = await db.select().from(model.table).where(and(...conditions));
+    const rows = await db
+      .select()
+      .from(model.table)
+      .where(and(...conditions));
     if (!rows[0]) {
       return c.json({ error: { code: 'NOT_FOUND', message: `${model.meta.name} not found` } }, 404);
     }

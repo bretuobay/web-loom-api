@@ -37,15 +37,15 @@ if (response.status === HTTPStatus.OK) {
 ### Utility Types
 
 ```typescript
-import { 
-  Prettify, 
-  DeepPartial, 
+import {
+  Prettify,
+  DeepPartial,
   DeepReadonly,
   RequireAtLeastOne,
   RequireKeys,
   OptionalKeys,
   Nullable,
-  Maybe
+  Maybe,
 } from '@web-loom/api-shared';
 
 // Prettify - Flatten intersection types for better IDE tooltips
@@ -87,7 +87,7 @@ import {
   DatabaseError,
   ConfigurationError,
   type ErrorResponse,
-  type ValidationErrorField
+  type ValidationErrorField,
 } from '@web-loom/api-shared';
 
 // Validation errors with field-level details
@@ -96,8 +96,8 @@ const validationError = new ValidationError('Validation failed', [
     path: ['user', 'email'],
     message: 'Invalid email format',
     code: 'invalid_format',
-    value: 'not-an-email'
-  }
+    value: 'not-an-email',
+  },
 ]);
 
 // Authentication errors
@@ -126,8 +126,8 @@ const errorResponse: ErrorResponse = {
     details: { fields: [] },
     timestamp: new Date().toISOString(),
     requestId: 'req-123',
-    path: '/api/users'
-  }
+    path: '/api/users',
+  },
 };
 ```
 
@@ -139,40 +139,40 @@ All error codes are available as an enum:
 import { ErrorCode } from '@web-loom/api-shared';
 
 // Validation errors
-ErrorCode.VALIDATION_ERROR
-ErrorCode.INVALID_INPUT
-ErrorCode.MISSING_FIELD
-ErrorCode.INVALID_FORMAT
+ErrorCode.VALIDATION_ERROR;
+ErrorCode.INVALID_INPUT;
+ErrorCode.MISSING_FIELD;
+ErrorCode.INVALID_FORMAT;
 
 // Authentication errors
-ErrorCode.UNAUTHORIZED
-ErrorCode.INVALID_TOKEN
-ErrorCode.TOKEN_EXPIRED
-ErrorCode.INVALID_CREDENTIALS
+ErrorCode.UNAUTHORIZED;
+ErrorCode.INVALID_TOKEN;
+ErrorCode.TOKEN_EXPIRED;
+ErrorCode.INVALID_CREDENTIALS;
 
 // Authorization errors
-ErrorCode.FORBIDDEN
-ErrorCode.INSUFFICIENT_PERMISSIONS
+ErrorCode.FORBIDDEN;
+ErrorCode.INSUFFICIENT_PERMISSIONS;
 
 // Resource errors
-ErrorCode.NOT_FOUND
-ErrorCode.RESOURCE_NOT_FOUND
-ErrorCode.CONFLICT
-ErrorCode.DUPLICATE_RESOURCE
+ErrorCode.NOT_FOUND;
+ErrorCode.RESOURCE_NOT_FOUND;
+ErrorCode.CONFLICT;
+ErrorCode.DUPLICATE_RESOURCE;
 
 // Rate limiting
-ErrorCode.RATE_LIMIT_EXCEEDED
+ErrorCode.RATE_LIMIT_EXCEEDED;
 
 // Server errors
-ErrorCode.INTERNAL_ERROR
-ErrorCode.DATABASE_ERROR
-ErrorCode.EXTERNAL_SERVICE_ERROR
-ErrorCode.SERVICE_UNAVAILABLE
+ErrorCode.INTERNAL_ERROR;
+ErrorCode.DATABASE_ERROR;
+ErrorCode.EXTERNAL_SERVICE_ERROR;
+ErrorCode.SERVICE_UNAVAILABLE;
 
 // Configuration errors
-ErrorCode.CONFIGURATION_ERROR
-ErrorCode.ADAPTER_ERROR
-ErrorCode.INITIALIZATION_ERROR
+ErrorCode.CONFIGURATION_ERROR;
+ErrorCode.ADAPTER_ERROR;
+ErrorCode.INITIALIZATION_ERROR;
 ```
 
 ### Utility Functions

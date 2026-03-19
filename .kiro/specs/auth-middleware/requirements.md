@@ -23,6 +23,7 @@ This spec defines authentication and authorisation as composable Hono middleware
 
 **REQ-AM-001**
 The `@web-loom/api-middleware-auth` package shall export an `AuthUser` interface:
+
 ```typescript
 interface AuthUser {
   id: string;
@@ -45,6 +46,7 @@ The `@web-loom/api-middleware-auth` package shall export a `jwtAuth(options: Jwt
 
 **REQ-AM-011**
 The `JwtAuthOptions` interface shall contain:
+
 - `secret: string | CryptoKey` — the JWT signing secret or key
 - `algorithm?: string` — signing algorithm (default: `'HS256'`)
 - `issuer?: string` — expected `iss` claim for validation
@@ -56,6 +58,7 @@ When the `Authorization: Bearer <token>` header is present and the JWT is valid,
 
 **REQ-AM-013**
 If the `Authorization` header is missing or the token is invalid or expired, the `jwtAuth` middleware shall return HTTP 401 with:
+
 ```json
 { "error": { "code": "UNAUTHORIZED", "message": "Invalid or missing token" } }
 ```
@@ -75,6 +78,7 @@ The `@web-loom/api-middleware-auth` package shall export a `sessionAuth(options:
 
 **REQ-AM-021**
 The `SessionAuthOptions` interface shall contain:
+
 - `lucia: Lucia` — a configured Lucia instance (from the `lucia` package)
 - `cookieName?: string` — session cookie name (default: `'session'`)
 - `getUser?: (luciaUser: User) => AuthUser` — maps Lucia's user type to `AuthUser` (default: identity mapping for `id`, `email`, `role`)
@@ -97,6 +101,7 @@ The `@web-loom/api-middleware-auth` package shall export an `apiKeyAuth(options:
 
 **REQ-AM-031**
 The `ApiKeyAuthOptions` interface shall contain:
+
 - `validate: (key: string) => AuthUser | null | Promise<AuthUser | null>` — consumer-supplied validation function
 - `header?: string` — header name to read the key from (default: `'X-API-Key'`; also accepts `Authorization: Bearer <key>`)
 
@@ -118,6 +123,7 @@ When `requireRole(role)` middleware runs and `c.var.user` is undefined, it shall
 
 **REQ-AM-042**
 When `requireRole(role)` middleware runs and `c.var.user.role` does not equal the required role, it shall return HTTP 403 with:
+
 ```json
 { "error": { "code": "FORBIDDEN", "message": "Insufficient role" } }
 ```

@@ -1,4 +1,9 @@
-import { SamplingDecision, type Sampler, type SamplingResult, type SpanAttributeValue } from './types';
+import {
+  SamplingDecision,
+  type Sampler,
+  type SamplingResult,
+  type SpanAttributeValue,
+} from './types';
 
 /**
  * Always samples every span.
@@ -34,14 +39,18 @@ export class ProbabilitySampler implements Sampler {
     this.threshold = Math.floor(rate * 0xffffffff);
   }
 
-  shouldSample(traceId: string, _spanName?: string, _attributes?: Record<string, SpanAttributeValue>): SamplingResult {
+  shouldSample(
+    traceId: string,
+    _spanName?: string,
+    _attributes?: Record<string, SpanAttributeValue>
+  ): SamplingResult {
     // Use last 8 hex chars of traceId for deterministic hash
     const hash = parseInt(traceId.slice(-8), 16);
-    const decision = hash <= this.threshold ? SamplingDecision.RECORD_AND_SAMPLE : SamplingDecision.DROP;
+    const decision =
+      hash <= this.threshold ? SamplingDecision.RECORD_AND_SAMPLE : SamplingDecision.DROP;
     return { decision };
   }
 }
-
 
 export interface CompositeSamplerOptions {
   /** Base probability for successful requests (0.0 to 1.0). Default: 0.1 */
@@ -69,7 +78,7 @@ export class CompositeSampler implements Sampler {
   shouldSample(
     traceId: string,
     spanName: string,
-    attributes?: Record<string, SpanAttributeValue>,
+    attributes?: Record<string, SpanAttributeValue>
   ): SamplingResult {
     // Always sample errors
     if (attributes?.['error'] === true) {

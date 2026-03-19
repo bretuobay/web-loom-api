@@ -5,12 +5,7 @@
  * to add middleware, routes, models, and extend configuration.
  */
 
-import type {
-  MiddlewareHandler,
-  PluginContext,
-  PluginModel,
-  PluginRoute,
-} from './types';
+import type { MiddlewareHandler, PluginContext, PluginModel, PluginRoute } from './types';
 
 export class PluginContextImpl implements PluginContext {
   private readonly _middleware: MiddlewareHandler[] = [];

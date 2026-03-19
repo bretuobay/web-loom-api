@@ -1,15 +1,10 @@
 import { ConflictError, NotFoundError, ValidationError } from '@web-loom/api-shared';
-import type {
-  ModelDefinition,
-  ModelMetadata,
-  Relationship,
-  FieldDefinition,
-} from './types';
+import type { ModelDefinition, ModelMetadata, Relationship, FieldDefinition } from './types';
 
 /**
  * Central registry for tracking all model definitions in the application.
  * Enables CRUD generation, type generation, and other code generation features.
- * 
+ *
  * The registry is thread-safe and supports:
  * - Model registration and unregistration
  * - Relationship tracking between models
@@ -23,7 +18,7 @@ export class ModelRegistry {
   /**
    * Register a model definition in the registry.
    * Validates the model and prevents duplicate registration.
-   * 
+   *
    * @param model - The model definition to register
    * @throws {ValidationError} If the model definition is invalid
    * @throws {ConflictError} If a model with the same name already exists
@@ -65,7 +60,7 @@ export class ModelRegistry {
 
   /**
    * Unregister a model from the registry.
-   * 
+   *
    * @param modelName - The name of the model to unregister
    * @throws {NotFoundError} If the model doesn't exist
    */
@@ -88,7 +83,7 @@ export class ModelRegistry {
 
   /**
    * Retrieve a model definition by name.
-   * 
+   *
    * @param modelName - The name of the model to retrieve
    * @returns The model definition, or undefined if not found
    */
@@ -98,7 +93,7 @@ export class ModelRegistry {
 
   /**
    * Retrieve all registered model definitions.
-   * 
+   *
    * @returns Array of all model definitions
    */
   getAll(): ModelDefinition[] {
@@ -107,7 +102,7 @@ export class ModelRegistry {
 
   /**
    * Check if a model is registered.
-   * 
+   *
    * @param modelName - The name of the model to check
    * @returns True if the model exists, false otherwise
    */
@@ -117,7 +112,7 @@ export class ModelRegistry {
 
   /**
    * Get all relationships for a specific model.
-   * 
+   *
    * @param modelName - The name of the model
    * @returns Array of relationships, or empty array if model not found
    */
@@ -130,7 +125,7 @@ export class ModelRegistry {
    * Get all model dependencies based on relationships.
    * Returns models that this model depends on (belongsTo relationships).
    * Used for determining initialization order.
-   * 
+   *
    * @param modelName - The name of the model
    * @returns Array of model names this model depends on
    */
@@ -152,7 +147,7 @@ export class ModelRegistry {
 
   /**
    * Get metadata for a specific model.
-   * 
+   *
    * @param modelName - The name of the model
    * @returns Model metadata, or empty object if model not found
    */
@@ -164,7 +159,7 @@ export class ModelRegistry {
   /**
    * Resolve model initialization order based on dependencies.
    * Uses topological sort to determine the correct order.
-   * 
+   *
    * @returns Array of model names in initialization order
    * @throws {ValidationError} If circular dependencies are detected
    */
@@ -181,10 +176,7 @@ export class ModelRegistry {
 
       if (visiting.has(modelName)) {
         const cycle = [...path, modelName].join(' -> ');
-        throw new ValidationError(
-          `Circular dependency detected: ${cycle}`,
-          []
-        );
+        throw new ValidationError(`Circular dependency detected: ${cycle}`, []);
       }
 
       visiting.add(modelName);
@@ -215,7 +207,7 @@ export class ModelRegistry {
   /**
    * Validate a model definition.
    * Checks for required fields and valid configuration.
-   * 
+   *
    * @param model - The model definition to validate
    * @throws {ValidationError} If the model is invalid
    */
@@ -291,10 +283,7 @@ export class ModelRegistry {
     }
 
     if (errors.length > 0) {
-      throw new ValidationError(
-        `Model "${model.name || 'unknown'}" validation failed`,
-        errors
-      );
+      throw new ValidationError(`Model "${model.name || 'unknown'}" validation failed`, errors);
     }
   }
 
@@ -338,7 +327,17 @@ export class ModelRegistry {
     }
 
     // Validate field type
-    const validTypes = ['string', 'number', 'boolean', 'date', 'uuid', 'enum', 'json', 'array', 'decimal'];
+    const validTypes = [
+      'string',
+      'number',
+      'boolean',
+      'date',
+      'uuid',
+      'enum',
+      'json',
+      'array',
+      'decimal',
+    ];
     if (!field.type || !validTypes.includes(field.type)) {
       errors.push({
         path: [...fieldPath, 'type'],

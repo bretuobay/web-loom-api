@@ -65,7 +65,7 @@ const routes = generator.generate(UserModel, {
 });
 
 // Register routes with your API framework adapter
-routes.forEach(route => {
+routes.forEach((route) => {
   apiFramework.registerRoute(route.method, route.path, route.handler);
 });
 ```
@@ -81,11 +81,13 @@ Returns a paginated list of resources with support for filtering, sorting, searc
 **Query Parameters:**
 
 **Pagination:**
+
 - `page` - Page number (default: 1) for page-based pagination
 - `limit` - Items per page (default: 20, max: configurable)
 - `cursor` - Cursor for cursor-based pagination (base64 encoded ID)
 
 **Filtering:**
+
 - `filter[field][operator]=value` - Filter by field with operator
 - Supported operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `like`
 - Examples:
@@ -94,6 +96,7 @@ Returns a paginated list of resources with support for filtering, sorting, searc
   - `?filter[status][in]=active,pending` - Status in list
 
 **Sorting:**
+
 - `sort=field1,-field2` - Sort by fields (- prefix for descending)
 - Examples:
   - `?sort=name` - Sort by name ascending
@@ -101,14 +104,17 @@ Returns a paginated list of resources with support for filtering, sorting, searc
   - `?sort=name,-createdAt` - Sort by name asc, then createdAt desc
 
 **Field Selection:**
+
 - `fields=field1,field2` - Select specific fields to return
 - Example: `?fields=id,name,email` - Only return id, name, and email
 
 **Search:**
+
 - `search=term` - Search across configured searchFields
 - Example: `?search=john` - Search for "john" in name and email fields
 
 **Page-based Response:**
+
 ```json
 {
   "data": [...],
@@ -121,6 +127,7 @@ Returns a paginated list of resources with support for filtering, sorting, searc
 ```
 
 **Cursor-based Response:**
+
 ```json
 {
   "data": [...],
@@ -175,43 +182,43 @@ Deletes a resource.
 interface CRUDOptions {
   /** Base path for the resource (e.g., '/users') */
   basePath: string;
-  
+
   /** Enable soft delete instead of hard delete */
   enableSoftDelete?: boolean;
-  
+
   /** Enable optimistic locking for updates */
   enableOptimisticLocking?: boolean;
-  
+
   /** Fields to exclude from responses */
   excludeFields?: string[];
-  
+
   /** Enable pagination for list endpoint */
   enablePagination?: boolean;
-  
+
   /** Default page size for pagination */
   defaultPageSize?: number;
-  
+
   /** Maximum page size allowed */
   maxPageSize?: number;
-  
+
   /** Enable filtering support */
   enableFiltering?: boolean;
-  
+
   /** Enable sorting support */
   enableSorting?: boolean;
-  
+
   /** Enable field selection support */
   enableFieldSelection?: boolean;
-  
+
   /** Enable search functionality */
   enableSearch?: boolean;
-  
+
   /** Fields to enable search on */
   searchFields?: string[];
-  
+
   /** Enable cursor-based pagination */
   enableCursorPagination?: boolean;
-  
+
   /** Enable relationship loading */
   enableRelationships?: boolean;
 }

@@ -40,6 +40,7 @@ All handlers use these techniques to minimize cold start time:
 4. **Lazy loading** — Non-critical features are initialized on first use, not at startup.
 
 Typical cold start times:
+
 - Vercel Edge: ~5ms (V8 isolate)
 - Cloudflare Workers: ~5ms (V8 isolate)
 - AWS Lambda: ~80ms (Node.js runtime)
@@ -55,6 +56,7 @@ vercel deploy
 ```
 
 **vercel.json:**
+
 ```json
 {
   "functions": {
@@ -66,6 +68,7 @@ vercel deploy
 ```
 
 **Environment variables** (set in Vercel dashboard):
+
 ```
 DATABASE_URL=postgresql://...
 ```
@@ -81,6 +84,7 @@ wrangler deploy
 ```
 
 **wrangler.toml:**
+
 ```toml
 name = "web-loom-api"
 main = "src/cloudflare/index.ts"
@@ -103,6 +107,7 @@ serverless deploy
 ```
 
 **serverless.yml:**
+
 ```yaml
 service: web-loom-api
 provider:
@@ -117,19 +122,19 @@ functions:
   api:
     handler: src/aws/index.handler
     events:
-      - httpApi: "*"
+      - httpApi: '*'
 ```
 
 ## API Endpoints
 
 All platforms serve the same endpoints:
 
-| Method | Path               | Description          |
-|--------|--------------------|----------------------|
-| GET    | `/api/health`      | Health check         |
-| GET    | `/api/items`       | List items (CRUD)    |
-| POST   | `/api/items`       | Create item (CRUD)   |
-| GET    | `/api/items/:id`   | Get item (CRUD)      |
-| PUT    | `/api/items/:id`   | Update item (CRUD)   |
-| DELETE | `/api/items/:id`   | Delete item (CRUD)   |
+| Method | Path                | Description          |
+| ------ | ------------------- | -------------------- |
+| GET    | `/api/health`       | Health check         |
+| GET    | `/api/items`        | List items (CRUD)    |
+| POST   | `/api/items`        | Create item (CRUD)   |
+| GET    | `/api/items/:id`    | Get item (CRUD)      |
+| PUT    | `/api/items/:id`    | Update item (CRUD)   |
+| DELETE | `/api/items/:id`    | Delete item (CRUD)   |
 | GET    | `/api/items/search` | Search items by name |

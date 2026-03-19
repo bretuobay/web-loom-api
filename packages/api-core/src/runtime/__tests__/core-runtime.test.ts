@@ -52,7 +52,7 @@ describe('createApp()', () => {
     const res = await app.handleRequest(new Request('http://localhost/health'));
 
     expect(res.status).toBe(200);
-    const body = await res.json() as { status: string };
+    const body = (await res.json()) as { status: string };
     expect(body.status).toBe('ok');
   });
 
@@ -61,7 +61,7 @@ describe('createApp()', () => {
     const res = await app.handleRequest(new Request('http://localhost/ready'));
 
     expect(res.status).toBe(200);
-    const body = await res.json() as { status: string };
+    const body = (await res.json()) as { status: string };
     expect(body.status).toBe('ready');
   });
 
@@ -91,7 +91,7 @@ describe('createApp()', () => {
 
     const res = await app.handleRequest(new Request('http://localhost/test-db'));
     expect(res.status).toBe(200);
-    const body = await res.json() as { hasDb: boolean };
+    const body = (await res.json()) as { hasDb: boolean };
     expect(body.hasDb).toBe(true);
   });
 

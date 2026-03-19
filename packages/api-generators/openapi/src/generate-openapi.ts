@@ -23,7 +23,7 @@ export interface OpenApiDocument {
 export function generateOpenApiDocument(
   models: AnyModel[],
   routeMetas: RouteMetaEntry[],
-  config: OpenApiConfig,
+  config: OpenApiConfig
 ): OpenApiDocument {
   const schemas: Record<string, SchemaObject> = {};
   const paths: PathsObject = {};

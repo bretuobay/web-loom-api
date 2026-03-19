@@ -4,7 +4,15 @@ import { CloudflareKVStore } from '../kv-store';
 import { CloudflareD1Adapter } from '../d1-adapter';
 import { WebSocketDurableObject } from '../durable-objects';
 import { WorkersAIHelper } from '../workers-ai';
-import type { WebLoomApp, CloudflareEnv, ExecutionContext, KVNamespace, D1Database, D1PreparedStatement, AiBinding } from '../types';
+import type {
+  WebLoomApp,
+  CloudflareEnv,
+  ExecutionContext,
+  KVNamespace,
+  D1Database,
+  D1PreparedStatement,
+  AiBinding,
+} from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -13,10 +21,11 @@ import type { WebLoomApp, CloudflareEnv, ExecutionContext, KVNamespace, D1Databa
 function createMockApp(response?: Response): WebLoomApp {
   return {
     handleRequest: vi.fn().mockResolvedValue(
-      response ?? new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+      response ??
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
     ),
   };
 }
@@ -50,7 +59,6 @@ function createMockKV(store: Map<string, string> = new Map()): KVNamespace {
     }),
   } as unknown as KVNamespace;
 }
-
 
 function createMockD1(): { db: D1Database; data: Map<string, unknown[]> } {
   const data = new Map<string, unknown[]>();
@@ -87,7 +95,7 @@ function createMockD1(): { db: D1Database; data: Map<string, unknown[]> } {
         results: [],
         success: true,
         meta: { duration: 1, changes: 1, last_row_id: 1, served_by: 'mock' },
-      })),
+      }))
     ),
   };
 
@@ -147,7 +155,8 @@ describe('createCloudflareHandler', () => {
     const request = new Request('https://example.com/api/test');
     await handler(request, env, ctx);
 
-    const passedRequest = (app.handleRequest as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request;
+    const passedRequest = (app.handleRequest as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as Request;
     expect(passedRequest.headers.get('x-cf-worker')).toBe('true');
   });
 
@@ -162,7 +171,8 @@ describe('createCloudflareHandler', () => {
     const request = new Request('https://example.com/api/test');
     await handler(request, env, ctx);
 
-    const passedRequest = (app.handleRequest as ReturnType<typeof vi.fn>).mock.calls[0][0] as Request;
+    const passedRequest = (app.handleRequest as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as Request;
     expect(passedRequest.headers.get('x-cf-kv-namespace')).toBe('CACHE');
     expect(passedRequest.headers.get('x-cf-d1-binding')).toBe('DB');
   });
@@ -189,7 +199,6 @@ describe('createCloudflareHandler', () => {
     expect(body.error.message).toBe('boom');
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // resolveKVBinding / resolveD1Binding
@@ -338,7 +347,6 @@ describe('CloudflareD1Adapter', () => {
   });
 });
 
-
 // ---------------------------------------------------------------------------
 // WebSocketDurableObject
 // ---------------------------------------------------------------------------
@@ -396,7 +404,7 @@ describe('WorkersAIHelper', () => {
     expect(result).toEqual({ response: 'Generated text response' });
     expect(ai.run).toHaveBeenCalledWith(
       '@cf/meta/llama-2-7b-chat-int8',
-      expect.objectContaining({ prompt: 'Hello world' }),
+      expect.objectContaining({ prompt: 'Hello world' })
     );
   });
 
@@ -409,34 +417,25 @@ describe('WorkersAIHelper', () => {
         max_tokens: 100,
         temperature: 0.7,
         stream: false,
-      }),
+      })
     );
   });
 
   it('textEmbedding calls embedding model', async () => {
     const result = await helper.textEmbedding('test text');
     expect(result).toEqual({ data: [[0.1, 0.2, 0.3]] });
-    expect(ai.run).toHaveBeenCalledWith(
-      '@cf/baai/bge-base-en-v1.5',
-      { text: ['test text'] },
-    );
+    expect(ai.run).toHaveBeenCalledWith('@cf/baai/bge-base-en-v1.5', { text: ['test text'] });
   });
 
   it('textEmbedding accepts array of strings', async () => {
     await helper.textEmbedding(['text1', 'text2']);
-    expect(ai.run).toHaveBeenCalledWith(
-      '@cf/baai/bge-base-en-v1.5',
-      { text: ['text1', 'text2'] },
-    );
+    expect(ai.run).toHaveBeenCalledWith('@cf/baai/bge-base-en-v1.5', { text: ['text1', 'text2'] });
   });
 
   it('imageClassification calls vision model', async () => {
     const imageData = new ArrayBuffer(8);
     const result = await helper.imageClassification(imageData);
     expect(result).toEqual([{ label: 'cat', score: 0.95 }]);
-    expect(ai.run).toHaveBeenCalledWith(
-      '@cf/microsoft/resnet-50',
-      { image: imageData },
-    );
+    expect(ai.run).toHaveBeenCalledWith('@cf/microsoft/resnet-50', { image: imageData });
   });
 });

@@ -1,9 +1,9 @@
 /**
  * Configuration validation using Zod
- * 
+ *
  * Provides runtime validation of configuration objects with detailed error messages.
  * Validates configuration at startup to catch errors early before the application runs.
- * 
+ *
  * @module config/validation
  */
 
@@ -44,8 +44,16 @@ export interface ValidationResult<T> {
 const databaseConfigSchema = z.object({
   url: z.string().min(1, { message: 'Database URL is required' }),
   driver: z.enum(['neon-serverless', 'libsql', 'pg']),
-  poolSize: z.number().int({ message: 'Pool size must be an integer' }).positive({ message: 'Pool size must be positive' }).optional(),
-  connectionTimeout: z.number().int({ message: 'Connection timeout must be an integer' }).positive({ message: 'Connection timeout must be positive' }).optional(),
+  poolSize: z
+    .number()
+    .int({ message: 'Pool size must be an integer' })
+    .positive({ message: 'Pool size must be positive' })
+    .optional(),
+  connectionTimeout: z
+    .number()
+    .int({ message: 'Connection timeout must be an integer' })
+    .positive({ message: 'Connection timeout must be positive' })
+    .optional(),
   ssl: z.boolean().optional(),
 });
 
@@ -58,14 +66,21 @@ const corsConfigSchema = z.object({
   methods: z.array(z.string()).optional(),
   headers: z.array(z.string()).optional(),
   exposedHeaders: z.array(z.string()).optional(),
-  maxAge: z.number().int({ message: 'Max age must be an integer' }).positive({ message: 'Max age must be positive' }).optional(),
+  maxAge: z
+    .number()
+    .int({ message: 'Max age must be an integer' })
+    .positive({ message: 'Max age must be positive' })
+    .optional(),
 });
 
 /**
  * Schema for rate limit configuration
  */
 const rateLimitConfigSchema = z.object({
-  limit: z.number().int({ message: 'Rate limit must be an integer' }).positive({ message: 'Rate limit must be a positive integer' }),
+  limit: z
+    .number()
+    .int({ message: 'Rate limit must be an integer' })
+    .positive({ message: 'Rate limit must be a positive integer' }),
   window: z.string().regex(/^\d+[smhd]$/, { message: 'Window must be in format: 30s, 1m, 1h, 1d' }),
   keyGenerator: z.function().optional(),
   skipSuccessfulRequests: z.boolean().optional(),
@@ -76,15 +91,22 @@ const rateLimitConfigSchema = z.object({
  * Schema for security headers configuration
  */
 const securityHeadersConfigSchema = z.object({
-  contentSecurityPolicy: z.object({
-    directives: z.record(z.string(), z.array(z.string())),
-    reportUri: z.string().optional(),
-  }).optional(),
-  hsts: z.object({
-    maxAge: z.number().int({ message: 'HSTS max age must be an integer' }).positive({ message: 'HSTS max age must be positive' }),
-    includeSubDomains: z.boolean().optional(),
-    preload: z.boolean().optional(),
-  }).optional(),
+  contentSecurityPolicy: z
+    .object({
+      directives: z.record(z.string(), z.array(z.string())),
+      reportUri: z.string().optional(),
+    })
+    .optional(),
+  hsts: z
+    .object({
+      maxAge: z
+        .number()
+        .int({ message: 'HSTS max age must be an integer' })
+        .positive({ message: 'HSTS max age must be positive' }),
+      includeSubDomains: z.boolean().optional(),
+      preload: z.boolean().optional(),
+    })
+    .optional(),
   frameOptions: z.string().optional(),
   contentTypeOptions: z.literal('nosniff').optional(),
   xssProtection: z.string().optional(),
@@ -97,7 +119,11 @@ const securityHeadersConfigSchema = z.object({
 const securityConfigSchema = z.object({
   cors: corsConfigSchema,
   rateLimit: rateLimitConfigSchema.optional(),
-  requestSizeLimit: z.number().int({ message: 'Request size limit must be an integer' }).positive({ message: 'Request size limit must be positive' }).optional(),
+  requestSizeLimit: z
+    .number()
+    .int({ message: 'Request size limit must be an integer' })
+    .positive({ message: 'Request size limit must be positive' })
+    .optional(),
   securityHeaders: securityHeadersConfigSchema.optional(),
 });
 
@@ -193,20 +219,20 @@ export const webLoomConfigSchema = z.object({
 
 /**
  * Validates a configuration object against the schema
- * 
+ *
  * Performs comprehensive validation of the configuration, checking:
  * - Required fields are present
  * - Field types are correct
  * - Values meet constraints (min, max, format, etc.)
  * - No unknown properties are present
- * 
+ *
  * @param config - Configuration object to validate
  * @returns Validation result with typed data or detailed errors
- * 
+ *
  * @example
  * ```typescript
  * const result = validateConfig(config);
- * 
+ *
  * if (result.success) {
  *   console.log('Configuration is valid:', result.data);
  * } else {
@@ -217,9 +243,7 @@ export const webLoomConfigSchema = z.object({
  * }
  * ```
  */
-export function validateConfig(
-  config: unknown
-): ValidationResult<WebLoomConfig> {
+export function validateConfig(config: unknown): ValidationResult<WebLoomConfig> {
   const result = webLoomConfigSchema.safeParse(config);
 
   if (result.success) {
@@ -244,14 +268,14 @@ export function validateConfig(
 
 /**
  * Validates configuration and throws an error if invalid
- * 
+ *
  * This is a convenience function for startup validation where you want
  * the application to terminate immediately if the configuration is invalid.
- * 
+ *
  * @param config - Configuration object to validate
  * @returns Validated and typed configuration
  * @throws {ConfigurationValidationError} If validation fails
- * 
+ *
  * @example
  * ```typescript
  * try {

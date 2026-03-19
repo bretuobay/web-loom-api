@@ -5,11 +5,13 @@ import type { AuthUser } from './types';
 /** Minimal Lucia interface — use the real `Lucia` type when lucia is installed. */
 export interface LuciaLike {
   validateSession(
-    sessionId: string,
+    sessionId: string
   ): Promise<{ session: { id: string } | null; user: Record<string, unknown> | null }>;
-  createSessionCookie(
-    sessionId: string,
-  ): { name: string; value: string; attributes: Record<string, unknown> };
+  createSessionCookie(sessionId: string): {
+    name: string;
+    value: string;
+    attributes: Record<string, unknown>;
+  };
   createBlankSessionCookie(): { name: string; value: string; attributes: Record<string, unknown> };
 }
 
@@ -52,13 +54,18 @@ export function sessionAuth(options: SessionAuthOptions): MiddlewareHandler {
       deleteCookie(c, blank.name);
       return c.json(
         { error: { code: 'UNAUTHORIZED', message: 'Invalid or expired session' } },
-        401,
+        401
       );
     }
 
     // Refresh session cookie
     const sessionCookie = options.lucia.createSessionCookie(session.id);
-    setCookie(c, sessionCookie.name, sessionCookie.value, sessionCookie.attributes as Parameters<typeof setCookie>[3]);
+    setCookie(
+      c,
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes as Parameters<typeof setCookie>[3]
+    );
 
     c.set('user', getUser(user));
     await next();

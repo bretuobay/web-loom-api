@@ -12,14 +12,14 @@ Deploy your Web Loom API to Vercel Edge Functions for global low-latency respons
 
 ```typescript
 // src/shared/app.ts
-import { createApp, defineConfig } from "@web-loom/api-core";
-import "./schema"; // register models
+import { createApp, defineConfig } from '@web-loom/api-core';
+import './schema'; // register models
 
 const config = defineConfig({
-  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
+  database: { url: process.env.DATABASE_URL!, driver: 'neon-serverless' },
   features: { crud: true },
   openapi: { enabled: true },
-  observability: { logging: { level: "warn", format: "json" } },
+  observability: { logging: { level: 'warn', format: 'json' } },
 });
 
 let appPromise: ReturnType<typeof createApp> | null = null;
@@ -35,15 +35,15 @@ export function getApp() {
 ```typescript
 // api/index.ts
 export const config = {
-  runtime: "edge",
-  regions: ["iad1", "sfo1", "cdg1"],
+  runtime: 'edge',
+  regions: ['iad1', 'sfo1', 'cdg1'],
 };
 
 export default async function handler(request: Request) {
-  const { getApp } = await import("../src/shared/app");
+  const { getApp } = await import('../src/shared/app');
   const app = await getApp();
   return app.handleRequest(request);
-};
+}
 ```
 
 ## Step 3: Configure Vercel
@@ -59,9 +59,7 @@ Create `vercel.json`:
       "runtime": "edge"
     }
   },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
 }
 ```
 
@@ -94,11 +92,11 @@ vercel --prod
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `RESEND_API_KEY` | If email enabled | Resend API key |
-| `FRONTEND_URL` | If CORS restricted | Allowed origin |
+| Variable         | Required           | Description                  |
+| ---------------- | ------------------ | ---------------------------- |
+| `DATABASE_URL`   | Yes                | PostgreSQL connection string |
+| `RESEND_API_KEY` | If email enabled   | Resend API key               |
+| `FRONTEND_URL`   | If CORS restricted | Allowed origin               |
 
 ## Troubleshooting
 

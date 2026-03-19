@@ -27,14 +27,14 @@ The framework is at **early alpha / architectural prototype stage**. The vision 
 
 No single framework is a direct equivalent, but the combination of these covers most of the stated goals:
 
-| Comparable Framework | Overlap | Key Difference |
-|---|---|---|
-| **KeystoneJS 6** | Schema-driven model definition, auto CRUD, adapter-based DB/auth | GraphQL-first, heavy CMS features, not serverless-optimized |
-| **Encore.ts** | Serverless-native TypeScript APIs, auto-generated clients, infra-as-code | Infrastructure provisioning scope, not adapter-swappable |
-| **RedwoodJS** | Full-stack meta-framework, model-driven (via Prisma), convention over config, CLI generation | Full-stack opinionated (React+GraphQL), single-platform deploy |
-| **AdonisJS** | Convention over config, file-based routing, ORM integration, auth built-in | Node.js only, not serverless/edge optimized, not adapter-swappable |
-| **Hono + Drizzle (manual)** | Same default stack | No CRUD generation, no adapter abstraction, no CLI, no OpenAPI generation |
-| **tRPC** | End-to-end type safety, client generation | RPC not REST, no model-driven DB schema, tightly coupled to specific tools |
+| Comparable Framework        | Overlap                                                                                      | Key Difference                                                             |
+| --------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **KeystoneJS 6**            | Schema-driven model definition, auto CRUD, adapter-based DB/auth                             | GraphQL-first, heavy CMS features, not serverless-optimized                |
+| **Encore.ts**               | Serverless-native TypeScript APIs, auto-generated clients, infra-as-code                     | Infrastructure provisioning scope, not adapter-swappable                   |
+| **RedwoodJS**               | Full-stack meta-framework, model-driven (via Prisma), convention over config, CLI generation | Full-stack opinionated (React+GraphQL), single-platform deploy             |
+| **AdonisJS**                | Convention over config, file-based routing, ORM integration, auth built-in                   | Node.js only, not serverless/edge optimized, not adapter-swappable         |
+| **Hono + Drizzle (manual)** | Same default stack                                                                           | No CRUD generation, no adapter abstraction, no CLI, no OpenAPI generation  |
+| **tRPC**                    | End-to-end type safety, client generation                                                    | RPC not REST, no model-driven DB schema, tightly coupled to specific tools |
 
 **Verdict:** The closest competitor is **KeystoneJS** for the model-driven CRUD angle and **Encore.ts** for the serverless-native angle. Neither does adapter-swappable REST specifically. The niche is real but narrow.
 
@@ -100,13 +100,13 @@ Global middleware (CORS, auth, rate limiting) cannot be applied to the HTTP serv
 
 The documented API surface and the actual TypeScript interfaces diverge in several places. This means the docs describe a different system than what the code implements.
 
-| Doc claims | Actual interface |
-|---|---|
-| `relationship.model: string` | `relationship.target: string` |
-| `DatabaseFieldConfig.unique`, `.index`, `.select`, `.references` | Only `columnName`, `columnType`, `indexed`, `primaryKey` exist |
-| `ModelOptions.crud`, `.permissions` | Only `timestamps`, `softDelete`, `optimisticLocking` |
-| `ModelDefinition.metadata` | Not in the interface |
-| `QueryBuilder.where("role", "=", "admin")` (operator-based) | `QueryBuilder.where(conditions: Partial<T>)` (object equality only) |
+| Doc claims                                                       | Actual interface                                                    |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `relationship.model: string`                                     | `relationship.target: string`                                       |
+| `DatabaseFieldConfig.unique`, `.index`, `.select`, `.references` | Only `columnName`, `columnType`, `indexed`, `primaryKey` exist      |
+| `ModelOptions.crud`, `.permissions`                              | Only `timestamps`, `softDelete`, `optimisticLocking`                |
+| `ModelDefinition.metadata`                                       | Not in the interface                                                |
+| `QueryBuilder.where("role", "=", "admin")` (operator-based)      | `QueryBuilder.where(conditions: Partial<T>)` (object equality only) |
 
 **Impact:** Any code written against the documented API will not type-check against the actual interfaces.
 
@@ -126,6 +126,7 @@ interface QueryBuilder<T> {
 The `where` signature accepts a partial record — only equality conditions are representable. Queries like `.where("dueDate", "<", new Date())` or `.where("age[gte]", 18)` shown in the docs and routing guide cannot be expressed through this interface.
 
 **Required work:** An operator-based overload or a predicate function signature, e.g.:
+
 ```typescript
 where(field: keyof T, op: '=' | '!=' | '<' | '<=' | '>' | '>=' | 'like' | 'in', value: unknown): QueryBuilder<T>;
 ```
@@ -176,8 +177,8 @@ This pattern is impossible with the current `Transaction` interface.
 The docs show a model schema composition API used extensively:
 
 ```typescript
-User.schema.pick("name", "email", "password")
-User.schema.pick("name", "email").partial()
+User.schema.pick('name', 'email', 'password');
+User.schema.pick('name', 'email').partial();
 ```
 
 There is no `schema` property on the `ModelDefinition` interface (or any other Model type). This pattern can't be implemented as shown because the field names are strings (not type-safe), and the relationship between a `ModelDefinition` and a Zod schema is not defined.
@@ -190,12 +191,14 @@ There is no `schema` property on the `ModelDefinition` interface (or any other M
 
 **Issue 1 — `auth: "owner"` on routes:**
 The docs show:
+
 ```typescript
 crud: {
   update: { auth: "owner" },
   delete: { auth: "admin" },
 }
 ```
+
 There is no specification for how the framework knows which field is the ownership field (e.g., `userId`), or how it queries the record to check ownership before proceeding.
 
 **Issue 2 — OAuth:**
@@ -237,7 +240,7 @@ No specification exists for this translation, and the `FieldDefinition` in the i
 **File:** `docs/api-reference/middleware.md:233`
 
 ```typescript
-ctx.request.headers.set("X-Response-Time", `${duration}ms`);
+ctx.request.headers.set('X-Response-Time', `${duration}ms`);
 ```
 
 `Request.headers` is a read-only `Headers` object in the Fetch API (Web Standards). This will throw at runtime. Response headers should be set on the `Response` object, or the framework needs a mutable response builder in `ctx`.
@@ -257,6 +260,7 @@ No endpoint, format, or interface for this is specified or implemented. The `Mod
 The docs state: _"If two files map to the same URL path and HTTP method, the Core Runtime terminates with a conflict error at startup."_
 
 `RouteDiscovery` exists but the conflict detection logic is in `RouteRegistry`. There's no specification or test coverage for:
+
 - Same path, different files (one imports the other)
 - Index files (`index.ts` at a directory level) and their precedence
 - Interaction between auto-generated CRUD routes and hand-written routes for the same path
@@ -277,48 +281,39 @@ The PRD flags WebSocket support and plugin-based job queues (BullMQ, Inngest) as
 
 ## 4. Summary Table
 
-| # | Gap | Severity | Blocking? |
-|---|---|---|---|
-| 3.1 | Core runtime uses mocks, not real adapters | Critical | Yes — nothing runs |
-| 3.2 | CRUD generation is a stub | Critical | Yes — headline feature missing |
-| 3.3 | Model discovery is a no-op | Critical | Yes — convention-over-config broken |
-| 3.4 | Middleware registration deferred | Critical | Yes — auth/CORS/rate-limit can't be applied |
-| 3.5 | Docs/code schema mismatch | Significant | Yes — can't write valid code from docs |
-| 3.6 | QueryBuilder only supports equality filters | Significant | Partially — can't express range/LIKE queries |
-| 3.7 | Transaction missing ORM methods | Significant | Yes — no type-safe transactions |
-| 3.8 | Lazy adapter loading is synchronous | Significant | No — but will cause silent failures |
-| 3.9 | Cache/jobs/webhooks adapters unspecified | Significant | No — context properties are dead code |
-| 3.10 | `defineModel` has no `.schema` helper | Significant | Yes — validation composition pattern broken |
-| 3.11 | Auth "owner" and OAuth underspecified | Significant | Partially |
-| 3.12 | `switch` codemods underspecified | Significant | No — DX promise misleading |
-| 3.13 | OpenAPI generation from FieldDefinition unspecified | Significant | No — generator can't be built reliably |
-| 3.14 | `Request.headers.set()` incorrect in Fetch API | Minor | No — doc bug |
-| 3.15 | AI metadata exposure not specified | Minor | No — future feature |
-| 3.16 | Route conflict resolution untested at scale | Minor | No |
-| 3.17 | Multi-tenancy not addressed | Minor | No |
-| 3.18 | Jobs/real-time marked open but referenced in API | Minor | No |
+| #    | Gap                                                 | Severity    | Blocking?                                    |
+| ---- | --------------------------------------------------- | ----------- | -------------------------------------------- |
+| 3.1  | Core runtime uses mocks, not real adapters          | Critical    | Yes — nothing runs                           |
+| 3.2  | CRUD generation is a stub                           | Critical    | Yes — headline feature missing               |
+| 3.3  | Model discovery is a no-op                          | Critical    | Yes — convention-over-config broken          |
+| 3.4  | Middleware registration deferred                    | Critical    | Yes — auth/CORS/rate-limit can't be applied  |
+| 3.5  | Docs/code schema mismatch                           | Significant | Yes — can't write valid code from docs       |
+| 3.6  | QueryBuilder only supports equality filters         | Significant | Partially — can't express range/LIKE queries |
+| 3.7  | Transaction missing ORM methods                     | Significant | Yes — no type-safe transactions              |
+| 3.8  | Lazy adapter loading is synchronous                 | Significant | No — but will cause silent failures          |
+| 3.9  | Cache/jobs/webhooks adapters unspecified            | Significant | No — context properties are dead code        |
+| 3.10 | `defineModel` has no `.schema` helper               | Significant | Yes — validation composition pattern broken  |
+| 3.11 | Auth "owner" and OAuth underspecified               | Significant | Partially                                    |
+| 3.12 | `switch` codemods underspecified                    | Significant | No — DX promise misleading                   |
+| 3.13 | OpenAPI generation from FieldDefinition unspecified | Significant | No — generator can't be built reliably       |
+| 3.14 | `Request.headers.set()` incorrect in Fetch API      | Minor       | No — doc bug                                 |
+| 3.15 | AI metadata exposure not specified                  | Minor       | No — future feature                          |
+| 3.16 | Route conflict resolution untested at scale         | Minor       | No                                           |
+| 3.17 | Multi-tenancy not addressed                         | Minor       | No                                           |
+| 3.18 | Jobs/real-time marked open but referenced in API    | Minor       | No                                           |
 
 ---
 
 ## 5. Recommended Priority Order
 
 **Immediate (unblocks a runnable prototype):**
+
 1. Wire real adapter loading in `CoreRuntime.initializeAdapter()` — stop using mocks
 2. Implement `QueryBuilder` operator-based `where` overload
 3. Add ORM methods to `Transaction` interface
 4. Reconcile docs vs code: field names (`model` vs `target`), `DatabaseFieldConfig`, `ModelOptions`
 5. Implement `Model.schema.pick()` / `.partial()` — tie to the underlying Zod schema
 
-**Next (completes core feature set):**
-6. Implement CRUD generation from model registry
-7. Implement model file discovery in `discoverModels()`
-8. Wire middleware registration to the API adapter
-9. Specify and implement cache/jobs adapter interfaces or remove from `RequestContext`
-10. Fix `ctx.request.headers.set()` to use a mutable response context
+**Next (completes core feature set):** 6. Implement CRUD generation from model registry 7. Implement model file discovery in `discoverModels()` 8. Wire middleware registration to the API adapter 9. Specify and implement cache/jobs adapter interfaces or remove from `RequestContext` 10. Fix `ctx.request.headers.set()` to use a mutable response context
 
-**Later (fills product gaps):**
-11. Specify "owner" auth pattern and implement row-level ownership check
-12. Design `webloom-api switch` codemod contracts
-13. Specify AI metadata endpoint format
-14. Address multi-tenancy in model options or middleware
-15. Resolve jobs/WebSocket scope ambiguity
+**Later (fills product gaps):** 11. Specify "owner" auth pattern and implement row-level ownership check 12. Design `webloom-api switch` codemod contracts 13. Specify AI metadata endpoint format 14. Address multi-tenancy in model options or middleware 15. Resolve jobs/WebSocket scope ambiguity

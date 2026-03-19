@@ -1,6 +1,6 @@
 /**
  * Init Command
- * 
+ *
  * Initializes a new Web Loom API project with interactive prompts.
  * Creates project structure, configuration files, and installs dependencies.
  */
@@ -126,9 +126,7 @@ async function checkDirectory(directory: string): Promise<void> {
     if (stats.isDirectory()) {
       const files = await fs.readdir(directory);
       if (files.length > 0) {
-        throw new CLIError(
-          `Directory ${directory} already exists and is not empty`
-        );
+        throw new CLIError(`Directory ${directory} already exists and is not empty`);
       }
     }
   } catch (err: unknown) {
@@ -148,10 +146,9 @@ async function createProjectFromTemplate(config: ProjectConfig): Promise<void> {
   await fs.mkdir(directory, { recursive: true });
 
   // Prepare template variables
-  const installCmd = packageManager === 'npm' ? 'npm install' : 
-                     packageManager === 'yarn' ? 'yarn' : 'pnpm install';
-  const runCmd = packageManager === 'npm' ? 'npm run' :
-                 packageManager === 'yarn' ? 'yarn' : 'pnpm';
+  const installCmd =
+    packageManager === 'npm' ? 'npm install' : packageManager === 'yarn' ? 'yarn' : 'pnpm install';
+  const runCmd = packageManager === 'npm' ? 'npm run' : packageManager === 'yarn' ? 'yarn' : 'pnpm';
 
   const variables = {
     PROJECT_NAME: name,
@@ -174,7 +171,7 @@ async function installDependencies(config: ProjectConfig): Promise<void> {
 
   await withSpinner('Installing dependencies', async () => {
     const { spawn } = await import('child_process');
-    
+
     return new Promise<void>((resolve, reject) => {
       const child = spawn(packageManager, ['install'], {
         cwd: directory,

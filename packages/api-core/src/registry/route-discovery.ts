@@ -6,22 +6,22 @@ import type { RouteDefinition } from './route-types';
 
 /**
  * Route Discovery
- * 
+ *
  * Discovers and registers routes from the file system using file-based routing conventions.
  * Scans the routes directory recursively and maps file paths to URL paths.
- * 
+ *
  * **File-Based Routing Conventions:**
  * - `index.ts` → `/`
  * - `users.ts` → `/users`
  * - `users/[id].ts` → `/users/:id` (dynamic segment)
  * - `[...path].ts` → `/*` (catch-all route)
  * - Nested folders create nested paths: `users/posts.ts` → `/users/posts`
- * 
+ *
  * **Supported HTTP Methods:**
  * Route files export functions named after HTTP methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD
- * 
+ *
  * **Requirements:** 6.1, 6.2, 6.3, 6.4, 1.3
- * 
+ *
  * @example
  * ```typescript
  * const discovery = new RouteDiscovery(registry);
@@ -37,10 +37,10 @@ export class RouteDiscovery {
 
   /**
    * Discover and register all routes from a directory
-   * 
+   *
    * @param routesDir - Path to the routes directory
    * @returns Promise that resolves when all routes are discovered and registered
-   * 
+   *
    * @example
    * ```typescript
    * await discovery.discover('./src/routes');
@@ -48,7 +48,7 @@ export class RouteDiscovery {
    */
   async discover(routesDir: string): Promise<void> {
     const absolutePath = path.resolve(routesDir);
-    
+
     // Check if directory exists
     if (!fs.existsSync(absolutePath)) {
       throw new Error(`Routes directory not found: ${routesDir}`);
@@ -60,7 +60,7 @@ export class RouteDiscovery {
 
   /**
    * Scan a directory recursively for route files
-   * 
+   *
    * @param dir - Current directory to scan
    * @param baseDir - Base routes directory for path calculation
    */
@@ -82,7 +82,7 @@ export class RouteDiscovery {
 
   /**
    * Check if a file is a valid route file
-   * 
+   *
    * @param filename - File name to check
    * @returns True if file is a route file (.ts or .js, not .test or .spec)
    */
@@ -107,7 +107,7 @@ export class RouteDiscovery {
 
   /**
    * Process a route file and register its handlers
-   * 
+   *
    * @param filePath - Absolute path to the route file
    * @param baseDir - Base routes directory for path calculation
    */
@@ -130,13 +130,13 @@ export class RouteDiscovery {
 
   /**
    * Convert a file path to a URL path
-   * 
+   *
    * Applies file-based routing conventions:
    * - index.ts → /
    * - users.ts → /users
    * - users/[id].ts → /users/:id
    * - [...path].ts → /*
-   * 
+   *
    * @param filePath - Absolute file path
    * @param baseDir - Base routes directory
    * @returns URL path
@@ -182,7 +182,7 @@ export class RouteDiscovery {
 
   /**
    * Import a route module dynamically
-   * 
+   *
    * @param filePath - Absolute path to the route file
    * @returns Imported module
    */
@@ -190,25 +190,25 @@ export class RouteDiscovery {
     // For Windows compatibility, convert backslashes to forward slashes
     // and ensure we have a proper file:// URL
     const normalizedPath = filePath.replace(/\\/g, '/');
-    
+
     // On Windows, we need file:///C:/... format
     // On Unix, we need file:///path/to/file format
-    const fileUrl = normalizedPath.startsWith('/') 
+    const fileUrl = normalizedPath.startsWith('/')
       ? `file://${normalizedPath}`
       : `file:///${normalizedPath}`;
-    
+
     // Dynamic import
     const module = await import(fileUrl);
-    
+
     return module;
   }
 
   /**
    * Register route handlers from a module
-   * 
+   *
    * Looks for exported functions named after HTTP methods (GET, POST, etc.)
    * and registers them with the route registry.
-   * 
+   *
    * @param module - Imported route module
    * @param urlPath - URL path for the route
    */
@@ -241,7 +241,7 @@ export class RouteDiscovery {
 
   /**
    * Get statistics about discovered routes
-   * 
+   *
    * @returns Object with discovery statistics
    */
   getStats(): { totalRoutes: number; routesByMethod: Record<HTTPMethod, number> } {

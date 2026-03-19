@@ -1,6 +1,6 @@
 /**
  * Error Handling Module
- * 
+ *
  * Provides centralized error handling, error classification, and database error mapping.
  */
 
@@ -23,17 +23,9 @@ export {
   HTTPStatus,
 } from './error-handler';
 
-export type {
-  Environment,
-  ErrorHandlerConfig,
-  ErrorContext,
-  ErrorResponse,
-} from './error-handler';
+export type { Environment, ErrorHandlerConfig, ErrorContext, ErrorResponse } from './error-handler';
 
 export { ConfigurationError } from './configuration-error';
 export { DuplicateModelError } from './duplicate-model-error';
 
-export {
-  mapDatabaseError,
-  isDatabaseError,
-} from './database-error-mapper';
+export { mapDatabaseError, isDatabaseError } from './database-error-mapper';

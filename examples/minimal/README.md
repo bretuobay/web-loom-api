@@ -78,11 +78,11 @@ curl -X DELETE http://localhost:3000/api/users/1 \
 
 ## API Endpoints
 
-| Method | Path             | Auth     | Description       |
-|--------|------------------|----------|-------------------|
-| GET    | `/api/users`     | Required | List all users    |
-| POST   | `/api/users`     | None     | Create a user     |
-| GET    | `/api/users/:id` | None     | Get user by ID    |
-| PUT    | `/api/users/:id` | Required | Update a user     |
-| DELETE | `/api/users/:id` | Required | Delete a user     |
-| POST   | `/api/auth/login`| None     | Log in            |
+| Method | Path              | Auth     | Description    |
+| ------ | ----------------- | -------- | -------------- |
+| GET    | `/api/users`      | Required | List all users |
+| POST   | `/api/users`      | None     | Create a user  |
+| GET    | `/api/users/:id`  | None     | Get user by ID |
+| PUT    | `/api/users/:id`  | Required | Update a user  |
+| DELETE | `/api/users/:id`  | Required | Delete a user  |
+| POST   | `/api/auth/login` | None     | Log in         |

@@ -12,7 +12,10 @@ describe('WebhookRegistry', () => {
   });
 
   it('registers a webhook and returns it with an id', async () => {
-    const wh = await registry.register({ url: 'https://example.com/hook', events: ['order.created'] });
+    const wh = await registry.register({
+      url: 'https://example.com/hook',
+      events: ['order.created'],
+    });
     expect(wh.id).toBeTruthy();
     expect(wh.url).toBe('https://example.com/hook');
     expect(wh.events).toEqual(['order.created']);
@@ -22,7 +25,11 @@ describe('WebhookRegistry', () => {
   });
 
   it('uses a provided secret', async () => {
-    const wh = await registry.register({ url: 'https://example.com/hook', events: ['a'], secret: 'my-secret' });
+    const wh = await registry.register({
+      url: 'https://example.com/hook',
+      events: ['a'],
+      secret: 'my-secret',
+    });
     expect(wh.secret).toBe('my-secret');
   });
 

@@ -51,7 +51,6 @@ export class Tracer implements TracerInterface {
     return span;
   }
 
-
   startSpan<T>(name: string, fn: (span: Span) => T): T {
     const span = this.createSpan(name);
     const previousSpan = this.activeSpan;

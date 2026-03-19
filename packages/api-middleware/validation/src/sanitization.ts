@@ -126,7 +126,7 @@ export function isPathTraversal(path: string): boolean {
  * @returns Middleware function
  */
 export function requestSizeLimit(
-  maxBytes: number = 1_048_576,
+  maxBytes: number = 1_048_576
 ): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
   return async (ctx: RequestContext, next: NextFunction): Promise<Response> => {
     const contentLength = ctx.request.headers.get('Content-Length');
@@ -145,7 +145,7 @@ export function requestSizeLimit(
           {
             status: 413,
             headers: { 'Content-Type': 'application/json' },
-          },
+          }
         );
       }
     }

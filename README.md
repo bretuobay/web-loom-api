@@ -20,48 +20,48 @@ npm install @web-loom/api-core drizzle-orm
 
 ```typescript
 // webloom.config.ts
-import { defineConfig } from "@web-loom/api-core";
+import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: "neon-serverless", // or "libsql" | "pg"
+    driver: 'neon-serverless', // or "libsql" | "pg"
   },
-  routes: { dir: "./src/routes" },
-  openapi: { enabled: true, title: "My API", version: "1.0.0" },
+  routes: { dir: './src/routes' },
+  openapi: { enabled: true, title: 'My API', version: '1.0.0' },
 });
 ```
 
 ```typescript
 // src/schema.ts — your Drizzle table is the single source of truth
-import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
-import { defineModel } from "@web-loom/api-core";
+import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import { defineModel } from '@web-loom/api-core';
 
-export const usersTable = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow(),
+export const usersTable = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // Registers the model; auto-generates 6 CRUD routes at /users
 export const User = defineModel(usersTable, {
-  name: "User",
+  name: 'User',
   crud: true,
 });
 ```
 
 ```typescript
 // src/routes/users.ts — hand-written routes alongside generated CRUD
-import { defineRoutes, validate } from "@web-loom/api-core";
-import { z } from "zod";
-import { usersTable } from "../schema";
+import { defineRoutes, validate } from '@web-loom/api-core';
+import { z } from 'zod';
+import { usersTable } from '../schema';
 
 const app = defineRoutes();
 
 // GET /users/search?q=...
-app.get("/search", async (c) => {
-  const q = c.req.query("q") ?? "";
+app.get('/search', async (c) => {
+  const q = c.req.query('q') ?? '';
   const users = await c.var.db
     .select()
     .from(usersTable)
@@ -74,9 +74,9 @@ export default app;
 
 ```typescript
 // src/index.ts
-import { createApp } from "@web-loom/api-core";
-import config from "../webloom.config";
-import "./src/schema"; // import models so they register
+import { createApp } from '@web-loom/api-core';
+import config from '../webloom.config';
+import './src/schema'; // import models so they register
 
 const app = await createApp(config);
 await app.start(3000);
@@ -86,32 +86,32 @@ await app.start(3000);
 
 ### Core
 
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-core` | Core runtime, model registry, route discovery, configuration |
-| `@web-loom/api-shared` | Shared types and utilities |
-| `@web-loom/api-cli` | CLI for code generation and scaffolding (`webloom` command) |
+| Package                | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| `@web-loom/api-core`   | Core runtime, model registry, route discovery, configuration |
+| `@web-loom/api-shared` | Shared types and utilities                                   |
+| `@web-loom/api-cli`    | CLI for code generation and scaffolding (`webloom` command)  |
 
 ### Generators
 
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-generator-crud` | Automatic CRUD route generation from model definitions |
-| `@web-loom/api-generator-openapi` | OpenAPI 3.1 document generation + Swagger/Scalar UI |
+| Package                           | Description                                            |
+| --------------------------------- | ------------------------------------------------------ |
+| `@web-loom/api-generator-crud`    | Automatic CRUD route generation from model definitions |
+| `@web-loom/api-generator-openapi` | OpenAPI 3.1 document generation + Swagger/Scalar UI    |
 
 ### Middleware
 
-| Package | Description |
-|---------|-------------|
+| Package                         | Description                                                  |
+| ------------------------------- | ------------------------------------------------------------ |
 | `@web-loom/api-middleware-auth` | JWT, session, and API key auth; RBAC guards; CSRF protection |
 
 ### Deployment
 
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-deployment-vercel` | Vercel Edge/Serverless handler |
-| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers handler |
-| `@web-loom/api-deployment-aws` | AWS Lambda handler |
+| Package                               | Description                    |
+| ------------------------------------- | ------------------------------ |
+| `@web-loom/api-deployment-vercel`     | Vercel Edge/Serverless handler |
+| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers handler     |
+| `@web-loom/api-deployment-aws`        | AWS Lambda handler             |
 
 ## Deploy Anywhere
 
@@ -128,7 +128,7 @@ Or use the deployment packages which set up the entry point for you:
 
 ```typescript
 // Cloudflare Workers (packages/api-deployment-cloudflare)
-import { app } from "./app";
+import { app } from './app';
 export default { fetch: app.handleRequest.bind(app) };
 ```
 
@@ -172,6 +172,7 @@ app.post(
 ```
 
 Live endpoints (when `openapi.enabled: true`):
+
 - `GET /openapi.json` — OpenAPI 3.1 spec
 - `GET /openapi.yaml` — YAML version
 - `GET /docs` — Swagger UI or Scalar

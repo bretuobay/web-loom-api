@@ -10,17 +10,17 @@
  * - Background jobs
  * - Webhooks
  */
-import { createApp } from "@web-loom/api-core";
-import config from "./config";
+import { createApp } from '@web-loom/api-core';
+import config from './config';
 
 async function main() {
   const app = await createApp(config);
 
   // Register webhook subscribers (in production, these come from a database)
   app.webhooks.subscribe({
-    url: "https://hooks.example.com/web-loom",
+    url: 'https://hooks.example.com/web-loom',
     secret: process.env.WEBHOOK_SECRET!,
-    events: ["post.created"],
+    events: ['post.created'],
   });
 
   await app.start();
@@ -31,6 +31,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Failed to start:", err);
+  console.error('Failed to start:', err);
   process.exit(1);
 });

@@ -14,7 +14,10 @@ describe('createGenerateClientCommand', () => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'webloom-client-'));
     fs.mkdirSync(path.join(tempDir, 'src', 'routes', 'users'), { recursive: true });
     fs.writeFileSync(path.join(tempDir, 'src', 'routes', 'index.ts'), 'export const GET = true;');
-    fs.writeFileSync(path.join(tempDir, 'src', 'routes', 'users', '[id].ts'), 'export const GET = true;');
+    fs.writeFileSync(
+      path.join(tempDir, 'src', 'routes', 'users', '[id].ts'),
+      'export const GET = true;'
+    );
     process.chdir(tempDir);
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -56,12 +59,7 @@ describe('createGenerateClientCommand', () => {
   it('generates optional files when hooks and errors are enabled', async () => {
     const command = createGenerateClientCommand();
 
-    await command.parseAsync([
-      'node',
-      'webloom',
-      '--output',
-      'generated/with-hooks',
-    ]);
+    await command.parseAsync(['node', 'webloom', '--output', 'generated/with-hooks']);
 
     const outputDir = path.join(tempDir, 'generated', 'with-hooks');
     expect(fs.existsSync(path.join(outputDir, 'errors.ts'))).toBe(true);

@@ -96,7 +96,7 @@ export function generateDockerfile(options: DockerfileOptions = {}): string {
     lines.push(
       ``,
       `HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\`,
-      `  CMD wget --no-verbose --tries=1 --spider http://localhost:${port}${healthCheckPath} || exit 1`,
+      `  CMD wget --no-verbose --tries=1 --spider http://localhost:${port}${healthCheckPath} || exit 1`
     );
   }
 

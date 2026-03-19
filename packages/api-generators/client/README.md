@@ -132,10 +132,7 @@ client.addResponseInterceptor(async (response) => {
 const controller = new AbortController();
 
 // Make cancellable request
-const promise = client.getUsers(
-  { page: 1 },
-  { signal: controller.signal }
-);
+const promise = client.getUsers({ page: 1 }, { signal: controller.signal });
 
 // Cancel the request
 controller.abort();
@@ -159,12 +156,13 @@ console.log(user.createdAt.toLocaleDateString()); // Works!
 
 // Works with nested objects and arrays
 const posts = await client.getPosts();
-posts.data.forEach(post => {
+posts.data.forEach((post) => {
   console.log(post.createdAt.getFullYear()); // Date methods work
 });
 ```
 
 The serialization/deserialization handles:
+
 - Date objects ↔ ISO 8601 strings
 - Nested objects and arrays
 - Preserves null and undefined values
@@ -242,6 +240,7 @@ function CreateUserForm() {
 ```
 
 Query hooks support:
+
 - Automatic fetching on mount
 - Loading and error states
 - Manual refetch
@@ -250,6 +249,7 @@ Query hooks support:
 - Request cancellation on unmount
 
 Mutation hooks support:
+
 - Loading and error states
 - Success/error callbacks
 - Manual trigger
@@ -259,30 +259,32 @@ Mutation hooks support:
 
 ### ClientGeneratorOptions
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `className` | `string` | `'APIClient'` | Name of the generated client class |
-| `baseUrl` | `string` | `''` | Default base URL for API requests |
-| `includeFetch` | `boolean` | `true` | Include fetch implementation |
-| `generateErrors` | `boolean` | `true` | Generate custom error classes |
-| `includeInterceptors` | `boolean` | `true` | Add request/response interceptors |
-| `includeRetry` | `boolean` | `true` | Add automatic retry logic |
-| `includeCancellation` | `boolean` | `true` | Add request cancellation support |
-| `includeJSDoc` | `boolean` | `true` | Include JSDoc comments |
-| `generateReactHooks` | `boolean` | `false` | Generate React hooks (useQuery, useMutation) |
-| `exportFormat` | `'esm' \| 'cjs' \| 'both'` | `'esm'` | Export format |
+| Option                | Type                       | Default       | Description                                  |
+| --------------------- | -------------------------- | ------------- | -------------------------------------------- |
+| `className`           | `string`                   | `'APIClient'` | Name of the generated client class           |
+| `baseUrl`             | `string`                   | `''`          | Default base URL for API requests            |
+| `includeFetch`        | `boolean`                  | `true`        | Include fetch implementation                 |
+| `generateErrors`      | `boolean`                  | `true`        | Generate custom error classes                |
+| `includeInterceptors` | `boolean`                  | `true`        | Add request/response interceptors            |
+| `includeRetry`        | `boolean`                  | `true`        | Add automatic retry logic                    |
+| `includeCancellation` | `boolean`                  | `true`        | Add request cancellation support             |
+| `includeJSDoc`        | `boolean`                  | `true`        | Include JSDoc comments                       |
+| `generateReactHooks`  | `boolean`                  | `false`       | Generate React hooks (useQuery, useMutation) |
+| `exportFormat`        | `'esm' \| 'cjs' \| 'both'` | `'esm'`       | Export format                                |
 
 ## Generated Files
 
 The generator creates the following files:
 
 ### types.ts
+
 - TypeScript interfaces for all models
 - Request/response type definitions
 - Pagination types
 - Error response types
 
 ### client.ts
+
 - Main API client class
 - Type-safe methods for all endpoints
 - Authentication management
@@ -290,6 +292,7 @@ The generator creates the following files:
 - Retry logic
 
 ### errors.ts
+
 - Custom error classes
 - `APIError` - Base error class
 - `ValidationError` - 400 errors
@@ -297,11 +300,13 @@ The generator creates the following files:
 - `NotFoundError` - 404 errors
 
 ### utils.ts
+
 - Utility functions
 - Query string builder
 - Helper methods
 
 ### hooks.ts (optional)
+
 - React hooks for queries and mutations
 - `useQuery` hooks for GET endpoints
 - `useMutation` hooks for POST/PUT/PATCH/DELETE
@@ -309,6 +314,7 @@ The generator creates the following files:
 - Auto-fetch and manual trigger support
 
 ### index.ts
+
 - Exports all generated code
 
 ## Error Handling
@@ -351,14 +357,14 @@ const user: User = await client.getUserById('id');
 // TypeScript validates request bodies
 await client.createUsers({
   email: 'test@example.com', // ✓ Valid
-  name: 'Test User',         // ✓ Valid
-  invalid: 'field',          // ✗ TypeScript error
+  name: 'Test User', // ✓ Valid
+  invalid: 'field', // ✗ TypeScript error
 });
 
 // TypeScript validates query parameters
 await client.getUsers({
-  page: 1,      // ✓ Valid
-  limit: 20,    // ✓ Valid
+  page: 1, // ✓ Valid
+  limit: 20, // ✓ Valid
   invalid: 123, // ✗ TypeScript error
 });
 ```
@@ -370,21 +376,27 @@ await client.getUsers({
 #### Methods
 
 ##### `registerModel(model: ModelDefinition): void`
+
 Register a single model definition.
 
 ##### `registerModels(models: ModelDefinition[]): void`
+
 Register multiple model definitions.
 
 ##### `registerRoute(route: RouteDefinition): void`
+
 Register a single route definition.
 
 ##### `registerRoutes(routes: RouteDefinition[]): void`
+
 Register multiple route definitions.
 
 ##### `generate(): GeneratedClient`
+
 Generate all client code and return as object.
 
 ##### `generateToFiles(): Map<string, string>`
+
 Generate all client code and return as file map.
 
 ## Examples

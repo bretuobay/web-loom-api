@@ -1,7 +1,9 @@
 import type { LogSanitizerInterface, SanitizationRule } from './types';
 
-const PASSWORD_PATTERN = /("(?:password|passwd|secret|token|authorization|cookie|session)"\s*:\s*)"[^"]*"/gi;
-const API_KEY_PATTERN = /("(?:api[_-]?key|apikey|access[_-]?key|secret[_-]?key)"\s*:\s*)"([^"]{4,})"/gi;
+const PASSWORD_PATTERN =
+  /("(?:password|passwd|secret|token|authorization|cookie|session)"\s*:\s*)"[^"]*"/gi;
+const API_KEY_PATTERN =
+  /("(?:api[_-]?key|apikey|access[_-]?key|secret[_-]?key)"\s*:\s*)"([^"]{4,})"/gi;
 const CREDIT_CARD_PATTERN = /\b(\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{1,4})\b/g;
 
 export class LogSanitizer implements LogSanitizerInterface {
@@ -29,10 +31,7 @@ export class LogSanitizer implements LogSanitizerInterface {
 
     // Apply custom rules
     for (const rule of this.rules) {
-      sanitized = sanitized.replace(
-        rule.pattern,
-        rule.replacement as string,
-      );
+      sanitized = sanitized.replace(rule.pattern, rule.replacement as string);
     }
 
     return JSON.parse(sanitized) as Record<string, unknown>;

@@ -19,10 +19,16 @@ const mockHandler: RequestHandler = async (_req) => ({
 describe('benchmark', () => {
   it('should run a function and return timing stats', async () => {
     let count = 0;
-    const result = await benchmark('test-fn', () => { count++; }, {
-      iterations: 20,
-      warmup: 2,
-    });
+    const result = await benchmark(
+      'test-fn',
+      () => {
+        count++;
+      },
+      {
+        iterations: 20,
+        warmup: 2,
+      }
+    );
 
     expect(result.name).toBe('test-fn');
     expect(result.iterations).toBe(20);
@@ -41,7 +47,9 @@ describe('benchmark', () => {
   it('should handle async functions', async () => {
     const result = await benchmark(
       'async-fn',
-      async () => { await new Promise((r) => setTimeout(r, 1)); },
+      async () => {
+        await new Promise((r) => setTimeout(r, 1));
+      },
       { iterations: 5, warmup: 1 }
     );
 
@@ -62,7 +70,9 @@ describe('benchmark', () => {
   it('should respect timeout', async () => {
     const result = await benchmark(
       'timeout-test',
-      async () => { await new Promise((r) => setTimeout(r, 50)); },
+      async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      },
       { iterations: 1000, warmup: 0, timeout: 200 }
     );
 
@@ -205,12 +215,28 @@ describe('formatBenchmarkReport', () => {
   it('should handle multiple results', () => {
     const results: BenchmarkResult[] = [
       {
-        name: 'a', iterations: 10, totalMs: 5, avgMs: 0.5,
-        minMs: 0.1, maxMs: 1, p50Ms: 0.4, p95Ms: 0.9, p99Ms: 1, opsPerSecond: 2000,
+        name: 'a',
+        iterations: 10,
+        totalMs: 5,
+        avgMs: 0.5,
+        minMs: 0.1,
+        maxMs: 1,
+        p50Ms: 0.4,
+        p95Ms: 0.9,
+        p99Ms: 1,
+        opsPerSecond: 2000,
       },
       {
-        name: 'b', iterations: 20, totalMs: 10, avgMs: 0.5,
-        minMs: 0.2, maxMs: 1.5, p50Ms: 0.5, p95Ms: 1.2, p99Ms: 1.4, opsPerSecond: 2000,
+        name: 'b',
+        iterations: 20,
+        totalMs: 10,
+        avgMs: 0.5,
+        minMs: 0.2,
+        maxMs: 1.5,
+        p50Ms: 0.5,
+        p95Ms: 1.2,
+        p99Ms: 1.4,
+        opsPerSecond: 2000,
       },
     ];
 

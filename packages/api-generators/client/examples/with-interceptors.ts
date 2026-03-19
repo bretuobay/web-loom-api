@@ -1,6 +1,6 @@
 /**
  * Interceptors Example
- * 
+ *
  * Demonstrates request/response interceptors for logging, auth refresh, etc.
  */
 

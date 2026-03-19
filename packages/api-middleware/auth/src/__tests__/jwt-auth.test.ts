@@ -12,9 +12,7 @@ async function makeToken(payload: Record<string, unknown>, secret = SECRET) {
 function buildApp(options: Parameters<typeof jwtAuth>[0]) {
   const app = new Hono();
   app.use('/test', jwtAuth(options));
-  app.get('/test', (c) =>
-    c.json({ userId: c.var.user?.id, role: c.var.user?.role }),
-  );
+  app.get('/test', (c) => c.json({ userId: c.var.user?.id, role: c.var.user?.role }));
   return app;
 }
 

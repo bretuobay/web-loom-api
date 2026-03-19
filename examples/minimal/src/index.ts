@@ -9,8 +9,8 @@
  * - Generating CRUD endpoints for registered models
  * - Starting the HTTP server
  */
-import { createApp } from "@web-loom/api-core";
-import config from "./config";
+import { createApp } from '@web-loom/api-core';
+import config from './config';
 
 async function main() {
   const app = await createApp(config);
@@ -24,6 +24,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Failed to start:", err);
+  console.error('Failed to start:', err);
   process.exit(1);
 });

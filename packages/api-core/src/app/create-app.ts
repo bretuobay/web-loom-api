@@ -52,7 +52,7 @@ export interface CreateAppOptions {
     hono: Hono<{ Variables: WebLoomVariables }>,
     models: AnyModel[],
     routeMetas: unknown[],
-    config: import('../config/types').OpenApiConfig,
+    config: import('../config/types').OpenApiConfig
   ) => Promise<void>;
 }
 
@@ -66,7 +66,10 @@ export interface CreateAppOptions {
  *
  * @throws {ConfigurationError} if `database.url` or `database.driver` is missing
  */
-export async function createApp(config: WebLoomConfig, options?: CreateAppOptions): Promise<Application> {
+export async function createApp(
+  config: WebLoomConfig,
+  options?: CreateAppOptions
+): Promise<Application> {
   // ── Database ─────────────────────────────────────────────────────────────
   const db = await createDrizzleDb(config.database);
 
@@ -119,9 +122,7 @@ export async function createApp(config: WebLoomConfig, options?: CreateAppOption
 
   // ── Built-in routes ──────────────────────────────────────────────────────
 
-  hono.get('/health', (c) =>
-    c.json({ status: 'ok', timestamp: new Date().toISOString() })
-  );
+  hono.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
   // /ready: perform a lightweight DB health check
   hono.get('/ready', async (c) => {
@@ -138,10 +139,7 @@ export async function createApp(config: WebLoomConfig, options?: CreateAppOption
       }
       return c.json({ status: 'ready', timestamp: new Date().toISOString() });
     } catch {
-      return c.json(
-        { status: 'unavailable', timestamp: new Date().toISOString() },
-        503
-      );
+      return c.json({ status: 'unavailable', timestamp: new Date().toISOString() }, 503);
     }
   });
 

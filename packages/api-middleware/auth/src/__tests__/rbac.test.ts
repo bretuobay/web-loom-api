@@ -11,7 +11,11 @@ import type { AuthUser } from '../types';
 
 function buildRoleApp(role: string, user?: AuthUser) {
   const app = new Hono();
-  if (user) app.use('*', (c, next) => { c.set('user', user); return next(); });
+  if (user)
+    app.use('*', (c, next) => {
+      c.set('user', user);
+      return next();
+    });
   app.use('/test', requireRole(role));
   app.get('/test', (c) => c.json({ ok: true }));
   return app;
@@ -19,7 +23,11 @@ function buildRoleApp(role: string, user?: AuthUser) {
 
 function buildPermissionApp(permission: string, user?: AuthUser) {
   const app = new Hono();
-  if (user) app.use('*', (c, next) => { c.set('user', user); return next(); });
+  if (user)
+    app.use('*', (c, next) => {
+      c.set('user', user);
+      return next();
+    });
   app.use('/test', requirePermission(permission));
   app.get('/test', (c) => c.json({ ok: true }));
   return app;
@@ -77,7 +85,10 @@ describe('requirePermission', () => {
   });
 
   it('calls next when user has the permission', async () => {
-    const app = buildPermissionApp('read:users', { id: 'u1', permissions: ['read:users', 'write:users'] });
+    const app = buildPermissionApp('read:users', {
+      id: 'u1',
+      permissions: ['read:users', 'write:users'],
+    });
     const res = await app.request('/test');
     expect(res.status).toBe(200);
   });
@@ -97,7 +108,7 @@ describe('composeAuth', () => {
   it('returns 401 when all strategies fail', async () => {
     const app = new Hono();
     const alwaysFail = composeAuth(
-      async (_c, _next) => {},  // doesn't call next, doesn't set user
+      async (_c, _next) => {} // doesn't call next, doesn't set user
     );
     app.use('/test', alwaysFail);
     app.get('/test', (c) => c.json({ ok: true }));
@@ -110,8 +121,13 @@ describe('composeAuth', () => {
   it('calls next when the first strategy succeeds', async () => {
     const app = new Hono();
     const firstSucceeds = composeAuth(
-      async (c, next) => { c.set('user', { id: 'u1' }); await next(); },
-      async (_c, _next) => { throw new Error('should not be called'); },
+      async (c, next) => {
+        c.set('user', { id: 'u1' });
+        await next();
+      },
+      async (_c, _next) => {
+        throw new Error('should not be called');
+      }
     );
     app.use('/test', firstSucceeds);
     app.get('/test', (c) => c.json({ userId: c.var.user?.id }));
@@ -124,8 +140,13 @@ describe('composeAuth', () => {
   it('falls through to the second strategy when the first does not set user', async () => {
     const app = new Hono();
     const secondSucceeds = composeAuth(
-      async (_c, next) => { await next(); },  // calls next but no user set → skip
-      async (c, next) => { c.set('user', { id: 'u2' }); await next(); },
+      async (_c, next) => {
+        await next();
+      }, // calls next but no user set → skip
+      async (c, next) => {
+        c.set('user', { id: 'u2' });
+        await next();
+      }
     );
     app.use('/test', secondSucceeds);
     app.get('/test', (c) => c.json({ userId: c.var.user?.id }));

@@ -60,7 +60,10 @@ export function createAdapterCheck(name: string, checkFn: () => Promise<boolean>
 /**
  * Create a generic custom health check.
  */
-export function createCustomCheck(name: string, fn: () => Promise<HealthCheckResult>): HealthCheckFn {
+export function createCustomCheck(
+  name: string,
+  fn: () => Promise<HealthCheckResult>
+): HealthCheckFn {
   return async (): Promise<HealthCheckResult> => {
     try {
       return await fn();

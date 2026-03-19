@@ -174,9 +174,13 @@ describe('defineModel', () => {
   });
 
   it('applies insert schema override', () => {
-    const User = defineModel(usersTable, { name: 'User' }, {
-      insert: (schema) => schema.extend({ email: z.string().email() }),
-    });
+    const User = defineModel(
+      usersTable,
+      { name: 'User' },
+      {
+        insert: (schema) => schema.extend({ email: z.string().email() }),
+      }
+    );
 
     const invalid = User.insertSchema.safeParse({ name: 'Alice', email: 'not-an-email' });
     expect(invalid.success).toBe(false);
@@ -186,9 +190,13 @@ describe('defineModel', () => {
   });
 
   it('applies update schema override', () => {
-    const User = defineModel(usersTable, { name: 'User' }, {
-      update: (schema) => schema.extend({ email: z.string().email().optional() }),
-    });
+    const User = defineModel(
+      usersTable,
+      { name: 'User' },
+      {
+        update: (schema) => schema.extend({ email: z.string().email().optional() }),
+      }
+    );
 
     const invalid = User.updateSchema.safeParse({ email: 'bad-email' });
     expect(invalid.success).toBe(false);

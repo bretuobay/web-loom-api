@@ -1,6 +1,6 @@
 /**
  * Configuration Validation Example
- * 
+ *
  * This example demonstrates how to use the configuration validation system
  * with environment variable loading and detailed error messages.
  */
@@ -228,9 +228,7 @@ invalidWindows.forEach((window) => {
   const result = validateConfig(config);
   console.log(`  ${window}: ${result.success ? '✓' : '✗'}`);
   if (!result.success) {
-    const error = result.errors?.find((e) =>
-      e.path.join('.').includes('window')
-    );
+    const error = result.errors?.find((e) => e.path.join('.').includes('window'));
     if (error) {
       console.log(`    Error: ${error.message}`);
     }

@@ -38,20 +38,20 @@ npm install
 Create `webloom.config.ts` at the project root:
 
 ```typescript
-import { defineConfig } from "@web-loom/api-core";
+import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: "neon-serverless", // "neon-serverless" | "libsql" | "pg"
+    driver: 'neon-serverless', // "neon-serverless" | "libsql" | "pg"
   },
   routes: {
-    dir: "./src/routes", // default — can be omitted
+    dir: './src/routes', // default — can be omitted
   },
   openapi: {
     enabled: true,
-    title: "My API",
-    version: "1.0.0",
+    title: 'My API',
+    version: '1.0.0',
   },
 });
 ```
@@ -64,35 +64,35 @@ The Drizzle table is the single source of truth. `defineModel()` wraps it to der
 
 ```typescript
 // src/schema.ts
-import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
-import { defineModel } from "@web-loom/api-core";
+import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import { defineModel } from '@web-loom/api-core';
 
-export const usersTable = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const usersTable = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Registers the model in the global registry.
 // crud: true generates all 6 CRUD endpoints at /users.
 export const User = defineModel(usersTable, {
-  name: "User",
+  name: 'User',
   crud: true,
 });
 ```
 
 With `crud: true` these endpoints are generated automatically:
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/users` | List (paginated, filterable, sortable) |
-| `POST` | `/users` | Create |
-| `GET` | `/users/:id` | Read by ID |
-| `PUT` | `/users/:id` | Replace (full update) |
-| `PATCH` | `/users/:id` | Partial update |
-| `DELETE` | `/users/:id` | Delete |
+| Method   | Path         | Description                            |
+| -------- | ------------ | -------------------------------------- |
+| `GET`    | `/users`     | List (paginated, filterable, sortable) |
+| `POST`   | `/users`     | Create                                 |
+| `GET`    | `/users/:id` | Read by ID                             |
+| `PUT`    | `/users/:id` | Replace (full update)                  |
+| `PATCH`  | `/users/:id` | Partial update                         |
+| `DELETE` | `/users/:id` | Delete                                 |
 
 ### 3. Add custom routes
 
@@ -100,22 +100,19 @@ Route files in `src/routes/` are discovered automatically. `defineRoutes()` retu
 
 ```typescript
 // src/routes/users.ts
-import { defineRoutes, validate } from "@web-loom/api-core";
-import { z } from "zod";
-import { usersTable } from "../schema";
-import { eq } from "drizzle-orm";
+import { defineRoutes, validate } from '@web-loom/api-core';
+import { z } from 'zod';
+import { usersTable } from '../schema';
+import { eq } from 'drizzle-orm';
 
 const app = defineRoutes();
 
 // GET /users/me  (custom endpoint alongside generated CRUD)
-app.get("/me", async (c) => {
-  const userId = c.req.header("X-User-Id") ?? "";
-  const [user] = await c.var.db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
+app.get('/me', async (c) => {
+  const userId = c.req.header('X-User-Id') ?? '';
+  const [user] = await c.var.db.select().from(usersTable).where(eq(usersTable.id, userId));
 
-  if (!user) return c.json({ error: { code: "NOT_FOUND", message: "User not found" } }, 404);
+  if (!user) return c.json({ error: { code: 'NOT_FOUND', message: 'User not found' } }, 404);
   return c.json({ user });
 });
 
@@ -126,13 +123,13 @@ export default app;
 
 ```typescript
 // src/index.ts
-import { createApp } from "@web-loom/api-core";
-import config from "../webloom.config";
-import "./schema"; // import models so they register before createApp
+import { createApp } from '@web-loom/api-core';
+import config from '../webloom.config';
+import './schema'; // import models so they register before createApp
 
 const app = await createApp(config);
 await app.start(3000);
-console.log("Web Loom API running at http://localhost:3000");
+console.log('Web Loom API running at http://localhost:3000');
 ```
 
 ### 5. Run it
@@ -180,11 +177,11 @@ npm install -D tsx @web-loom/api-cli
 Create `webloom.config.ts`:
 
 ```typescript
-import { defineConfig } from "@web-loom/api-core";
+import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
-  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
-  openapi: { enabled: true, title: "Task Tracker", version: "1.0.0" },
+  database: { url: process.env.DATABASE_URL!, driver: 'neon-serverless' },
+  openapi: { enabled: true, title: 'Task Tracker', version: '1.0.0' },
 });
 ```
 
@@ -192,21 +189,21 @@ export default defineConfig({
 
 ```typescript
 // src/schema.ts
-import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
-import { defineModel } from "@web-loom/api-core";
+import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import { defineModel } from '@web-loom/api-core';
 
-export const tasksTable = pgTable("tasks", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  status: text("status").notNull().default("todo"),
-  priority: text("priority").notNull().default("medium"),
-  dueDate: timestamp("due_date"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const tasksTable = pgTable('tasks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  status: text('status').notNull().default('todo'),
+  priority: text('priority').notNull().default('medium'),
+  dueDate: timestamp('due_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 export const Task = defineModel(tasksTable, {
-  name: "Task",
+  name: 'Task',
   crud: {
     list: { auth: false },
     create: { auth: true },
@@ -220,14 +217,14 @@ export const Task = defineModel(tasksTable, {
 
 ```typescript
 // src/routes/tasks.ts
-import { defineRoutes } from "@web-loom/api-core";
-import { tasksTable } from "../schema";
-import { lt, ne } from "drizzle-orm";
+import { defineRoutes } from '@web-loom/api-core';
+import { tasksTable } from '../schema';
+import { lt, ne } from 'drizzle-orm';
 
 const app = defineRoutes();
 
 // GET /tasks/overdue
-app.get("/overdue", async (c) => {
+app.get('/overdue', async (c) => {
   const tasks = await c.var.db
     .select()
     .from(tasksTable)
@@ -245,9 +242,9 @@ export default app;
 
 ```typescript
 // src/index.ts
-import { createApp } from "@web-loom/api-core";
-import config from "../webloom.config";
-import "./schema";
+import { createApp } from '@web-loom/api-core';
+import config from '../webloom.config';
+import './schema';
 
 const app = await createApp(config);
 await app.start(3000);

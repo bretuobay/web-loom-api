@@ -34,11 +34,11 @@ interface RequestOptions {
 **Usage:**
 
 ```typescript
-import { createTestClient } from "@web-loom/api-testing";
-import { createApp } from "@web-loom/api-core";
-import config from "../src/config";
+import { createTestClient } from '@web-loom/api-testing';
+import { createApp } from '@web-loom/api-core';
+import config from '../src/config';
 
-describe("Users API", () => {
+describe('Users API', () => {
   let client: TestClient;
 
   beforeAll(async () => {
@@ -46,29 +46,29 @@ describe("Users API", () => {
     client = createTestClient(app);
   });
 
-  it("creates a user", async () => {
-    const res = await client.post("/users", {
-      name: "Alice",
-      email: "alice@example.com",
+  it('creates a user', async () => {
+    const res = await client.post('/users', {
+      name: 'Alice',
+      email: 'alice@example.com',
     });
 
     expect(res.status).toBe(201);
-    expect(res.json().user.name).toBe("Alice");
+    expect(res.json().user.name).toBe('Alice');
   });
 
-  it("returns 400 for invalid data", async () => {
-    const res = await client.post("/users", { name: "" });
+  it('returns 400 for invalid data', async () => {
+    const res = await client.post('/users', { name: '' });
     expect(res.status).toBe(400);
   });
 
-  it("requires auth for admin routes", async () => {
-    const res = await client.get("/admin/users");
+  it('requires auth for admin routes', async () => {
+    const res = await client.get('/admin/users');
     expect(res.status).toBe(401);
   });
 
-  it("allows admin access", async () => {
-    client.authenticate({ id: "1", role: "admin" });
-    const res = await client.get("/admin/users");
+  it('allows admin access', async () => {
+    client.authenticate({ id: '1', role: 'admin' });
+    const res = await client.get('/admin/users');
     expect(res.status).toBe(200);
   });
 });
@@ -98,9 +98,9 @@ interface ResponseAssertions {
 ```
 
 ```typescript
-const res = await client.get("/users/123");
+const res = await client.get('/users/123');
 client.expect(res).toHaveStatus(200);
-client.expect(res).toHaveHeader("Content-Type", "application/json");
+client.expect(res).toHaveHeader('Content-Type', 'application/json');
 client.expect(res).toMatchSchema(userSchema);
 ```
 
@@ -129,13 +129,13 @@ interface Factory<T> {
 **Usage:**
 
 ```typescript
-import { defineFactory } from "@web-loom/api-testing";
-import { User } from "../src/models/user";
+import { defineFactory } from '@web-loom/api-testing';
+import { User } from '../src/models/user';
 
 const userFactory = defineFactory(User, {
   name: () => faker.person.fullName(),
   email: () => faker.internet.email(),
-  role: "user",
+  role: 'user',
 });
 
 // Build in-memory (no DB)
@@ -143,7 +143,7 @@ const user = userFactory.build();
 const users = userFactory.buildMany(10);
 
 // Create in database
-const dbUser = await userFactory.create({ role: "admin" });
+const dbUser = await userFactory.create({ role: 'admin' });
 const dbUsers = await userFactory.createMany(5);
 ```
 
@@ -154,17 +154,13 @@ const dbUsers = await userFactory.createMany(5);
 ### `seed(model, count, factory)`
 
 ```typescript
-function seed<T>(
-  model: Model,
-  count: number,
-  factory: Factory<T>
-): Promise<T[]>;
+function seed<T>(model: Model, count: number, factory: Factory<T>): Promise<T[]>;
 ```
 
 **Usage:**
 
 ```typescript
-import { seed } from "@web-loom/api-testing";
+import { seed } from '@web-loom/api-testing';
 
 await seed(User, 50, userFactory);
 await seed(Post, 200, postFactory);
@@ -192,11 +188,11 @@ interface MockDatabaseAdapter extends DatabaseAdapter {
 **Usage:**
 
 ```typescript
-import { createMockDatabase } from "@web-loom/api-testing";
+import { createMockDatabase } from '@web-loom/api-testing';
 
 const mockDb = createMockDatabase();
-mockDb.mockQuery("SELECT * FROM users WHERE id = ?", [
-  { id: "1", name: "Test User", email: "test@example.com" },
+mockDb.mockQuery('SELECT * FROM users WHERE id = ?', [
+  { id: '1', name: 'Test User', email: 'test@example.com' },
 ]);
 
 // Use in tests
@@ -221,10 +217,10 @@ interface MockAuthAdapter extends AuthAdapter {
 **Usage:**
 
 ```typescript
-import { createMockAuth } from "@web-loom/api-testing";
+import { createMockAuth } from '@web-loom/api-testing';
 
 const mockAuth = createMockAuth();
-mockAuth.mockUser({ id: "1", role: "admin" });
+mockAuth.mockUser({ id: '1', role: 'admin' });
 ```
 
 ### `createMockEmail()`
@@ -242,12 +238,12 @@ interface MockEmailAdapter extends EmailAdapter {
 **Usage:**
 
 ```typescript
-import { createMockEmail } from "@web-loom/api-testing";
+import { createMockEmail } from '@web-loom/api-testing';
 
 const mockEmail = createMockEmail();
 // ... trigger email sending ...
 expect(mockEmail.getSentEmails()).toHaveLength(1);
-expect(mockEmail.getLastEmail()?.to).toBe("user@example.com");
+expect(mockEmail.getLastEmail()?.to).toBe('user@example.com');
 ```
 
 ---
@@ -262,12 +258,12 @@ Verifies your API matches its OpenAPI specification.
 function testContract(options: ContractTestOptions): Promise<ContractTestResult>;
 
 interface ContractTestOptions {
-  spec: string;                    // Path to OpenAPI JSON file
-  baseUrl: string;                 // API base URL
+  spec: string; // Path to OpenAPI JSON file
+  baseUrl: string; // API base URL
   tests?: {
-    validateSchemas?: boolean;     // Validate response schemas
+    validateSchemas?: boolean; // Validate response schemas
     validateStatusCodes?: boolean; // Validate status codes
-    validateHeaders?: boolean;     // Validate response headers
+    validateHeaders?: boolean; // Validate response headers
   };
 }
 ```
@@ -275,11 +271,11 @@ interface ContractTestOptions {
 **Usage:**
 
 ```typescript
-import { testContract } from "@web-loom/api-testing";
+import { testContract } from '@web-loom/api-testing';
 
 const result = await testContract({
-  spec: "./openapi.json",
-  baseUrl: "http://localhost:3000",
+  spec: './openapi.json',
+  baseUrl: 'http://localhost:3000',
   tests: {
     validateSchemas: true,
     validateStatusCodes: true,
@@ -304,8 +300,8 @@ function benchmark(
 ): Promise<BenchmarkResult>;
 
 interface BenchmarkOptions {
-  maxDuration?: number;    // Max duration in ms
-  iterations?: number;     // Number of iterations
+  maxDuration?: number; // Max duration in ms
+  iterations?: number; // Number of iterations
 }
 
 interface BenchmarkResult {
@@ -323,10 +319,10 @@ interface BenchmarkResult {
 **Usage:**
 
 ```typescript
-import { benchmark } from "@web-loom/api-testing";
+import { benchmark } from '@web-loom/api-testing';
 
 const result = await benchmark(
-  "cold start",
+  'cold start',
   async () => {
     const app = await createApp(config);
   },

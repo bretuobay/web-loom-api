@@ -110,13 +110,15 @@ export function createParamsValidation<T extends ZodTypeAny>(
 /**
  * @deprecated Use the `validate()` helper from `@web-loom/api-core` instead.
  */
-export function createValidation<TBody extends ZodTypeAny, TQuery extends ZodTypeAny, TParams extends ZodTypeAny>(
-  schemas: {
-    body?: TBody;
-    query?: TQuery;
-    params?: TParams;
-  }
-): (c: Context, next: Next) => Promise<void> {
+export function createValidation<
+  TBody extends ZodTypeAny,
+  TQuery extends ZodTypeAny,
+  TParams extends ZodTypeAny,
+>(schemas: {
+  body?: TBody;
+  query?: TQuery;
+  params?: TParams;
+}): (c: Context, next: Next) => Promise<void> {
   return async (c: Context, next: Next): Promise<void> => {
     const errors: Array<{ field: string; message: string; code: string }> = [];
 

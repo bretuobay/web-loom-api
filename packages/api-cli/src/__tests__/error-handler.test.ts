@@ -38,7 +38,7 @@ describe('Error Handler', () => {
     it('should handle CLIError and exit with correct code', () => {
       const error = new CLIError('CLI error', 2);
       handleError(error, false);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(2);
     });
@@ -46,14 +46,14 @@ describe('Error Handler', () => {
     it('should handle generic Error and exit with code 1', () => {
       const error = new Error('Generic error');
       handleError(error, false);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle unknown errors', () => {
       handleError('string error', false);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -62,9 +62,9 @@ describe('Error Handler', () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const error = new Error('Test error');
       error.stack = 'Stack trace';
-      
+
       handleError(error, true);
-      
+
       consoleLogSpy.mockRestore();
     });
   });
@@ -73,9 +73,9 @@ describe('Error Handler', () => {
     it('should execute command successfully', async () => {
       const mockFn = vi.fn().mockResolvedValue(undefined);
       const wrapped = wrapCommand(mockFn);
-      
+
       await wrapped('arg1', 'arg2');
-      
+
       expect(mockFn).toHaveBeenCalledWith('arg1', 'arg2');
       expect(processExitSpy).not.toHaveBeenCalled();
     });
@@ -83,18 +83,18 @@ describe('Error Handler', () => {
     it('should catch and handle errors', async () => {
       const mockFn = vi.fn().mockRejectedValue(new CLIError('Command failed'));
       const wrapped = wrapCommand(mockFn);
-      
+
       await wrapped();
-      
+
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should pass arguments correctly', async () => {
       const mockFn = vi.fn().mockResolvedValue(undefined);
       const wrapped = wrapCommand(mockFn);
-      
+
       await wrapped('a', 'b', 'c');
-      
+
       expect(mockFn).toHaveBeenCalledWith('a', 'b', 'c');
     });
   });

@@ -1,6 +1,6 @@
 /**
  * Generate Route Command
- * 
+ *
  * Generates route files with HTTP method handlers and validation schema stubs.
  */
 
@@ -14,7 +14,7 @@ import { CLIError, wrapCommand } from '../../utils/error-handler.js';
  * HTTP methods supported
  */
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'] as const;
-type HTTPMethod = typeof HTTP_METHODS[number];
+type HTTPMethod = (typeof HTTP_METHODS)[number];
 
 /**
  * Route generation options
@@ -39,14 +39,14 @@ function parseRoutePath(routePath: string): {
   params: string[];
 } {
   const params: string[] = [];
-  
+
   // Extract parameters from :param format
   const urlPath = routePath;
   const filePath = routePath.replace(/:([a-zA-Z0-9_]+)/g, (_, param) => {
     params.push(param);
     return `[${param}]`;
   });
-  
+
   return { filePath, urlPath, params };
 }
 
@@ -55,9 +55,9 @@ function parseRoutePath(routePath: string): {
  */
 function generateValidationSchema(methods: HTTPMethod[], params: string[]): string {
   const lines: string[] = [];
-  const hasBodyMethods = methods.some(m => m === 'POST' || m === 'PUT' || m === 'PATCH');
+  const hasBodyMethods = methods.some((m) => m === 'POST' || m === 'PUT' || m === 'PATCH');
   const hasGetMethod = methods.includes('GET');
-  
+
   if (hasBodyMethods) {
     lines.push(`/**`);
     lines.push(` * Request body validation schema`);
@@ -68,7 +68,7 @@ function generateValidationSchema(methods: HTTPMethod[], params: string[]): stri
     lines.push(`});`);
     lines.push(``);
   }
-  
+
   if (params.length > 0) {
     lines.push(`/**`);
     lines.push(` * Path parameters validation schema`);
@@ -80,7 +80,7 @@ function generateValidationSchema(methods: HTTPMethod[], params: string[]): stri
     lines.push(`});`);
     lines.push(``);
   }
-  
+
   if (hasGetMethod) {
     lines.push(`/**`);
     lines.push(` * Query parameters validation schema`);
@@ -92,7 +92,7 @@ function generateValidationSchema(methods: HTTPMethod[], params: string[]): stri
     lines.push(`});`);
     lines.push(``);
   }
-  
+
   return lines.join('\n');
 }
 
@@ -106,12 +106,14 @@ function generateMethodHandler(
   options: GenerateRouteOptions
 ): string {
   const lines: string[] = [];
-  
+
   lines.push(`/**`);
   lines.push(` * ${method} ${urlPath}`);
   lines.push(` */`);
-  lines.push(`export async function ${method}(ctx: RequestContext, next: NextFunction): Promise<Response> {`);
-  
+  lines.push(
+    `export async function ${method}(ctx: RequestContext, next: NextFunction): Promise<Response> {`
+  );
+
   if (options.auth) {
     lines.push(`  // TODO: Check authentication`);
     lines.push(`  // if (!ctx.user) {`);
@@ -122,7 +124,7 @@ function generateMethodHandler(
     lines.push(`  // }`);
     lines.push(``);
   }
-  
+
   if (options.validation) {
     if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
       lines.push(`  // Validate request body`);
@@ -130,13 +132,13 @@ function generateMethodHandler(
       lines.push(`  const validatedBody = bodySchema.parse(body);`);
       lines.push(``);
     }
-    
+
     if (params.length > 0) {
       lines.push(`  // Validate path parameters`);
       lines.push(`  const validatedParams = paramsSchema.parse(ctx.params);`);
       lines.push(``);
     }
-    
+
     if (method === 'GET') {
       lines.push(`  // Validate query parameters`);
       lines.push(`  const url = new URL(ctx.request.url);`);
@@ -145,10 +147,10 @@ function generateMethodHandler(
       lines.push(``);
     }
   }
-  
+
   lines.push(`  // TODO: Implement your business logic here`);
   lines.push(``);
-  
+
   // Generate response based on method
   if (method === 'GET') {
     lines.push(`  return new Response(`);
@@ -204,9 +206,9 @@ function generateMethodHandler(
     lines.push(`    }`);
     lines.push(`  );`);
   }
-  
+
   lines.push(`}`);
-  
+
   return lines.join('\n');
 }
 
@@ -220,16 +222,16 @@ function generateRouteContent(
   options: GenerateRouteOptions
 ): string {
   const lines: string[] = [];
-  
+
   // Imports
   lines.push(`import type { RequestContext, NextFunction } from '@web-loom/api-core';`);
-  
+
   if (options.validation) {
     lines.push(`import { z } from 'zod';`);
   }
-  
+
   lines.push(``);
-  
+
   // Add validation schemas if enabled (generate once for all methods)
   if (options.validation) {
     const schema = generateValidationSchema(methods, params);
@@ -237,20 +239,20 @@ function generateRouteContent(
       lines.push(schema);
     }
   }
-  
+
   // Generate handlers for each method
   for (const method of methods) {
     lines.push(generateMethodHandler(method, urlPath, params, options));
     lines.push(``);
   }
-  
+
   // Remove last empty line
   if (lines[lines.length - 1] === '') {
     lines.pop();
   }
-  
+
   lines.push(``);
-  
+
   return lines.join('\n');
 }
 
@@ -260,14 +262,14 @@ function generateRouteContent(
 function getRouteFilePath(filePath: string, outputDir?: string): string {
   // Remove leading slash
   const cleanPath = filePath.replace(/^\//, '');
-  
+
   // Convert to file path
   const fileName = cleanPath ? `${cleanPath}.ts` : 'index.ts';
-  
+
   if (outputDir) {
     return path.join(outputDir, fileName);
   }
-  
+
   // Default to src/routes directory
   return path.join(process.cwd(), 'src', 'routes', fileName);
 }
@@ -284,7 +286,7 @@ async function generateRouteCommand(
     if (!routePath) {
       throw new CLIError('Route path is required');
     }
-    
+
     if (!routePath.startsWith('/')) {
       throw new CLIError('Route path must start with /');
     }
@@ -297,8 +299,8 @@ async function generateRouteCommand(
     // Parse methods
     let methods: HTTPMethod[] = ['GET'];
     if (options.methods && options.methods.length > 0) {
-      const upperMethods = options.methods.map(m => m.toUpperCase());
-      
+      const upperMethods = options.methods.map((m) => m.toUpperCase());
+
       // Validate methods
       for (const method of upperMethods) {
         if (!(HTTP_METHODS as readonly string[]).includes(method)) {
@@ -307,7 +309,7 @@ async function generateRouteCommand(
           );
         }
       }
-      
+
       methods = upperMethods as HTTPMethod[];
     }
 
@@ -340,11 +342,11 @@ async function generateRouteCommand(
     info(`  File: ${outputPath}`);
     info(`  URL: ${urlPath}`);
     info(`  Methods: ${methods.join(', ')}`);
-    
+
     if (params.length > 0) {
       info(`  Parameters: ${params.join(', ')}`);
     }
-    
+
     info(`\nNext steps:`);
     info(`  1. Implement the business logic in the generated handlers`);
     if (options.validation) {
@@ -367,11 +369,7 @@ export function createGenerateRouteCommand(): Command {
   return new Command('route')
     .description('Generate a route file with HTTP method handlers')
     .argument('<path>', 'Route path (e.g., /users, /posts/:id)')
-    .option(
-      '-m, --methods <methods...>',
-      'HTTP methods to generate (default: GET)',
-      ['GET']
-    )
+    .option('-m, --methods <methods...>', 'HTTP methods to generate (default: GET)', ['GET'])
     .option('--validation', 'Add validation schema stubs')
     .option('--auth', 'Add authentication check stubs')
     .option('-o, --output <dir>', 'Output directory (default: src/routes)')

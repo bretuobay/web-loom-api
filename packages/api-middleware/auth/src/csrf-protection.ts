@@ -7,7 +7,9 @@ export interface CsrfProtectionOptions {
    * Function that returns the expected CSRF token for the current request.
    * Typically reads it from the session.
    */
-  getToken: (c: Parameters<MiddlewareHandler>[0]) => string | undefined | Promise<string | undefined>;
+  getToken: (
+    c: Parameters<MiddlewareHandler>[0]
+  ) => string | undefined | Promise<string | undefined>;
   /** Header to read the submitted token from (default: 'X-CSRF-Token') */
   headerName?: string;
 }
@@ -31,18 +33,12 @@ export function csrfProtection(options: CsrfProtectionOptions): MiddlewareHandle
 
     const submitted = c.req.header(headerName);
     if (!submitted) {
-      return c.json(
-        { error: { code: 'FORBIDDEN', message: 'CSRF token missing' } },
-        403,
-      );
+      return c.json({ error: { code: 'FORBIDDEN', message: 'CSRF token missing' } }, 403);
     }
 
     const expected = await options.getToken(c);
     if (!expected || submitted !== expected) {
-      return c.json(
-        { error: { code: 'FORBIDDEN', message: 'CSRF token invalid' } },
-        403,
-      );
+      return c.json({ error: { code: 'FORBIDDEN', message: 'CSRF token invalid' } }, 403);
     }
 
     await next();

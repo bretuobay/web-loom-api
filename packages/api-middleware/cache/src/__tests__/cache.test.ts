@@ -10,7 +10,7 @@ import type { RequestContext, NextFunction } from '@web-loom/api-core';
 function createContext(
   method: string,
   url: string,
-  headers?: Record<string, string>,
+  headers?: Record<string, string>
 ): RequestContext {
   const reqHeaders = new Headers(headers);
   const request = new Request(url, { method, headers: reqHeaders });

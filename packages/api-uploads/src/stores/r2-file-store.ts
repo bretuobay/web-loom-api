@@ -15,7 +15,11 @@ import type { FileStore, ParsedFile, SignedUrlOptions, StoredFile } from '../typ
  * Mirrors the Cloudflare Workers R2 bucket API.
  */
 export interface R2Client {
-  put(key: string, value: Buffer, options?: { httpMetadata?: { contentType?: string } }): Promise<void>;
+  put(
+    key: string,
+    value: Buffer,
+    options?: { httpMetadata?: { contentType?: string } }
+  ): Promise<void>;
   get(key: string): Promise<{ arrayBuffer(): Promise<ArrayBuffer> } | null>;
   delete(key: string): Promise<void>;
 }

@@ -16,9 +16,4 @@ export {
 } from './validation-middleware';
 
 // Input sanitization utilities (unchanged)
-export {
-  sanitize,
-  sanitizeObject,
-  isPathTraversal,
-  requestSizeLimit,
-} from './sanitization';
+export { sanitize, sanitizeObject, isPathTraversal, requestSizeLimit } from './sanitization';

@@ -44,6 +44,7 @@ They share only types from `stack-foundation` (`WebLoomVariables`, `Application`
 ### Why `crud-generator` cannot be parallelised
 
 It imports:
+
 - `Model<TTable>`, `ModelRegistry`, `serializeModel` — from `model-system`
 - `defineRoutes()`, `validate()` — from `routing-system`
 - `authenticate`, `requireRole` — from `auth-middleware`
@@ -53,6 +54,7 @@ All three must be stable before CRUD handlers can be written.
 ### Why `openapi-generator` is always last
 
 It imports:
+
 - `ModelRegistry` and Zod schemas — from `model-system`
 - `openApiMeta()`, route registry — from `routing-system`
 - CRUD path structure — from `crud-generator`

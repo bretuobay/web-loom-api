@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  mapDatabaseError,
-  isDatabaseError,
-} from '../database-error-mapper';
+import { mapDatabaseError, isDatabaseError } from '../database-error-mapper';
 import {
   DatabaseError,
   ConflictError,
@@ -148,7 +145,7 @@ describe('Database Error Mapper', () => {
         'column does not exist',
       ];
 
-      testCases.forEach(message => {
+      testCases.forEach((message) => {
         const error = new Error(message);
         expect(isDatabaseError(error)).toBe(true);
       });

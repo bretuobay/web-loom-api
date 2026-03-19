@@ -374,9 +374,7 @@ describe('createLambdaHandler', () => {
   });
 
   it('handles API Gateway v2 events', async () => {
-    mockApp.handleRequest.mockResolvedValue(
-      new Response('ok', { status: 200 })
-    );
+    mockApp.handleRequest.mockResolvedValue(new Response('ok', { status: 200 }));
 
     const handler = createLambdaHandler(mockApp);
     const result = await handler(createV2Event(), createMockContext());
@@ -385,9 +383,7 @@ describe('createLambdaHandler', () => {
   });
 
   it('handles Function URL events', async () => {
-    mockApp.handleRequest.mockResolvedValue(
-      new Response('ok', { status: 200 })
-    );
+    mockApp.handleRequest.mockResolvedValue(new Response('ok', { status: 200 }));
 
     const handler = createLambdaHandler(mockApp);
     const result = await handler(createFunctionURLEvent(), createMockContext());
@@ -551,9 +547,9 @@ describe('createRDSProxyConfig', () => {
   });
 
   it('throws when username is missing', () => {
-    expect(() =>
-      createRDSProxyConfig({ host: 'proxy.rds.amazonaws.com', database: 'db' })
-    ).toThrow('Database username not configured');
+    expect(() => createRDSProxyConfig({ host: 'proxy.rds.amazonaws.com', database: 'db' })).toThrow(
+      'Database username not configured'
+    );
   });
 });
 
@@ -693,9 +689,7 @@ describe('CloudWatchLogger', () => {
     logger.error('e');
 
     expect(writeSpy).toHaveBeenCalledTimes(4);
-    const levels = writeSpy.mock.calls.map(
-      (call) => JSON.parse((call[0] as string).trim()).level
-    );
+    const levels = writeSpy.mock.calls.map((call) => JSON.parse((call[0] as string).trim()).level);
     expect(levels).toEqual(['DEBUG', 'INFO', 'WARN', 'ERROR']);
 
     writeSpy.mockRestore();

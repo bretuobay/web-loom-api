@@ -21,6 +21,7 @@ Short answer: **three of the five adapters should be removed and replaced with d
 **What it does:** Wraps Hono behind an `APIFrameworkAdapter` interface. Translates Hono's context `c` → Web Loom's `RequestContext` via `createRequestContext()`.
 
 **The realistic alternative list:**
+
 - **Express** — no native Fetch API, no edge support, not viable for the target platforms
 - **Fastify** — Node.js only, no Cloudflare Workers or Vercel Edge support
 - **ElysiaJS** — Bun-only
@@ -142,6 +143,7 @@ Anything complex (discriminated unions, branded types, `.transform()`, `.superRe
 **The swap-to-Yup/Joi argument doesn't hold:**
 
 Zod, Yup, and Joi have fundamentally different validation philosophies:
+
 - Zod: parse-and-transform (returns typed data)
 - Yup: cast-and-validate (mutates)
 - Joi: plain validation (no TypeScript inference)
@@ -206,13 +208,13 @@ Switching email providers is a real maintenance event that happens multiple time
 
 ## Summary Table
 
-| Adapter | Keep? | Reason |
-|---|---|---|
-| API Framework (Hono) | **Remove** | No real swap target in serverless; blocks Hono ecosystem |
-| Database + QueryBuilder | **Remove** | Custom SQL builder atop Drizzle; loses type safety, enables SQL injection |
-| Validation (Zod) | **Remove** | Re-wraps Zod; destroys type inference; Zod is the standard |
-| Auth (Lucia) | **Redesign** | Concept is right, but class interface is wrong; use Hono middleware |
-| Email (Resend) | **Keep** | Genuine swap scenario; clean interface; good implementation |
+| Adapter                 | Keep?        | Reason                                                                    |
+| ----------------------- | ------------ | ------------------------------------------------------------------------- |
+| API Framework (Hono)    | **Remove**   | No real swap target in serverless; blocks Hono ecosystem                  |
+| Database + QueryBuilder | **Remove**   | Custom SQL builder atop Drizzle; loses type safety, enables SQL injection |
+| Validation (Zod)        | **Remove**   | Re-wraps Zod; destroys type inference; Zod is the standard                |
+| Auth (Lucia)            | **Redesign** | Concept is right, but class interface is wrong; use Hono middleware       |
+| Email (Resend)          | **Keep**     | Genuine swap scenario; clean interface; good implementation               |
 
 ---
 
@@ -252,14 +254,11 @@ import { insertUserSchema } from '../models/user';
 
 export default defineRoutes((app) => {
   // app IS a Hono app/router — no translation layer
-  app.post('/users',
-    zValidator('json', insertUserSchema),
-    async (c) => {
-      const data = c.req.valid('json'); // fully typed, no casting
-      const user = await c.var.db.insert(users).values(data).returning();
-      return c.json(user[0], 201);
-    }
-  );
+  app.post('/users', zValidator('json', insertUserSchema), async (c) => {
+    const data = c.req.valid('json'); // fully typed, no casting
+    const user = await c.var.db.insert(users).values(data).returning();
+    return c.json(user[0], 201);
+  });
 });
 ```
 

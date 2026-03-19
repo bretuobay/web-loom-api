@@ -20,11 +20,17 @@ const errorSchema: SchemaObject = {
 };
 
 const standardErrors: Record<string, unknown> = {
-  400: { description: 'Validation error', content: { 'application/json': { schema: errorSchema } } },
+  400: {
+    description: 'Validation error',
+    content: { 'application/json': { schema: errorSchema } },
+  },
   401: { description: 'Unauthorized', content: { 'application/json': { schema: errorSchema } } },
   403: { description: 'Forbidden', content: { 'application/json': { schema: errorSchema } } },
   409: { description: 'Conflict', content: { 'application/json': { schema: errorSchema } } },
-  500: { description: 'Internal server error', content: { 'application/json': { schema: errorSchema } } },
+  500: {
+    description: 'Internal server error',
+    content: { 'application/json': { schema: errorSchema } },
+  },
 };
 
 const listQueryParams = [
@@ -93,7 +99,7 @@ function paginatedWrapper(itemRef: SchemaObject): SchemaObject {
 export function buildCrudPathItems(
   model: AnyModel,
   paths: PathsObject,
-  schemas: Record<string, SchemaObject>,
+  schemas: Record<string, SchemaObject>
 ): void {
   const base = model.meta.basePath;
   const name = model.meta.name;

@@ -62,7 +62,10 @@ export class WebhookRegistry {
   /**
    * Update a webhook's properties.
    */
-  async update(id: string, updates: Partial<Pick<Webhook, 'url' | 'events' | 'active'>>): Promise<Webhook | undefined> {
+  async update(
+    id: string,
+    updates: Partial<Pick<Webhook, 'url' | 'events' | 'active'>>
+  ): Promise<Webhook | undefined> {
     const existing = await this.store.get(id);
     if (!existing) return undefined;
 

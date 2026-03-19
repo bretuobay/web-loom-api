@@ -44,7 +44,6 @@ export class RedisJobStore implements JobStore {
     return `${this.prefix}dead:${id}`;
   }
 
-
   async save(job: Job): Promise<void> {
     await this.client.set(this.jobKey(job.id), JSON.stringify(job));
   }
@@ -94,7 +93,6 @@ export class RedisJobStore implements JobStore {
 
     return { ...selected };
   }
-
 
   async getByStatus(status: JobStatus): Promise<Job[]> {
     const keys = await this.client.keys(`${this.prefix}*`);
@@ -148,7 +146,6 @@ export class RedisJobStore implements JobStore {
       await this.client.del(keys);
     }
   }
-
 
   /**
    * Create a mock Redis job store backed by in-memory Maps.

@@ -1,6 +1,6 @@
 /**
  * CLI Utilities
- * 
+ *
  * Exports all utility functions for use in commands.
  */
 

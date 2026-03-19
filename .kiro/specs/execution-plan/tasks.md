@@ -129,18 +129,19 @@ Depends on all previous phases.
 
 ## Phase Summary
 
-| Phase | Spec(s) | Can start after | Parallelisable |
-|---|---|---|---|
-| 1 | `stack-foundation` | — (first) | No |
-| 2A | `model-system` | Phase 1 complete | Yes (with 2B, 2C) |
-| 2B | `routing-system` | Phase 1 complete | Yes (with 2A, 2C) |
-| 2C | `auth-middleware` | Phase 1 complete | Yes (with 2A, 2B) |
-| 3 | `crud-generator` | Phase 2 complete | No |
-| 4 | `openapi-generator` | Phase 3 complete | No |
+| Phase | Spec(s)             | Can start after  | Parallelisable    |
+| ----- | ------------------- | ---------------- | ----------------- |
+| 1     | `stack-foundation`  | — (first)        | No                |
+| 2A    | `model-system`      | Phase 1 complete | Yes (with 2B, 2C) |
+| 2B    | `routing-system`    | Phase 1 complete | Yes (with 2A, 2C) |
+| 2C    | `auth-middleware`   | Phase 1 complete | Yes (with 2A, 2B) |
+| 3     | `crud-generator`    | Phase 2 complete | No                |
+| 4     | `openapi-generator` | Phase 3 complete | No                |
 
 ## Estimated Parallelism
 
 With 3 engineers or agents available, the minimum sequential work is:
+
 - Phase 1 (SF)
 - Phase 2 (2A + 2B + 2C in parallel)
 - Phase 3 (CG)

@@ -2,7 +2,7 @@
 
 /**
  * Web Loom CLI Entry Point
- * 
+ *
  * Main entry point for the webloom command-line tool.
  * Provides commands for project initialization, code generation,
  * database migrations, and development server.

@@ -4,10 +4,10 @@
  * Defines the Web Loom config with sensible defaults.
  * Adapters are selected here: Hono for HTTP, Drizzle for DB, Zod for validation.
  */
-import { defineConfig } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
+import { defineConfig } from '@web-loom/api-core';
+import { honoAdapter } from '@web-loom/api-adapter-hono';
+import { drizzleAdapter } from '@web-loom/api-adapter-drizzle';
+import { zodAdapter } from '@web-loom/api-adapter-zod';
 
 export default defineConfig({
   // Adapter selection — swap any of these without changing app code
@@ -26,7 +26,7 @@ export default defineConfig({
   // Security defaults
   security: {
     cors: {
-      origin: ["http://localhost:3000"],
+      origin: ['http://localhost:3000'],
       credentials: true,
     },
   },
@@ -46,8 +46,8 @@ export default defineConfig({
   // Basic logging
   observability: {
     logging: {
-      level: "info",
-      format: "pretty",
+      level: 'info',
+      format: 'pretty',
     },
   },
 });

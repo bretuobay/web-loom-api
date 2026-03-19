@@ -99,8 +99,8 @@ The registry can determine the correct initialization order for models based on 
 ```typescript
 // Register models in any order
 registry.register(commentModel); // depends on Post and User
-registry.register(postModel);    // depends on User
-registry.register(userModel);    // no dependencies
+registry.register(postModel); // depends on User
+registry.register(userModel); // no dependencies
 
 // Resolve initialization order
 const order = registry.resolveDependencyOrder();
@@ -162,24 +162,24 @@ registry.register({ name: 'blog_post', fields: [...] }); // Not PascalCase
     { name: 'email', type: 'string' },
     { name: 'firstName', type: 'string' },
     { name: 'role', type: 'enum', validation: { enum: ['admin', 'user'] } },
-  ]
+  ];
 }
 
 // ✗ Invalid
 {
-  fields: [] // Must have at least one field
+  fields: []; // Must have at least one field
 }
 
 {
   fields: [
-    { name: 'Email', type: 'string' } // Not camelCase
-  ]
+    { name: 'Email', type: 'string' }, // Not camelCase
+  ];
 }
 
 {
   fields: [
-    { name: 'role', type: 'enum' } // Missing enum values
-  ]
+    { name: 'role', type: 'enum' }, // Missing enum values
+  ];
 }
 ```
 
@@ -189,12 +189,20 @@ registry.register({ name: 'blog_post', fields: [...] }); // Not PascalCase
 
 ```typescript
 // ✓ Valid
-{ tableName: 'users' }
-{ tableName: 'blog_posts' }
+{
+  tableName: 'users';
+}
+{
+  tableName: 'blog_posts';
+}
 
 // ✗ Invalid
-{ tableName: 'Users' }      // Not snake_case
-{ tableName: 'BlogPosts' }  // Not snake_case
+{
+  tableName: 'Users';
+} // Not snake_case
+{
+  tableName: 'BlogPosts';
+} // Not snake_case
 ```
 
 ### Relationship Validation
@@ -209,20 +217,20 @@ registry.register({ name: 'blog_post', fields: [...] }); // Not PascalCase
   relationships: [
     { type: 'belongsTo', model: 'User' },
     { type: 'manyToMany', model: 'Tag', through: 'post_tags' },
-  ]
+  ];
 }
 
 // ✗ Invalid
 {
   relationships: [
-    { type: 'invalid', model: 'User' } // Invalid type
-  ]
+    { type: 'invalid', model: 'User' }, // Invalid type
+  ];
 }
 
 {
   relationships: [
-    { type: 'manyToMany', model: 'Tag' } // Missing 'through' table
-  ]
+    { type: 'manyToMany', model: 'Tag' }, // Missing 'through' table
+  ];
 }
 ```
 
@@ -243,7 +251,7 @@ try {
 } catch (error) {
   if (error instanceof ValidationError) {
     console.log(error.message); // "Model "invalid" validation failed"
-    console.log(error.fields);  // Array of field-level errors
+    console.log(error.fields); // Array of field-level errors
   }
 }
 ```
@@ -365,7 +373,6 @@ See `examples/model-registry-example.ts` for a complete working example demonstr
 - [Model Definition Types](./types.ts) - TypeScript types for model definitions
 - [CRUD Generator](../../api-generator-crud/) - Uses the registry to generate CRUD routes
 - [Type Generator](../../api-generator-types/) - Uses the registry to generate TypeScript types
-
 
 ---
 
@@ -537,8 +544,8 @@ Trailing slashes are automatically removed (except for root `/`):
 registry.register({ path: '/users/', method: 'GET', handler: getUsers });
 
 // Both match the same route
-registry.match('/users', 'GET');   // ✓ Matches
-registry.match('/users/', 'GET');  // ✓ Matches
+registry.match('/users', 'GET'); // ✓ Matches
+registry.match('/users/', 'GET'); // ✓ Matches
 ```
 
 ## Conflict Detection
@@ -824,7 +831,6 @@ registry.register({
 
 - Requirements: 5.1, 5.2, 5.3, 6.5, 6.6
 
-
 ---
 
 # Route Discovery
@@ -845,32 +851,32 @@ The Route Discovery component automatically discovers and registers routes from 
 
 ### Basic Mapping
 
-| File Path | URL Path |
-|-----------|----------|
-| `index.ts` | `/` |
-| `users.ts` | `/users` |
-| `about.ts` | `/about` |
-| `users/index.ts` | `/users` |
+| File Path        | URL Path       |
+| ---------------- | -------------- |
+| `index.ts`       | `/`            |
+| `users.ts`       | `/users`       |
+| `about.ts`       | `/about`       |
+| `users/index.ts` | `/users`       |
 | `users/posts.ts` | `/users/posts` |
 
 ### Dynamic Segments
 
 Use `[param]` syntax for dynamic route parameters:
 
-| File Path | URL Path |
-|-----------|----------|
-| `[id].ts` | `/:id` |
-| `users/[id].ts` | `/users/:id` |
-| `users/[id]/posts.ts` | `/users/:id/posts` |
+| File Path                      | URL Path                   |
+| ------------------------------ | -------------------------- |
+| `[id].ts`                      | `/:id`                     |
+| `users/[id].ts`                | `/users/:id`               |
+| `users/[id]/posts.ts`          | `/users/:id/posts`         |
 | `users/[id]/posts/[postId].ts` | `/users/:id/posts/:postId` |
 
 ### Catch-All Routes
 
 Use `[...path]` syntax for catch-all routes:
 
-| File Path | URL Path |
-|-----------|----------|
-| `[...path].ts` | `/*` |
+| File Path           | URL Path  |
+| ------------------- | --------- |
+| `[...path].ts`      | `/*`      |
 | `docs/[...path].ts` | `/docs/*` |
 
 ## Usage
@@ -920,11 +926,11 @@ export async function POST(ctx) {
 export async function GET(ctx) {
   const { id } = ctx.params;
   const user = await db.users.findUnique({ where: { id } });
-  
+
   if (!user) {
     return new Response('Not found', { status: 404 });
   }
-  
+
   return new Response(JSON.stringify(user));
 }
 
@@ -955,11 +961,11 @@ export async function GET(ctx) {
   const post = await db.posts.findFirst({
     where: { id: postId, userId: id },
   });
-  
+
   if (!post) {
     return new Response('Not found', { status: 404 });
   }
-  
+
   return new Response(JSON.stringify(post));
 }
 ```
@@ -1199,13 +1205,23 @@ Use `index.ts` for collection endpoints:
 
 ```typescript
 // src/routes/users/index.ts
-export async function GET() { /* List users */ }
-export async function POST() { /* Create user */ }
+export async function GET() {
+  /* List users */
+}
+export async function POST() {
+  /* Create user */
+}
 
 // src/routes/users/[id].ts
-export async function GET() { /* Get user */ }
-export async function PUT() { /* Update user */ }
-export async function DELETE() { /* Delete user */ }
+export async function GET() {
+  /* Get user */
+}
+export async function PUT() {
+  /* Update user */
+}
+export async function DELETE() {
+  /* Delete user */
+}
 ```
 
 ### 3. Keep Route Files Focused
@@ -1215,15 +1231,25 @@ Each route file should handle a single resource or endpoint:
 ```typescript
 // ✓ Good - focused on user resource
 // src/routes/users/[id].ts
-export async function GET(ctx) { /* Get user */ }
-export async function PUT(ctx) { /* Update user */ }
-export async function DELETE(ctx) { /* Delete user */ }
+export async function GET(ctx) {
+  /* Get user */
+}
+export async function PUT(ctx) {
+  /* Update user */
+}
+export async function DELETE(ctx) {
+  /* Delete user */
+}
 
 // ✗ Bad - mixing multiple resources
 // src/routes/api.ts
 export async function GET(ctx) {
-  if (ctx.path.includes('users')) { /* ... */ }
-  if (ctx.path.includes('posts')) { /* ... */ }
+  if (ctx.path.includes('users')) {
+    /* ... */
+  }
+  if (ctx.path.includes('posts')) {
+    /* ... */
+  }
 }
 ```
 
@@ -1257,11 +1283,11 @@ export async function GET(ctx) {
   try {
     const { id } = ctx.params;
     const user = await db.users.findUnique({ where: { id } });
-    
+
     if (!user) {
       return new Response('User not found', { status: 404 });
     }
-    
+
     return new Response(JSON.stringify(user));
   } catch (error) {
     console.error('Error fetching user:', error);

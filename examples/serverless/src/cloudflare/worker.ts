@@ -5,8 +5,8 @@
  * Use this when you need fine-grained control over the request lifecycle
  * or want to add Cloudflare-specific features like Durable Objects.
  */
-import { createCloudflareHandler } from "@web-loom/api-deployment-cloudflare";
-import { getApp } from "../shared/app";
+import { createCloudflareHandler } from '@web-loom/api-deployment-cloudflare';
+import { getApp } from '../shared/app';
 
 interface Env {
   DATABASE_URL: string;
@@ -34,8 +34,6 @@ export default {
     const app = await getApp();
 
     // Run cleanup tasks
-    await app.db.execute(
-      "DELETE FROM items WHERE created_at < NOW() - INTERVAL '30 days'"
-    );
+    await app.db.execute("DELETE FROM items WHERE created_at < NOW() - INTERVAL '30 days'");
   },
 };

@@ -314,7 +314,11 @@ describe('generateOpenApiDocument', () => {
   });
 
   it('includes description in info when provided', () => {
-    const doc = generateOpenApiDocument([], [], { title: 'T', version: '1', description: 'My API' });
+    const doc = generateOpenApiDocument([], [], {
+      title: 'T',
+      version: '1',
+      description: 'My API',
+    });
     expect(doc.info.description).toBe('My API');
   });
 });
