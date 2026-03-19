@@ -4,12 +4,12 @@
  * Demonstrates a production-ready configuration with all adapters enabled:
  * auth, email, caching, rate limiting, webhooks, background jobs, and file uploads.
  */
-import { defineConfig } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
-import { luciaAdapter } from "@web-loom/api-adapter-lucia";
-import { resendAdapter } from "@web-loom/api-adapter-resend";
+import { defineConfig } from '@web-loom/api-core';
+import { honoAdapter } from '@web-loom/api-adapter-hono';
+import { drizzleAdapter } from '@web-loom/api-adapter-drizzle';
+import { zodAdapter } from '@web-loom/api-adapter-zod';
+import { luciaAdapter } from '@web-loom/api-adapter-lucia';
+import { resendAdapter } from '@web-loom/api-adapter-resend';
 
 export default defineConfig({
   adapters: {
@@ -17,12 +17,12 @@ export default defineConfig({
     database: drizzleAdapter(),
     validation: zodAdapter(),
     auth: luciaAdapter({
-      sessionExpiry: "30d",
-      cookieName: "session",
+      sessionExpiry: '30d',
+      cookieName: 'session',
     }),
     email: resendAdapter({
       apiKey: process.env.RESEND_API_KEY!,
-      from: "noreply@example.com",
+      from: 'noreply@example.com',
     }),
   },
 
@@ -51,8 +51,8 @@ export default defineConfig({
   },
 
   observability: {
-    logging: { level: "info", format: "json" },
-    metrics: { enabled: true, endpoint: "/metrics" },
+    logging: { level: 'info', format: 'json' },
+    metrics: { enabled: true, endpoint: '/metrics' },
     tracing: { enabled: true, sampleRate: 0.1 },
   },
 

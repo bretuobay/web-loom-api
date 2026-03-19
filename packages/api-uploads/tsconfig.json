@@ -4,18 +4,9 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
-      "@web-loom/api-shared": [
-        "../api-shared/dist/index.d.ts"
-      ]
+      "@web-loom/api-shared": ["../api-shared/dist/index.d.ts"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

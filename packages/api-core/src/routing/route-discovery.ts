@@ -35,7 +35,7 @@ async function collectRouteFiles(dir: string): Promise<string[]> {
  */
 export async function discoverAndMountRoutes(
   mainApp: Hono<{ Variables: WebLoomVariables }>,
-  routesDir: string,
+  routesDir: string
 ): Promise<void> {
   // Check directory existence; warn and bail if absent
   try {

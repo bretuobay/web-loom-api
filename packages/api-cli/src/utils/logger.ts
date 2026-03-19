@@ -1,6 +1,6 @@
 /**
  * CLI Logger Utility
- * 
+ *
  * Provides colored console output for different log levels.
  * Respects --no-color flag and --debug mode.
  */
@@ -81,20 +81,17 @@ export function log(message: string): void {
 /**
  * Create a spinner for long-running operations
  */
-export async function withSpinner<T>(
-  message: string,
-  fn: () => Promise<T>
-): Promise<T> {
+export async function withSpinner<T>(message: string, fn: () => Promise<T>): Promise<T> {
   // Dynamic import to handle ESM module
   const ora = (await import('ora')).default;
-  
+
   if (!config.color) {
     info(message);
     return fn();
   }
 
   const spinner = ora(message).start();
-  
+
   try {
     const result = await fn();
     spinner.succeed();

@@ -59,6 +59,7 @@ For each model registered in the `Model_Registry` with `crud` enabled, the OpenA
 
 **REQ-OG-021**
 For each CRUD operation, the generator shall produce:
+
 - `summary` derived from the operation name and model name (e.g., `"List Users"`, `"Create User"`)
 - `tags` set to `[model.meta.name]`
 - `operationId` set to `"<operation><ModelName>"` (e.g., `"listUser"`, `"createUser"`)
@@ -87,6 +88,7 @@ The Web_Loom_API shall expose an `openApiMeta(meta: RouteMeta)` middleware facto
 
 **REQ-OG-031**
 The `RouteMeta` interface shall contain:
+
 - `summary?: string`
 - `description?: string`
 - `tags?: string[]`

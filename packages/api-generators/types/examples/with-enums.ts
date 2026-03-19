@@ -1,6 +1,6 @@
 /**
  * Enums Example
- * 
+ *
  * Demonstrates enum type generation
  */
 
@@ -53,9 +53,9 @@ const models: ModelDefinition[] = [
       { name: 'id', type: 'uuid', required: true },
       { name: 'email', type: 'string', required: true },
       { name: 'name', type: 'string', required: true },
-      { 
-        name: 'role', 
-        type: 'enum', 
+      {
+        name: 'role',
+        type: 'enum',
         required: true,
         enum: ['user', 'admin', 'moderator'],
         metadata: {
@@ -74,9 +74,9 @@ const models: ModelDefinition[] = [
       { name: 'id', type: 'uuid', required: true },
       { name: 'title', type: 'string', required: true },
       { name: 'description', type: 'string', required: false },
-      { 
-        name: 'status', 
-        type: 'enum', 
+      {
+        name: 'status',
+        type: 'enum',
         required: true,
         enum: ['todo', 'in_progress', 'done'],
         metadata: {

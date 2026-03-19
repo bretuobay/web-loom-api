@@ -46,7 +46,7 @@ export function jwtAuth(options: JwtAuthOptions): MiddlewareHandler {
       }
       return c.json(
         { error: { code: 'UNAUTHORIZED', message: 'Missing Authorization header' } },
-        401,
+        401
       );
     }
 
@@ -76,10 +76,7 @@ export function jwtAuth(options: JwtAuthOptions): MiddlewareHandler {
         await next();
         return;
       }
-      return c.json(
-        { error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } },
-        401,
-      );
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } }, 401);
     }
   };
 }

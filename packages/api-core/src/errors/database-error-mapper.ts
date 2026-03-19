@@ -1,6 +1,6 @@
 /**
  * Database Error Mapper
- * 
+ *
  * Maps database-specific errors to appropriate HTTP status codes and error types.
  * Handles common database errors like unique constraint violations, foreign key
  * violations, and connection errors.
@@ -23,7 +23,7 @@ const ERROR_PATTERNS = {
   FOREIGN_KEY_VIOLATION: ['23503', 'foreign key constraint', 'violates foreign key'],
   NOT_NULL_VIOLATION: ['23502', 'null value', 'violates not-null'],
   CHECK_VIOLATION: ['23514', 'check constraint'],
-  
+
   // Connection errors
   CONNECTION_ERROR: [
     'ECONNREFUSED',
@@ -34,14 +34,9 @@ const ERROR_PATTERNS = {
     'connection lost',
     'connection terminated',
   ],
-  
+
   // Not found patterns
-  NOT_FOUND: [
-    'not found',
-    'does not exist',
-    'no rows',
-    'zero rows',
-  ],
+  NOT_FOUND: ['not found', 'does not exist', 'no rows', 'zero rows'],
 };
 
 /**
@@ -49,7 +44,7 @@ const ERROR_PATTERNS = {
  */
 function matchesPattern(message: string, patterns: string[]): boolean {
   const lowerMessage = message.toLowerCase();
-  return patterns.some(pattern => lowerMessage.includes(pattern.toLowerCase()));
+  return patterns.some((pattern) => lowerMessage.includes(pattern.toLowerCase()));
 }
 
 /**
@@ -99,10 +94,10 @@ function extractTableName(message: string): string | undefined {
 
 /**
  * Map database error to appropriate application error
- * 
+ *
  * @param error - Original database error
  * @returns Mapped application error
- * 
+ *
  * @example
  * ```typescript
  * try {
@@ -124,12 +119,12 @@ export function mapDatabaseError(error: unknown): Error {
 
   // Check for unique constraint violation (409 Conflict)
   if (
-    errorCode && ERROR_PATTERNS.UNIQUE_VIOLATION.includes(errorCode) ||
+    (errorCode && ERROR_PATTERNS.UNIQUE_VIOLATION.includes(errorCode)) ||
     matchesPattern(message, ERROR_PATTERNS.UNIQUE_VIOLATION)
   ) {
     const constraintName = extractConstraintName(message);
     const tableName = extractTableName(message);
-    
+
     let conflictMessage = 'A record with this value already exists';
     if (constraintName) {
       conflictMessage = `Duplicate value violates constraint: ${constraintName}`;
@@ -142,11 +137,11 @@ export function mapDatabaseError(error: unknown): Error {
 
   // Check for foreign key violation (409 Conflict)
   if (
-    errorCode && ERROR_PATTERNS.FOREIGN_KEY_VIOLATION.includes(errorCode) ||
+    (errorCode && ERROR_PATTERNS.FOREIGN_KEY_VIOLATION.includes(errorCode)) ||
     matchesPattern(message, ERROR_PATTERNS.FOREIGN_KEY_VIOLATION)
   ) {
     const constraintName = extractConstraintName(message);
-    
+
     let conflictMessage = 'Referenced record does not exist or is still in use';
     if (constraintName) {
       conflictMessage = `Foreign key constraint violated: ${constraintName}`;
@@ -157,7 +152,7 @@ export function mapDatabaseError(error: unknown): Error {
 
   // Check for not null violation (400 Bad Request)
   if (
-    errorCode && ERROR_PATTERNS.NOT_NULL_VIOLATION.includes(errorCode) ||
+    (errorCode && ERROR_PATTERNS.NOT_NULL_VIOLATION.includes(errorCode)) ||
     matchesPattern(message, ERROR_PATTERNS.NOT_NULL_VIOLATION)
   ) {
     return new DatabaseError('Required field is missing', error);
@@ -165,11 +160,11 @@ export function mapDatabaseError(error: unknown): Error {
 
   // Check for check constraint violation (400 Bad Request)
   if (
-    errorCode && ERROR_PATTERNS.CHECK_VIOLATION.includes(errorCode) ||
+    (errorCode && ERROR_PATTERNS.CHECK_VIOLATION.includes(errorCode)) ||
     matchesPattern(message, ERROR_PATTERNS.CHECK_VIOLATION)
   ) {
     const constraintName = extractConstraintName(message);
-    
+
     let checkMessage = 'Data validation failed';
     if (constraintName) {
       checkMessage = `Check constraint violated: ${constraintName}`;
@@ -180,7 +175,7 @@ export function mapDatabaseError(error: unknown): Error {
 
   // Check for connection errors (503 Service Unavailable)
   if (
-    errorCode && ERROR_PATTERNS.CONNECTION_ERROR.includes(errorCode) ||
+    (errorCode && ERROR_PATTERNS.CONNECTION_ERROR.includes(errorCode)) ||
     matchesPattern(message, ERROR_PATTERNS.CONNECTION_ERROR)
   ) {
     return new InternalError(
@@ -195,10 +190,7 @@ export function mapDatabaseError(error: unknown): Error {
   }
 
   // Default: wrap as DatabaseError
-  return new DatabaseError(
-    'A database error occurred',
-    error
-  );
+  return new DatabaseError('A database error occurred', error);
 }
 
 /**

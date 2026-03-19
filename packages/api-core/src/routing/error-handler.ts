@@ -1,9 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { ErrorHandler } from 'hono';
-import {
-  ValidationError,
-  WebLoomError,
-} from '@web-loom/api-shared';
+import { ValidationError, WebLoomError } from '@web-loom/api-shared';
 
 /**
  * Global Hono error handler.
@@ -40,7 +37,7 @@ export const globalErrorHandler: ErrorHandler = (err, c) => {
         },
       },
       400,
-      headers,
+      headers
     );
   }
 
@@ -58,7 +55,7 @@ export const globalErrorHandler: ErrorHandler = (err, c) => {
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err.statusCode ?? 500) as any,
-      headers,
+      headers
     );
   }
 
@@ -78,6 +75,6 @@ export const globalErrorHandler: ErrorHandler = (err, c) => {
       },
     },
     500,
-    headers,
+    headers
   );
 };

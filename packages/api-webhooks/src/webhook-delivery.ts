@@ -25,7 +25,11 @@ const DEFAULT_TIMEOUT = 10_000;
 /**
  * Calculate exponential backoff delay.
  */
-export function calculateBackoffDelay(attempt: number, baseDelay: number, maxDelay: number): number {
+export function calculateBackoffDelay(
+  attempt: number,
+  baseDelay: number,
+  maxDelay: number
+): number {
   const delay = baseDelay * Math.pow(2, attempt - 1);
   return Math.min(delay, maxDelay);
 }
@@ -34,7 +38,12 @@ export function calculateBackoffDelay(attempt: number, baseDelay: number, maxDel
  * Default HTTP transport using fetch.
  */
 export const defaultTransport: HttpTransport = {
-  async post(url: string, body: string, headers: Record<string, string>, timeout: number): Promise<number> {
+  async post(
+    url: string,
+    body: string,
+    headers: Record<string, string>,
+    timeout: number
+  ): Promise<number> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
@@ -86,7 +95,11 @@ export class WebhookDelivery {
       attempts = attempt;
 
       if (attempt > 1) {
-        const delay = calculateBackoffDelay(attempt - 1, this.options.baseDelay ?? 1000, this.options.maxDelay ?? 30000);
+        const delay = calculateBackoffDelay(
+          attempt - 1,
+          this.options.baseDelay ?? 1000,
+          this.options.maxDelay ?? 30000
+        );
         await this.sleep(delay);
       }
 
@@ -95,7 +108,7 @@ export class WebhookDelivery {
           webhook.url,
           body,
           { [SIGNATURE_HEADER]: signature },
-          this.options.timeout ?? 10000,
+          this.options.timeout ?? 10000
         );
         lastStatusCode = statusCode;
 

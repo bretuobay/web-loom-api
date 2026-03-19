@@ -49,7 +49,6 @@ describe('parseCron', () => {
   });
 });
 
-
 describe('cronMatches', () => {
   it('matches a date against a cron expression', () => {
     const parsed = parseCron('30 12 * * *');

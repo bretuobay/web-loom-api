@@ -57,7 +57,6 @@ export function parseTracestate(header: string): Array<[string, string]> {
     .filter((e): e is [string, string] => e !== null);
 }
 
-
 /**
  * Format tracestate entries back into a header string.
  */
@@ -68,7 +67,9 @@ export function formatTracestate(entries: Array<[string, string]>): string {
 /**
  * Extract trace context from incoming request headers.
  */
-export function extractTraceContext(headers: Record<string, string | undefined>): TraceContext | null {
+export function extractTraceContext(
+  headers: Record<string, string | undefined>
+): TraceContext | null {
   const traceparent = headers['traceparent'];
   if (!traceparent) return null;
 
@@ -86,7 +87,10 @@ export function extractTraceContext(headers: Record<string, string | undefined>)
 /**
  * Inject trace context into outgoing request headers.
  */
-export function injectTraceContext(ctx: TraceContext, headers: Record<string, string>): Record<string, string> {
+export function injectTraceContext(
+  ctx: TraceContext,
+  headers: Record<string, string>
+): Record<string, string> {
   headers['traceparent'] = formatTraceparent(ctx);
   if (ctx.traceState) {
     headers['tracestate'] = ctx.traceState;

@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  extractBoundary,
-  fileUpload,
-  parseMultipart,
-} from '../upload-middleware';
+import { extractBoundary, fileUpload, parseMultipart } from '../upload-middleware';
 import type { ResolvedFileUploadOptions } from '../types';
 
 // -----------------------------------------------------------------------
@@ -23,7 +19,7 @@ function buildMultipartBody(
     filename?: string;
     contentType?: string;
     content: string | Buffer;
-  }>,
+  }>
 ): Buffer {
   const chunks: Buffer[] = [];
   for (const part of parts) {
@@ -31,16 +27,14 @@ function buildMultipartBody(
     if (part.filename) {
       chunks.push(
         Buffer.from(
-          `Content-Disposition: form-data; name="${part.name}"; filename="${part.filename}"\r\n`,
-        ),
+          `Content-Disposition: form-data; name="${part.name}"; filename="${part.filename}"\r\n`
+        )
       );
       chunks.push(
-        Buffer.from(`Content-Type: ${part.contentType ?? 'application/octet-stream'}\r\n`),
+        Buffer.from(`Content-Type: ${part.contentType ?? 'application/octet-stream'}\r\n`)
       );
     } else {
-      chunks.push(
-        Buffer.from(`Content-Disposition: form-data; name="${part.name}"\r\n`),
-      );
+      chunks.push(Buffer.from(`Content-Disposition: form-data; name="${part.name}"\r\n`));
     }
     chunks.push(Buffer.from('\r\n'));
     chunks.push(Buffer.isBuffer(part.content) ? part.content : Buffer.from(part.content));
@@ -56,15 +50,13 @@ function buildMultipartBody(
 
 describe('extractBoundary', () => {
   it('extracts boundary from standard header', () => {
-    expect(
-      extractBoundary('multipart/form-data; boundary=----WebKitFormBoundary'),
-    ).toBe('----WebKitFormBoundary');
+    expect(extractBoundary('multipart/form-data; boundary=----WebKitFormBoundary')).toBe(
+      '----WebKitFormBoundary'
+    );
   });
 
   it('extracts quoted boundary', () => {
-    expect(
-      extractBoundary('multipart/form-data; boundary="abc123"'),
-    ).toBe('abc123');
+    expect(extractBoundary('multipart/form-data; boundary="abc123"')).toBe('abc123');
   });
 
   it('returns undefined for non-multipart content type', () => {
@@ -208,7 +200,8 @@ describe('fileUpload', () => {
 
     const { result } = await handler({
       headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
-      arrayBuffer: async () => body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength),
+      arrayBuffer: async () =>
+        body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength),
     });
 
     expect(result?.files).toHaveLength(1);

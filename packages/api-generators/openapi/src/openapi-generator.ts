@@ -1,6 +1,6 @@
 /**
  * OpenAPI Generator
- * 
+ *
  * Generates OpenAPI 3.1 specifications from model and route definitions
  */
 
@@ -60,7 +60,7 @@ export interface ModelDefinition {
 
 /**
  * OpenAPI Generator Class
- * 
+ *
  * Generates OpenAPI 3.1 specifications from Web Loom models and routes
  */
 export class OpenAPIGenerator {
@@ -276,9 +276,9 @@ export class OpenAPIGenerator {
     const pathParts = route.path
       .split('/')
       .filter(Boolean)
-      .map(part => part.replace(/[^a-zA-Z0-9]/g, ''));
-    
-    return `${method}${pathParts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('')}`;
+      .map((part) => part.replace(/[^a-zA-Z0-9]/g, ''));
+
+    return `${method}${pathParts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('')}`;
   }
 
   /**
@@ -292,7 +292,7 @@ export class OpenAPIGenerator {
     if (pathParams) {
       for (const param of pathParams) {
         const paramName = param.substring(1);
-        
+
         // Check if there's a validation schema for this parameter
         let schema: OpenAPISchema = { type: 'string' };
         if (route.validation?.params && typeof route.validation.params === 'object') {
@@ -759,7 +759,10 @@ export class OpenAPIGenerator {
                     details: {
                       type: 'object',
                       properties: {
-                        retryAfter: { type: 'integer', description: 'Seconds until retry is allowed' },
+                        retryAfter: {
+                          type: 'integer',
+                          description: 'Seconds until retry is allowed',
+                        },
                       },
                     },
                     timestamp: { type: 'string', format: 'date-time' },
@@ -883,7 +886,11 @@ export class OpenAPIGenerator {
     }
 
     // Add example if enabled
-    if (this.options.includeExamples && model.metadata?.examples && model.metadata.examples.length > 0) {
+    if (
+      this.options.includeExamples &&
+      model.metadata?.examples &&
+      model.metadata.examples.length > 0
+    ) {
       schema.example = model.metadata.examples[0];
     } else if (this.options.includeExamples) {
       schema.example = this.generateModelExample(model);
@@ -916,7 +923,7 @@ export class OpenAPIGenerator {
    */
   private inferModelFromPath(path: string): string | null {
     const parts = path.split('/').filter(Boolean);
-    
+
     // Find the first part that doesn't start with : and isn't 'api' or version
     for (const part of parts) {
       if (!part.startsWith(':') && !part.match(/^(api|v\d+)$/i)) {
@@ -951,36 +958,41 @@ export class OpenAPIGenerator {
    */
   private objectToYAML(obj: unknown, indent = 0): string {
     const spaces = '  '.repeat(indent);
-    
+
     if (obj === null || obj === undefined) {
       return 'null';
     }
-    
+
     if (typeof obj === 'string') {
       return obj.includes('\n') ? `|\n${spaces}  ${obj.replace(/\n/g, `\n${spaces}  `)}` : obj;
     }
-    
+
     if (typeof obj === 'number' || typeof obj === 'boolean') {
       return String(obj);
     }
-    
+
     if (Array.isArray(obj)) {
       if (obj.length === 0) return '[]';
-      return '\n' + obj.map(item => `${spaces}- ${this.objectToYAML(item, indent + 1)}`).join('\n');
+      return (
+        '\n' + obj.map((item) => `${spaces}- ${this.objectToYAML(item, indent + 1)}`).join('\n')
+      );
     }
-    
+
     if (typeof obj === 'object') {
       const entries = Object.entries(obj);
       if (entries.length === 0) return '{}';
-      
-      return '\n' + entries
-        .map(([key, value]) => {
-          const yamlValue = this.objectToYAML(value, indent + 1);
-          return `${spaces}${key}:${yamlValue.startsWith('\n') ? yamlValue : ' ' + yamlValue}`;
-        })
-        .join('\n');
+
+      return (
+        '\n' +
+        entries
+          .map(([key, value]) => {
+            const yamlValue = this.objectToYAML(value, indent + 1);
+            return `${spaces}${key}:${yamlValue.startsWith('\n') ? yamlValue : ' ' + yamlValue}`;
+          })
+          .join('\n')
+      );
     }
-    
+
     return String(obj);
   }
 }

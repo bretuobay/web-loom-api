@@ -1,6 +1,6 @@
 /**
  * Advanced OpenAPI Generator Usage Example
- * 
+ *
  * Demonstrates validation schemas, rate limiting, caching, and authentication
  */
 
@@ -245,9 +245,7 @@ const generator = new OpenAPIGenerator({
       description: 'API key for service-to-service authentication',
     },
   },
-  security: [
-    { bearerAuth: [] },
-  ],
+  security: [{ bearerAuth: [] }],
   tags: [
     {
       name: 'Users',

@@ -44,7 +44,6 @@ export interface ConnectionInfo {
  * ```
  */
 export class WebSocketDurableObject {
-
   private connections = new Map<string, DOWebSocket>();
   private connectionInfo = new Map<string, ConnectionInfo>();
   private nextId = 1;

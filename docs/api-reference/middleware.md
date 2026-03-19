@@ -29,13 +29,13 @@ Available as `c.var.user` after any successful auth strategy.
 Validates a Bearer JWT in the `Authorization` header.
 
 ```typescript
-import { jwtAuth } from "@web-loom/api-middleware-auth";
+import { jwtAuth } from '@web-loom/api-middleware-auth';
 
 // Protect all routes
-app.use("/*", jwtAuth({ secret: process.env.JWT_SECRET! }));
+app.use('/*', jwtAuth({ secret: process.env.JWT_SECRET! }));
 
 // Optional auth (sets c.var.user if token present, doesn't reject if absent)
-app.use("/*", jwtAuth({ secret: process.env.JWT_SECRET!, optional: true }));
+app.use('/*', jwtAuth({ secret: process.env.JWT_SECRET!, optional: true }));
 ```
 
 **Options:**
@@ -61,11 +61,14 @@ interface JwtAuthOptions {
 Cookie-based session authentication via [Lucia](https://lucia-auth.com). Validates the session cookie and refreshes it if needed.
 
 ```typescript
-import { sessionAuth } from "@web-loom/api-middleware-auth";
+import { sessionAuth } from '@web-loom/api-middleware-auth';
 
-app.use("/*", sessionAuth({
-  lucia: luciaInstance,
-}));
+app.use(
+  '/*',
+  sessionAuth({
+    lucia: luciaInstance,
+  })
+);
 ```
 
 **Options:**
@@ -88,16 +91,18 @@ interface SessionAuthOptions {
 Validates API keys from `X-API-Key` header or `Authorization: Bearer <key>` fallback.
 
 ```typescript
-import { apiKeyAuth } from "@web-loom/api-middleware-auth";
+import { apiKeyAuth } from '@web-loom/api-middleware-auth';
 
-app.use("/api/*", apiKeyAuth({
-  validate: async (key) => {
-    const record = await db.select().from(apiKeysTable)
-      .where(eq(apiKeysTable.key, key)).limit(1);
-    if (!record[0]) return null;
-    return { id: record[0].userId, role: "api" };
-  },
-}));
+app.use(
+  '/api/*',
+  apiKeyAuth({
+    validate: async (key) => {
+      const record = await db.select().from(apiKeysTable).where(eq(apiKeysTable.key, key)).limit(1);
+      if (!record[0]) return null;
+      return { id: record[0].userId, role: 'api' };
+    },
+  })
+);
 ```
 
 **Options:**
@@ -120,9 +125,9 @@ interface ApiKeyAuthOptions {
 Returns 403 if `c.var.user.role` doesn't match. Must be used after an auth strategy middleware.
 
 ```typescript
-import { jwtAuth, requireRole } from "@web-loom/api-middleware-auth";
+import { jwtAuth, requireRole } from '@web-loom/api-middleware-auth';
 
-app.delete("/:id", jwtAuth({ secret }), requireRole("admin"), async (c) => {
+app.delete('/:id', jwtAuth({ secret }), requireRole('admin'), async (c) => {
   // Only admins reach here
 });
 ```
@@ -150,13 +155,13 @@ app.delete("/:id",
 Tries each strategy in order. Succeeds on the first strategy that sets `c.var.user`. Returns 401 only if all strategies fail.
 
 ```typescript
-import { jwtAuth, apiKeyAuth, composeAuth } from "@web-loom/api-middleware-auth";
+import { jwtAuth, apiKeyAuth, composeAuth } from '@web-loom/api-middleware-auth';
 
 // Accept either JWT or API key
-app.use("/api/*", composeAuth(
-  jwtAuth({ secret: process.env.JWT_SECRET! }),
-  apiKeyAuth({ validate: lookupApiKey }),
-));
+app.use(
+  '/api/*',
+  composeAuth(jwtAuth({ secret: process.env.JWT_SECRET! }), apiKeyAuth({ validate: lookupApiKey }))
+);
 ```
 
 ---
@@ -166,9 +171,9 @@ app.use("/api/*", composeAuth(
 CSRF protection for session-based flows. Rejects unsafe methods (POST, PUT, PATCH, DELETE) that lack a valid CSRF token.
 
 ```typescript
-import { csrfProtection } from "@web-loom/api-middleware-auth";
+import { csrfProtection } from '@web-loom/api-middleware-auth';
 
-app.use("/*", csrfProtection());
+app.use('/*', csrfProtection());
 ```
 
 **Options:**
@@ -190,13 +195,13 @@ Set `auth` on CRUD operation options to protect generated routes:
 
 ```typescript
 export const Post = defineModel(postsTable, {
-  name: "Post",
+  name: 'Post',
   crud: {
-    list:   { auth: false },   // public
-    read:   { auth: false },   // public
-    create: { auth: true },    // any authenticated user
+    list: { auth: false }, // public
+    read: { auth: false }, // public
+    create: { auth: true }, // any authenticated user
     update: { auth: true },
-    delete: { auth: "admin" }, // only users with role "admin"
+    delete: { auth: 'admin' }, // only users with role "admin"
   },
 });
 ```
@@ -208,12 +213,12 @@ export const Post = defineModel(postsTable, {
 Web Loom routes are standard Hono handlers. Use Hono's `MiddlewareHandler` type:
 
 ```typescript
-import type { MiddlewareHandler } from "hono";
+import type { MiddlewareHandler } from 'hono';
 
 export const requestTimer: MiddlewareHandler = async (c, next) => {
   const start = Date.now();
   await next();
-  c.res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
+  c.res.headers.set('X-Response-Time', `${Date.now() - start}ms`);
 };
 ```
 
@@ -221,8 +226,8 @@ Short-circuit without calling `next()` to stop the chain:
 
 ```typescript
 export const maintenanceMode: MiddlewareHandler = async (c, next) => {
-  if (process.env.MAINTENANCE === "true") {
-    return c.json({ error: { code: "SERVICE_UNAVAILABLE", message: "Down for maintenance" } }, 503);
+  if (process.env.MAINTENANCE === 'true') {
+    return c.json({ error: { code: 'SERVICE_UNAVAILABLE', message: 'Down for maintenance' } }, 503);
   }
   await next();
 };
@@ -231,7 +236,7 @@ export const maintenanceMode: MiddlewareHandler = async (c, next) => {
 Apply to a route:
 
 ```typescript
-app.get("/", requestTimer, maintenanceMode, async (c) => {
-  return c.json({ status: "ok" });
+app.get('/', requestTimer, maintenanceMode, async (c) => {
+  return c.json({ status: 'ok' });
 });
 ```

@@ -67,12 +67,7 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   async set(key: string, state: TokenBucketState, ttlMs: number): Promise<void> {
     const ttlSeconds = Math.ceil(ttlMs / 1000);
-    await this.client.set(
-      this.prefix + key,
-      JSON.stringify(state),
-      'EX',
-      ttlSeconds,
-    );
+    await this.client.set(this.prefix + key, JSON.stringify(state), 'EX', ttlSeconds);
   }
 
   async reset(key: string): Promise<void> {

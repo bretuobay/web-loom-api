@@ -253,6 +253,7 @@ All packages use the modern exports field with proper type definitions:
 ```
 
 This ensures:
+
 - TypeScript can find type definitions
 - ESM and CommonJS compatibility
 - Proper module resolution in all environments

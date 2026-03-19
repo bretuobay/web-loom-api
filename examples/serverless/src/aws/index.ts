@@ -12,8 +12,8 @@
  *
  * Or with AWS CDK / SAM.
  */
-import { createLambdaHandler } from "@web-loom/api-deployment-aws";
-import { getApp } from "../shared/app";
+import { createLambdaHandler } from '@web-loom/api-deployment-aws';
+import { getApp } from '../shared/app';
 
 /**
  * Lambda handler — converts API Gateway v2 events into Web Standard

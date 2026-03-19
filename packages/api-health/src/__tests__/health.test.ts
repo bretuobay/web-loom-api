@@ -53,7 +53,6 @@ describe('HealthChecker', () => {
     });
   });
 
-
   describe('runReadinessChecks', () => {
     it('should return healthy when all checks pass', async () => {
       checker.registerCheck('db', async () => ({ status: 'healthy', message: 'OK' }));
@@ -71,7 +70,10 @@ describe('HealthChecker', () => {
 
     it('should return unhealthy when any check fails', async () => {
       checker.registerCheck('db', async () => ({ status: 'healthy' }));
-      checker.registerCheck('cache', async () => ({ status: 'unhealthy', message: 'Connection refused' }));
+      checker.registerCheck('cache', async () => ({
+        status: 'unhealthy',
+        message: 'Connection refused',
+      }));
 
       const result = await checker.runReadinessChecks();
       expect(result.status).toBe('unhealthy');
@@ -135,7 +137,6 @@ describe('HealthChecker', () => {
   });
 });
 
-
 describe('Health Endpoints', () => {
   let checker: HealthChecker;
 
@@ -182,7 +183,9 @@ describe('Check Helpers', () => {
     });
 
     it('should return unhealthy when ping fails', async () => {
-      const pingFn = async () => { throw new Error('Connection refused'); };
+      const pingFn = async () => {
+        throw new Error('Connection refused');
+      };
       const check = createDatabaseCheck(pingFn);
       const result = await check();
       expect(result.status).toBe('unhealthy');
@@ -206,7 +209,9 @@ describe('Check Helpers', () => {
     });
 
     it('should return unhealthy when adapter check throws', async () => {
-      const check = createAdapterCheck('Redis', async () => { throw new Error('Adapter error'); });
+      const check = createAdapterCheck('Redis', async () => {
+        throw new Error('Adapter error');
+      });
       const result = await check();
       expect(result.status).toBe('unhealthy');
       expect(result.message).toBe('Adapter error');
@@ -225,7 +230,9 @@ describe('Check Helpers', () => {
     });
 
     it('should handle custom function errors', async () => {
-      const check = createCustomCheck('custom', async () => { throw new Error('Custom failure'); });
+      const check = createCustomCheck('custom', async () => {
+        throw new Error('Custom failure');
+      });
       const result = await check();
       expect(result.status).toBe('unhealthy');
       expect(result.message).toBe('Custom failure');

@@ -1,6 +1,6 @@
 /**
  * Generate CRUD Command
- * 
+ *
  * Generates CRUD route files for a model using the CRUD Generator.
  */
 
@@ -27,10 +27,7 @@ interface GenerateCRUDOptions {
 /**
  * Generate route file content for CRUD endpoints
  */
-function generateCRUDRouteContent(
-  modelName: string,
-  options: GenerateCRUDOptions
-): string {
+function generateCRUDRouteContent(modelName: string, options: GenerateCRUDOptions): string {
   const basePath = options.basePath || `/${modelName.toLowerCase()}s`;
   const lines: string[] = [];
 
@@ -38,7 +35,9 @@ function generateCRUDRouteContent(
   lines.push(`import type { RequestContext, NextFunction } from '@web-loom/api-core';`);
   lines.push(`import { CRUDGenerator } from '@web-loom/api-generator-crud';`);
   lines.push(`import { ${modelName} } from '../models/${modelName.toLowerCase()}.js';`);
-  lines.push(`import { database } from '../database.js'; // You'll need to export your database adapter`);
+  lines.push(
+    `import { database } from '../database.js'; // You'll need to export your database adapter`
+  );
   lines.push(``);
 
   // Create CRUD generator instance
@@ -54,43 +53,45 @@ function generateCRUDRouteContent(
   lines.push(`// Generate CRUD routes`);
   lines.push(`const routes = crudGenerator.generate(${modelName}, {`);
   lines.push(`  basePath: '${basePath}',`);
-  
+
   if (options.softDelete) {
     lines.push(`  enableSoftDelete: true,`);
   }
-  
+
   if (options.pagination !== false) {
     lines.push(`  enablePagination: true,`);
     lines.push(`  defaultPageSize: 20,`);
     lines.push(`  maxPageSize: 100,`);
   }
-  
+
   if (options.filtering !== false) {
     lines.push(`  enableFiltering: true,`);
   }
-  
+
   if (options.sorting !== false) {
     lines.push(`  enableSorting: true,`);
   }
-  
+
   if (options.search) {
     lines.push(`  enableSearch: true,`);
     lines.push(`  searchFields: [], // TODO: Add fields to search on`);
   }
-  
+
   if (options.relationships) {
     lines.push(`  enableRelationships: true,`);
   }
-  
+
   lines.push(`});`);
   lines.push(``);
 
   // Export route handlers
   lines.push(`// Export route handlers`);
   lines.push(`// List all ${modelName}s - GET ${basePath}`);
-  lines.push(`export const GET = routes.find(r => r.method === 'GET' && r.path === '${basePath}')?.handler;`);
+  lines.push(
+    `export const GET = routes.find(r => r.method === 'GET' && r.path === '${basePath}')?.handler;`
+  );
   lines.push(``);
-  
+
   lines.push(`// Create ${modelName} - POST ${basePath}`);
   lines.push(`export const POST = routes.find(r => r.method === 'POST')?.handler;`);
   lines.push(``);
@@ -102,7 +103,9 @@ function generateCRUDRouteContent(
   lines.push(` * with the following exports:`);
   lines.push(` * `);
   lines.push(` * // Get ${modelName} by ID - GET ${basePath}/:id`);
-  lines.push(` * export const GET = routes.find(r => r.method === 'GET' && r.path.includes(':id'))?.handler;`);
+  lines.push(
+    ` * export const GET = routes.find(r => r.method === 'GET' && r.path.includes(':id'))?.handler;`
+  );
   lines.push(` * `);
   lines.push(` * // Update ${modelName} (full) - PUT ${basePath}/:id`);
   lines.push(` * export const PUT = routes.find(r => r.method === 'PUT')?.handler;`);
@@ -121,10 +124,7 @@ function generateCRUDRouteContent(
 /**
  * Generate individual resource route file content
  */
-function generateIndividualRouteContent(
-  modelName: string,
-  options: GenerateCRUDOptions
-): string {
+function generateIndividualRouteContent(modelName: string, options: GenerateCRUDOptions): string {
   const basePath = options.basePath || `/${modelName.toLowerCase()}s`;
   const lines: string[] = [];
 
@@ -132,7 +132,9 @@ function generateIndividualRouteContent(
   lines.push(`import type { RequestContext, NextFunction } from '@web-loom/api-core';`);
   lines.push(`import { CRUDGenerator } from '@web-loom/api-generator-crud';`);
   lines.push(`import { ${modelName} } from '../../models/${modelName.toLowerCase()}.js';`);
-  lines.push(`import { database } from '../../database.js'; // You'll need to export your database adapter`);
+  lines.push(
+    `import { database } from '../../database.js'; // You'll need to export your database adapter`
+  );
   lines.push(``);
 
   // Create CRUD generator instance
@@ -148,50 +150,52 @@ function generateIndividualRouteContent(
   lines.push(`// Generate CRUD routes`);
   lines.push(`const routes = crudGenerator.generate(${modelName}, {`);
   lines.push(`  basePath: '${basePath}',`);
-  
+
   if (options.softDelete) {
     lines.push(`  enableSoftDelete: true,`);
   }
-  
+
   if (options.pagination !== false) {
     lines.push(`  enablePagination: true,`);
     lines.push(`  defaultPageSize: 20,`);
     lines.push(`  maxPageSize: 100,`);
   }
-  
+
   if (options.filtering !== false) {
     lines.push(`  enableFiltering: true,`);
   }
-  
+
   if (options.sorting !== false) {
     lines.push(`  enableSorting: true,`);
   }
-  
+
   if (options.search) {
     lines.push(`  enableSearch: true,`);
     lines.push(`  searchFields: [], // TODO: Add fields to search on`);
   }
-  
+
   if (options.relationships) {
     lines.push(`  enableRelationships: true,`);
   }
-  
+
   lines.push(`});`);
   lines.push(``);
 
   // Export route handlers for individual resource
   lines.push(`// Get ${modelName} by ID - GET ${basePath}/:id`);
-  lines.push(`export const GET = routes.find(r => r.method === 'GET' && r.path.includes(':id'))?.handler;`);
+  lines.push(
+    `export const GET = routes.find(r => r.method === 'GET' && r.path.includes(':id'))?.handler;`
+  );
   lines.push(``);
-  
+
   lines.push(`// Update ${modelName} (full) - PUT ${basePath}/:id`);
   lines.push(`export const PUT = routes.find(r => r.method === 'PUT')?.handler;`);
   lines.push(``);
-  
+
   lines.push(`// Update ${modelName} (partial) - PATCH ${basePath}/:id`);
   lines.push(`export const PATCH = routes.find(r => r.method === 'PATCH')?.handler;`);
   lines.push(``);
-  
+
   lines.push(`// Delete ${modelName} - DELETE ${basePath}/:id`);
   lines.push(`export const DELETE = routes.find(r => r.method === 'DELETE')?.handler;`);
   lines.push(``);
@@ -207,14 +211,14 @@ function getRouteFilePaths(
   outputDir?: string
 ): { collectionPath: string; individualPath: string } {
   const routeDir = basePath.replace(/^\//, '').replace(/\//g, path.sep);
-  
+
   if (outputDir) {
     return {
       collectionPath: path.join(outputDir, routeDir, 'index.ts'),
       individualPath: path.join(outputDir, routeDir, '[id].ts'),
     };
   }
-  
+
   // Default to src/routes directory
   const baseDir = path.join(process.cwd(), 'src', 'routes');
   return {
@@ -227,13 +231,8 @@ function getRouteFilePaths(
  * Check if model file exists
  */
 async function checkModelExists(modelName: string): Promise<boolean> {
-  const modelPath = path.join(
-    process.cwd(),
-    'src',
-    'models',
-    `${modelName.toLowerCase()}.ts`
-  );
-  
+  const modelPath = path.join(process.cwd(), 'src', 'models', `${modelName.toLowerCase()}.ts`);
+
   try {
     await fs.access(modelPath);
     return true;
@@ -245,10 +244,7 @@ async function checkModelExists(modelName: string): Promise<boolean> {
 /**
  * Generate CRUD command handler
  */
-async function generateCRUDCommand(
-  modelName: string,
-  options: GenerateCRUDOptions
-): Promise<void> {
+async function generateCRUDCommand(modelName: string, options: GenerateCRUDOptions): Promise<void> {
   try {
     // Validate model name
     if (!modelName || !/^[A-Z][a-zA-Z0-9]*$/.test(modelName)) {
@@ -262,9 +258,7 @@ async function generateCRUDCommand(
     // Check if model exists
     const modelExists = await checkModelExists(modelName);
     if (!modelExists) {
-      logError(
-        `Model file not found: src/models/${modelName.toLowerCase()}.ts`
-      );
+      logError(`Model file not found: src/models/${modelName.toLowerCase()}.ts`);
       info(`\nRun: webloom generate model ${modelName}`);
       throw new CLIError('Model not found');
     }
@@ -277,10 +271,7 @@ async function generateCRUDCommand(
     const individualContent = generateIndividualRouteContent(modelName, options);
 
     // Get output paths
-    const { collectionPath, individualPath } = getRouteFilePaths(
-      basePath,
-      options.output
-    );
+    const { collectionPath, individualPath } = getRouteFilePaths(basePath, options.output);
 
     // Ensure directories exist
     await fs.mkdir(path.dirname(collectionPath), { recursive: true });
@@ -305,7 +296,7 @@ async function generateCRUDCommand(
     success(`\nCRUD routes generated successfully!`);
     info(`  Collection: ${collectionPath}`);
     info(`  Individual: ${individualPath}`);
-    
+
     info(`\nGenerated endpoints:`);
     info(`  GET    ${basePath}           - List all ${modelName}s`);
     info(`  POST   ${basePath}           - Create ${modelName}`);
@@ -313,7 +304,7 @@ async function generateCRUDCommand(
     info(`  PUT    ${basePath}/:id       - Update ${modelName} (full)`);
     info(`  PATCH  ${basePath}/:id       - Update ${modelName} (partial)`);
     info(`  DELETE ${basePath}/:id       - Delete ${modelName}`);
-    
+
     info(`\nNext steps:`);
     info(`  1. Create src/database.ts and export your database adapter`);
     info(`  2. Review and customize the generated routes`);

@@ -20,24 +20,24 @@ describe('Init Command', () => {
     });
 
     it('should support --name option', () => {
-      const nameOption = command.options.find(opt => opt.long === '--name');
+      const nameOption = command.options.find((opt) => opt.long === '--name');
       expect(nameOption).toBeDefined();
       expect(nameOption?.short).toBe('-n');
     });
 
     it('should support --template option', () => {
-      const templateOption = command.options.find(opt => opt.long === '--template');
+      const templateOption = command.options.find((opt) => opt.long === '--template');
       expect(templateOption).toBeDefined();
       expect(templateOption?.short).toBe('-t');
     });
 
     it('should support --skip-install option', () => {
-      const skipInstallOption = command.options.find(opt => opt.long === '--skip-install');
+      const skipInstallOption = command.options.find((opt) => opt.long === '--skip-install');
       expect(skipInstallOption).toBeDefined();
     });
 
     it('should support --package-manager option', () => {
-      const pmOption = command.options.find(opt => opt.long === '--package-manager');
+      const pmOption = command.options.find((opt) => opt.long === '--package-manager');
       expect(pmOption).toBeDefined();
     });
   });

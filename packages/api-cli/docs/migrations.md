@@ -5,6 +5,7 @@ Web Loom provides a robust database migration system for managing schema changes
 ## Overview
 
 Migrations are version control for your database schema. They allow you to:
+
 - Track schema changes over time
 - Apply changes consistently across environments
 - Rollback changes if needed
@@ -52,6 +53,7 @@ webloom migrate create create_users_table
 ```
 
 Options:
+
 - `-d, --dir <directory>`: Migrations directory (default: `src/migrations`)
 
 ### Apply Migrations
@@ -63,10 +65,12 @@ webloom migrate up
 Applies all pending migrations in chronological order.
 
 Options:
+
 - `-d, --dir <directory>`: Migrations directory (default: `src/migrations`)
 - `-s, --steps <number>`: Number of migrations to apply (default: all)
 
 Examples:
+
 ```bash
 # Apply all pending migrations
 webloom migrate up
@@ -84,10 +88,12 @@ webloom migrate down
 Reverts the last applied migration(s).
 
 Options:
+
 - `-d, --dir <directory>`: Migrations directory (default: `src/migrations`)
 - `-s, --steps <number>`: Number of migrations to revert (default: 1)
 
 Examples:
+
 ```bash
 # Revert last migration
 webloom migrate down
@@ -105,6 +111,7 @@ webloom migrate status
 Shows the status of all migrations (applied/pending).
 
 Options:
+
 - `-d, --dir <directory>`: Migrations directory (default: `src/migrations`)
 
 ## Migration Tracking
@@ -125,6 +132,7 @@ CREATE TABLE migrations (
 Migrations are grouped into batches. Each time you run `migrate up`, all applied migrations are assigned the same batch number. This allows you to rollback an entire deployment at once.
 
 Example:
+
 ```bash
 # First deployment
 webloom migrate up
@@ -189,6 +197,7 @@ async down(db: DatabaseAdapter): Promise<void> {
 Once a migration has been applied to production, never modify it. Instead, create a new migration to make additional changes.
 
 ❌ Bad:
+
 ```typescript
 // Modifying an already-applied migration
 async up(db: DatabaseAdapter): Promise<void> {
@@ -198,6 +207,7 @@ async up(db: DatabaseAdapter): Promise<void> {
 ```
 
 ✅ Good:
+
 ```typescript
 // Create a new migration
 // 20240116_120000_add_age_to_users.ts
@@ -232,11 +242,13 @@ webloom migrate up --steps 1
 Create focused migrations that do one thing:
 
 ✅ Good:
+
 - `create_users_table.ts`
 - `add_email_index_to_users.ts`
 - `add_role_to_users.ts`
 
 ❌ Bad:
+
 - `update_entire_schema.ts` (too broad)
 
 ### 7. Use Descriptive Names
@@ -244,11 +256,13 @@ Create focused migrations that do one thing:
 Migration names should clearly describe what they do:
 
 ✅ Good:
+
 - `create_users_table`
 - `add_email_index_to_users`
 - `rename_username_to_email`
 
 ❌ Bad:
+
 - `migration1`
 - `update`
 - `fix`
@@ -282,7 +296,7 @@ async down(db: DatabaseAdapter): Promise<void> {
 ```typescript
 async up(db: DatabaseAdapter): Promise<void> {
   await db.execute(`
-    ALTER TABLE users 
+    ALTER TABLE users
     ADD COLUMN avatar_url VARCHAR(500),
     ADD COLUMN bio TEXT
   `);
@@ -290,7 +304,7 @@ async up(db: DatabaseAdapter): Promise<void> {
 
 async down(db: DatabaseAdapter): Promise<void> {
   await db.execute(`
-    ALTER TABLE users 
+    ALTER TABLE users
     DROP COLUMN avatar_url,
     DROP COLUMN bio
   `);
@@ -321,13 +335,13 @@ async down(db: DatabaseAdapter): Promise<void> {
 async up(db: DatabaseAdapter): Promise<void> {
   // Add new column
   await db.execute('ALTER TABLE users ADD COLUMN full_name VARCHAR(255)');
-  
+
   // Populate from existing data
   await db.execute(`
-    UPDATE users 
+    UPDATE users
     SET full_name = first_name || ' ' || last_name
   `);
-  
+
   // Make it required
   await db.execute('ALTER TABLE users ALTER COLUMN full_name SET NOT NULL');
 }
@@ -393,6 +407,7 @@ webloom migrate down --steps N
 For production systems, follow these patterns:
 
 1. **Add columns as nullable first**:
+
 ```typescript
 // Migration 1: Add column as nullable
 await db.execute('ALTER TABLE users ADD COLUMN email VARCHAR(255)');
@@ -402,6 +417,7 @@ await db.execute('ALTER TABLE users ALTER COLUMN email SET NOT NULL');
 ```
 
 2. **Rename in multiple steps**:
+
 ```typescript
 // Migration 1: Add new column
 await db.execute('ALTER TABLE users ADD COLUMN email VARCHAR(255)');

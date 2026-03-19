@@ -1,6 +1,6 @@
 /**
  * TypeScript Client Generator
- * 
+ *
  * Generates type-safe TypeScript API clients from model and route definitions
  */
 
@@ -123,7 +123,7 @@ export class ClientGenerator {
    */
   private generateTypes(): string {
     const lines: string[] = [];
-    
+
     lines.push('/**');
     lines.push(' * Generated TypeScript Types');
     lines.push(' * ');
@@ -138,15 +138,15 @@ export class ClientGenerator {
         lines.push(` * ${model.metadata.description}`);
         lines.push(` */`);
       }
-      
+
       lines.push(`export interface ${modelToInterfaceName(name)} {`);
-      
+
       for (const field of model.fields) {
         const optional = !field.required && !field.validation?.required;
         const tsType = fieldTypeToTS(field.type);
         lines.push(`  ${field.name}${optional ? '?' : ''}: ${tsType};`);
       }
-      
+
       lines.push('}');
       lines.push('');
     }
@@ -214,7 +214,7 @@ export class ClientGenerator {
    */
   private generateClient(): string {
     const lines: string[] = [];
-    
+
     lines.push('/**');
     lines.push(' * Generated API Client');
     lines.push(' * ');
@@ -232,11 +232,13 @@ export class ClientGenerator {
       lines.push(`  ${modelToInterfaceName(name)},`);
     }
     lines.push(`} from './types';`);
-    
+
     if (this.options.generateErrors) {
-      lines.push(`import { APIError, ValidationError, NotFoundError, UnauthorizedError } from './errors';`);
+      lines.push(
+        `import { APIError, ValidationError, NotFoundError, UnauthorizedError } from './errors';`
+      );
     }
-    
+
     lines.push('');
 
     // Client class
@@ -245,20 +247,26 @@ export class ClientGenerator {
       lines.push(` * Type-safe API client`);
       lines.push(` */`);
     }
-    
+
     lines.push(`export class ${this.options.className} {`);
     lines.push(`  private baseUrl: string;`);
     lines.push(`  private headers: Record<string, string> = {};`);
-    
+
     if (this.options.includeInterceptors) {
-      lines.push(`  private requestInterceptors: Array<(config: RequestConfig) => RequestConfig | Promise<RequestConfig>> = [];`);
-      lines.push(`  private responseInterceptors: Array<(response: APIResponse) => APIResponse | Promise<APIResponse>> = [];`);
+      lines.push(
+        `  private requestInterceptors: Array<(config: RequestConfig) => RequestConfig | Promise<RequestConfig>> = [];`
+      );
+      lines.push(
+        `  private responseInterceptors: Array<(response: APIResponse) => APIResponse | Promise<APIResponse>> = [];`
+      );
     }
-    
+
     lines.push('');
 
     // Constructor
-    lines.push(`  constructor(baseUrl: string = '${this.options.baseUrl}', defaultHeaders: Record<string, string> = {}) {`);
+    lines.push(
+      `  constructor(baseUrl: string = '${this.options.baseUrl}', defaultHeaders: Record<string, string> = {}) {`
+    );
     lines.push(`    this.baseUrl = baseUrl;`);
     lines.push(`    this.headers = { 'Content-Type': 'application/json', ...defaultHeaders };`);
     lines.push(`  }`);
@@ -287,7 +295,9 @@ export class ClientGenerator {
       lines.push(`  /**`);
       lines.push(`   * Add request interceptor`);
       lines.push(`   */`);
-      lines.push(`  addRequestInterceptor(interceptor: (config: RequestConfig) => RequestConfig | Promise<RequestConfig>): void {`);
+      lines.push(
+        `  addRequestInterceptor(interceptor: (config: RequestConfig) => RequestConfig | Promise<RequestConfig>): void {`
+      );
       lines.push(`    this.requestInterceptors.push(interceptor);`);
       lines.push(`  }`);
       lines.push('');
@@ -295,7 +305,9 @@ export class ClientGenerator {
       lines.push(`  /**`);
       lines.push(`   * Add response interceptor`);
       lines.push(`   */`);
-      lines.push(`  addResponseInterceptor(interceptor: (response: APIResponse) => APIResponse | Promise<APIResponse>): void {`);
+      lines.push(
+        `  addResponseInterceptor(interceptor: (response: APIResponse) => APIResponse | Promise<APIResponse>): void {`
+      );
       lines.push(`    this.responseInterceptors.push(interceptor);`);
       lines.push(`  }`);
       lines.push('');
@@ -305,8 +317,10 @@ export class ClientGenerator {
     lines.push(`  /**`);
     lines.push(`   * Make HTTP request`);
     lines.push(`   */`);
-    lines.push(`  private async request<T>(method: string, path: string, config: RequestConfig = {}): Promise<APIResponse<T>> {`);
-    
+    lines.push(
+      `  private async request<T>(method: string, path: string, config: RequestConfig = {}): Promise<APIResponse<T>> {`
+    );
+
     if (this.options.includeInterceptors) {
       lines.push(`    // Apply request interceptors`);
       lines.push(`    let finalConfig = config;`);
@@ -315,12 +329,14 @@ export class ClientGenerator {
       lines.push(`    }`);
       lines.push('');
     }
-    
+
     lines.push(`    const url = new URL(path, this.baseUrl);`);
     lines.push('');
     lines.push(`    // Add query parameters`);
     lines.push(`    if (${this.options.includeInterceptors ? 'finalConfig' : 'config'}.params) {`);
-    lines.push(`      Object.entries(${this.options.includeInterceptors ? 'finalConfig' : 'config'}.params).forEach(([key, value]) => {`);
+    lines.push(
+      `      Object.entries(${this.options.includeInterceptors ? 'finalConfig' : 'config'}.params).forEach(([key, value]) => {`
+    );
     lines.push(`        if (value !== undefined && value !== null) {`);
     lines.push(`          url.searchParams.append(key, String(value));`);
     lines.push(`        }`);
@@ -328,20 +344,26 @@ export class ClientGenerator {
     lines.push(`    }`);
     lines.push('');
 
-    lines.push(`    const headers = { ...this.headers, ...${this.options.includeInterceptors ? 'finalConfig' : 'config'}.headers };`);
+    lines.push(
+      `    const headers = { ...this.headers, ...${this.options.includeInterceptors ? 'finalConfig' : 'config'}.headers };`
+    );
     lines.push('');
 
     lines.push(`    const fetchOptions: RequestInit = {`);
     lines.push(`      method,`);
     lines.push(`      headers,`);
     if (this.options.includeCancellation) {
-      lines.push(`      signal: ${this.options.includeInterceptors ? 'finalConfig' : 'config'}.signal,`);
+      lines.push(
+        `      signal: ${this.options.includeInterceptors ? 'finalConfig' : 'config'}.signal,`
+      );
     }
     lines.push(`    };`);
     lines.push('');
 
     lines.push(`    if (${this.options.includeInterceptors ? 'finalConfig' : 'config'}.body) {`);
-    lines.push(`      fetchOptions.body = JSON.stringify(this.serialize(${this.options.includeInterceptors ? 'finalConfig' : 'config'}.body));`);
+    lines.push(
+      `      fetchOptions.body = JSON.stringify(this.serialize(${this.options.includeInterceptors ? 'finalConfig' : 'config'}.body));`
+    );
     lines.push(`    }`);
     lines.push('');
 
@@ -356,7 +378,9 @@ export class ClientGenerator {
       lines.push(`        const response = await fetch(url.toString(), fetchOptions);`);
       lines.push('');
       lines.push(`        // Check if we should retry`);
-      lines.push(`        if (!response.ok && attempt < maxRetries && retryableStatusCodes.includes(response.status)) {`);
+      lines.push(
+        `        if (!response.ok && attempt < maxRetries && retryableStatusCodes.includes(response.status)) {`
+      );
       lines.push(`          const delay = Math.min(1000 * Math.pow(2, attempt), 10000);`);
       lines.push(`          await new Promise(resolve => setTimeout(resolve, delay));`);
       lines.push(`          continue;`);
@@ -378,9 +402,11 @@ export class ClientGenerator {
       lines.push('');
       lines.push(`        const data = await response.json();`);
       lines.push(`        const deserializedData = this.deserialize<T>(data);`);
-      lines.push(`        let result: APIResponse<T> = { data: deserializedData, status: response.status, headers: responseHeaders };`);
+      lines.push(
+        `        let result: APIResponse<T> = { data: deserializedData, status: response.status, headers: responseHeaders };`
+      );
       lines.push('');
-      
+
       if (this.options.includeInterceptors) {
         lines.push(`        // Apply response interceptors`);
         lines.push(`        for (const interceptor of this.responseInterceptors) {`);
@@ -388,7 +414,7 @@ export class ClientGenerator {
         lines.push(`        }`);
         lines.push('');
       }
-      
+
       lines.push(`        return result;`);
       lines.push(`      } catch (error) {`);
       lines.push(`        lastError = error as Error;`);
@@ -418,9 +444,11 @@ export class ClientGenerator {
       lines.push('');
       lines.push(`    const data = await response.json();`);
       lines.push(`    const deserializedData = this.deserialize<T>(data);`);
-      lines.push(`    let result: APIResponse<T> = { data: deserializedData, status: response.status, headers: responseHeaders };`);
+      lines.push(
+        `    let result: APIResponse<T> = { data: deserializedData, status: response.status, headers: responseHeaders };`
+      );
       lines.push('');
-      
+
       if (this.options.includeInterceptors) {
         lines.push(`    // Apply response interceptors`);
         lines.push(`    for (const interceptor of this.responseInterceptors) {`);
@@ -428,10 +456,10 @@ export class ClientGenerator {
         lines.push(`    }`);
         lines.push('');
       }
-      
+
       lines.push(`    return result;`);
     }
-    
+
     lines.push(`  }`);
     lines.push('');
 
@@ -474,7 +502,9 @@ export class ClientGenerator {
     lines.push('');
     lines.push(`    if (typeof data === 'string') {`);
     lines.push(`      // Check if string is ISO date format`);
-    lines.push(`      const isoDateRegex = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z?$/;`);
+    lines.push(
+      `      const isoDateRegex = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z?$/;`
+    );
     lines.push(`      if (isoDateRegex.test(data)) {`);
     lines.push(`        const date = new Date(data);`);
     lines.push(`        if (!isNaN(date.getTime())) {`);
@@ -508,13 +538,17 @@ export class ClientGenerator {
       lines.push(`  private createError(status: number, errorData: APIErrorResponse): Error {`);
       lines.push(`    switch (status) {`);
       lines.push(`      case 400:`);
-      lines.push(`        return new ValidationError(errorData.error.message, errorData.error.details);`);
+      lines.push(
+        `        return new ValidationError(errorData.error.message, errorData.error.details);`
+      );
       lines.push(`      case 401:`);
       lines.push(`        return new UnauthorizedError(errorData.error.message);`);
       lines.push(`      case 404:`);
       lines.push(`        return new NotFoundError(errorData.error.message);`);
       lines.push(`      default:`);
-      lines.push(`        return new APIError(errorData.error.message, status, errorData.error.code);`);
+      lines.push(
+        `        return new APIError(errorData.error.message, status, errorData.error.code);`
+      );
       lines.push(`    }`);
       lines.push(`  }`);
       lines.push('');
@@ -522,20 +556,20 @@ export class ClientGenerator {
 
     // Generate methods for each route
     const generatedMethods = new Set<string>();
-    
+
     for (const route of this.routes) {
       const methodName = pathToMethodName(route.path, route.method);
-      
+
       // Skip if we've already generated this method
       if (generatedMethods.has(methodName)) {
         continue;
       }
       generatedMethods.add(methodName);
-      
+
       const pathParams = extractPathParams(route.path);
       const modelName = this.inferModelFromPath(route.path);
       const model = modelName ? this.models.get(modelName) : undefined;
-      
+
       // Generate method
       lines.push(...this.generateMethod(route, methodName, pathParams, model));
       lines.push('');
@@ -557,76 +591,80 @@ export class ClientGenerator {
     model?: ModelDefinition
   ): string[] {
     const lines: string[] = [];
-    
+
     // JSDoc
     if (this.options.includeJSDoc) {
       const jsdocParams: Array<{ name: string; description?: string }> = [];
-      
+
       for (const param of pathParams) {
         jsdocParams.push({ name: param.name, description: `${capitalize(param.name)} parameter` });
       }
-      
+
       if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
         jsdocParams.push({ name: 'data', description: 'Request body data' });
       }
-      
+
       if (route.method === 'GET' && !route.path.includes(':')) {
         jsdocParams.push({ name: 'params', description: 'Query parameters' });
       }
-      
+
       jsdocParams.push({ name: 'config', description: 'Request configuration' });
-      
+
       const returnType = this.getReturnType(route, model);
-      
-      lines.push(generateJSDoc(
-        route.metadata?.description,
-        jsdocParams,
-        `Promise with ${returnType}`
-      ));
+
+      lines.push(
+        generateJSDoc(route.metadata?.description, jsdocParams, `Promise with ${returnType}`)
+      );
     }
-    
+
     // Method signature
     const params: string[] = [];
-    
+
     for (const param of pathParams) {
       params.push(`${param.name}: ${param.type}`);
     }
-    
+
     if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
       const dataType = model ? `Partial<${modelToInterfaceName(model.name)}>` : 'unknown';
       params.push(`data: ${dataType}`);
     }
-    
+
     if (route.method === 'GET' && !route.path.includes(':')) {
       params.push(`params?: { page?: number; limit?: number; [key: string]: unknown }`);
     }
-    
+
     params.push(`config: RequestConfig = {}`);
-    
+
     const returnType = this.getReturnType(route, model);
-    
+
     lines.push(`  async ${methodName}(${params.join(', ')}): Promise<${returnType}> {`);
-    
+
     // Build path
     let pathBuilder = `\`${route.path}\``;
     for (const param of pathParams) {
       pathBuilder = pathBuilder.replace(`:${param.name}`, `\${${param.name}}`);
     }
-    
+
     lines.push(`    const path = ${pathBuilder};`);
-    
+
     // Build config
     if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
-      lines.push(`    const response = await this.request<${this.getDataType(route, model)}>('${route.method}', path, { ...config, body: data });`);
+      lines.push(
+        `    const response = await this.request<${this.getDataType(route, model)}>('${route.method}', path, { ...config, body: data });`
+      );
     } else if (route.method === 'GET' && !route.path.includes(':')) {
-      lines.push(`    const response = await this.request<${this.getDataType(route, model)}>('${route.method}', path, { ...config, params });`);
+      lines.push(
+        `    const response = await this.request<${this.getDataType(route, model)}>('${route.method}', path, { ...config, params });`
+      );
     } else {
-      lines.push(`    const response = await this.request<${this.getDataType(route, model)}>('${route.method}', path, config);`);
+      lines.push(
+        `    const response = await this.request<${this.getDataType(route, model)}>('${route.method}', path, config);`
+      );
     }
-    
+
     lines.push(`    return response.data;`);
     lines.push(`  }`);
-    
+
     return lines;
   }
 
@@ -637,7 +675,7 @@ export class ClientGenerator {
     if (route.method === 'DELETE') {
       return 'void';
     }
-    
+
     if (route.method === 'GET' && !route.path.includes(':')) {
       // List endpoint
       if (model) {
@@ -645,11 +683,11 @@ export class ClientGenerator {
       }
       return 'PaginatedResponse<unknown>';
     }
-    
+
     if (model) {
       return modelToInterfaceName(model.name);
     }
-    
+
     return 'unknown';
   }
 
@@ -664,11 +702,11 @@ export class ClientGenerator {
       }
       return 'PaginatedResponse<unknown>';
     }
-    
+
     if (model) {
       return modelToInterfaceName(model.name);
     }
-    
+
     return 'unknown';
   }
 
@@ -677,14 +715,14 @@ export class ClientGenerator {
    */
   private inferModelFromPath(path: string): string | null {
     const parts = path.split('/').filter(Boolean);
-    
+
     for (const part of parts) {
       if (!part.startsWith(':') && !part.match(/^(api|v\d+)$/i)) {
         const singular = part.endsWith('s') ? part.slice(0, -1) : part;
         return capitalize(singular);
       }
     }
-    
+
     return null;
   }
 
@@ -693,7 +731,7 @@ export class ClientGenerator {
    */
   private generateErrors(): string {
     const lines: string[] = [];
-    
+
     lines.push('/**');
     lines.push(' * Generated Error Classes');
     lines.push(' * ');
@@ -757,7 +795,7 @@ export class ClientGenerator {
    */
   private generateUtils(): string {
     const lines: string[] = [];
-    
+
     lines.push('/**');
     lines.push(' * Generated Utility Functions');
     lines.push(' * ');
@@ -785,7 +823,7 @@ export class ClientGenerator {
    */
   private generateReactHooks(): string {
     const lines: string[] = [];
-    
+
     lines.push('/**');
     lines.push(' * Generated React Hooks');
     lines.push(' * ');
@@ -802,11 +840,11 @@ export class ClientGenerator {
     }
     lines.push(`  PaginatedResponse,`);
     lines.push(`} from './types';`);
-    
+
     if (this.options.generateErrors) {
       lines.push(`import type { APIError } from './errors';`);
     }
-    
+
     lines.push('');
     lines.push('/**');
     lines.push(' * Hook state for queries');
@@ -850,27 +888,27 @@ export class ClientGenerator {
 
     // Generate hooks for each route
     const generatedHooks = new Set<string>();
-    
+
     for (const route of this.routes) {
       const methodName = pathToMethodName(route.path, route.method);
       const hookName = this.getHookName(route.method, methodName);
-      
+
       // Skip if we've already generated this hook
       if (generatedHooks.has(hookName)) {
         continue;
       }
       generatedHooks.add(hookName);
-      
+
       const pathParams = extractPathParams(route.path);
       const modelName = this.inferModelFromPath(route.path);
       const model = modelName ? this.models.get(modelName) : undefined;
-      
+
       if (route.method === 'GET') {
         lines.push(...this.generateQueryHook(route, hookName, methodName, pathParams, model));
       } else {
         lines.push(...this.generateMutationHook(route, hookName, methodName, pathParams, model));
       }
-      
+
       lines.push('');
     }
 
@@ -900,38 +938,38 @@ export class ClientGenerator {
   ): string[] {
     const lines: string[] = [];
     const returnType = this.getReturnType(route, model);
-    
+
     // JSDoc
     if (this.options.includeJSDoc) {
       lines.push(`/**`);
       lines.push(` * ${route.metadata?.description || `Hook for ${methodName}`}`);
       lines.push(` */`);
     }
-    
+
     // Hook signature
     const params: string[] = ['client: ' + this.options.className];
-    
+
     for (const param of pathParams) {
       params.push(`${param.name}: ${param.type}`);
     }
-    
+
     if (route.method === 'GET' && !route.path.includes(':')) {
       params.push(`params?: { page?: number; limit?: number; [key: string]: unknown }`);
     }
-    
+
     params.push(`options?: UseQueryOptions`);
-    
+
     lines.push(`export function ${hookName}(`);
     lines.push(`  ${params.join(',\n  ')}`);
     lines.push(`): UseQueryResult<${returnType}> {`);
-    
+
     // State
     lines.push(`  const [data, setData] = useState<${returnType} | null>(null);`);
     lines.push(`  const [isLoading, setIsLoading] = useState(true);`);
     lines.push(`  const [error, setError] = useState<Error | null>(null);`);
     lines.push(`  const abortControllerRef = useRef<AbortController | null>(null);`);
     lines.push('');
-    
+
     // Fetch function
     lines.push(`  const fetchData = useCallback(async () => {`);
     lines.push(`    try {`);
@@ -945,7 +983,7 @@ export class ClientGenerator {
     lines.push('');
     lines.push(`      abortControllerRef.current = new AbortController();`);
     lines.push('');
-    
+
     // Build method call
     const callParams: string[] = [];
     for (const param of pathParams) {
@@ -955,7 +993,7 @@ export class ClientGenerator {
       callParams.push('params');
     }
     callParams.push('{ signal: abortControllerRef.current.signal }');
-    
+
     lines.push(`      const result = await client.${methodName}(${callParams.join(', ')});`);
     lines.push(`      setData(result);`);
     lines.push(`      options?.onSuccess?.(result);`);
@@ -967,9 +1005,11 @@ export class ClientGenerator {
     lines.push(`    } finally {`);
     lines.push(`      setIsLoading(false);`);
     lines.push(`    }`);
-    lines.push(`  }, [client, ${pathParams.map(p => p.name).join(', ')}${pathParams.length > 0 ? ', ' : ''}${route.method === 'GET' && !route.path.includes(':') ? 'params, ' : ''}options]);`);
+    lines.push(
+      `  }, [client, ${pathParams.map((p) => p.name).join(', ')}${pathParams.length > 0 ? ', ' : ''}${route.method === 'GET' && !route.path.includes(':') ? 'params, ' : ''}options]);`
+    );
     lines.push('');
-    
+
     // Effect for auto-fetch
     lines.push(`  useEffect(() => {`);
     lines.push(`    if (options?.enabled !== false) {`);
@@ -983,7 +1023,7 @@ export class ClientGenerator {
     lines.push(`    };`);
     lines.push(`  }, [fetchData, options?.enabled]);`);
     lines.push('');
-    
+
     // Refetch interval
     lines.push(`  useEffect(() => {`);
     lines.push(`    if (options?.refetchInterval) {`);
@@ -992,10 +1032,10 @@ export class ClientGenerator {
     lines.push(`    }`);
     lines.push(`  }, [fetchData, options?.refetchInterval]);`);
     lines.push('');
-    
+
     lines.push(`  return { data, isLoading, error, refetch: fetchData };`);
     lines.push(`}`);
-    
+
     return lines;
   }
 
@@ -1011,7 +1051,7 @@ export class ClientGenerator {
   ): string[] {
     const lines: string[] = [];
     const returnType = this.getReturnType(route, model);
-    
+
     // Determine variables type
     let variablesType = 'unknown';
     if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
@@ -1019,10 +1059,10 @@ export class ClientGenerator {
         variablesType = `Partial<${modelToInterfaceName(model.name)}>`;
       }
     }
-    
+
     // For routes with path params, include them in variables
     if (pathParams.length > 0) {
-      const paramTypes = pathParams.map(p => `${p.name}: ${p.type}`).join('; ');
+      const paramTypes = pathParams.map((p) => `${p.name}: ${p.type}`).join('; ');
       if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
         variablesType = `{ ${paramTypes}; data: ${variablesType} }`;
       } else {
@@ -1031,48 +1071,50 @@ export class ClientGenerator {
     } else if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
       variablesType = `{ data: ${variablesType} }`;
     }
-    
+
     // JSDoc
     if (this.options.includeJSDoc) {
       lines.push(`/**`);
       lines.push(` * ${route.metadata?.description || `Hook for ${methodName}`}`);
       lines.push(` */`);
     }
-    
+
     // Hook signature
     lines.push(`export function ${hookName}(`);
     lines.push(`  client: ${this.options.className},`);
     lines.push(`  options?: UseMutationOptions<${returnType}>`);
     lines.push(`): UseMutationResult<${returnType}, ${variablesType}> {`);
-    
+
     // State
     lines.push(`  const [data, setData] = useState<${returnType} | null>(null);`);
     lines.push(`  const [isLoading, setIsLoading] = useState(false);`);
     lines.push(`  const [error, setError] = useState<Error | null>(null);`);
     lines.push('');
-    
+
     // Mutate function
-    lines.push(`  const mutate = useCallback(async (variables: ${variablesType}): Promise<${returnType}> => {`);
+    lines.push(
+      `  const mutate = useCallback(async (variables: ${variablesType}): Promise<${returnType}> => {`
+    );
     lines.push(`    try {`);
     lines.push(`      setIsLoading(true);`);
     lines.push(`      setError(null);`);
     lines.push('');
-    
+
     // Build method call
     const callParams: string[] = [];
-    
+
     if (pathParams.length > 0) {
       for (const param of pathParams) {
         callParams.push(`variables.${param.name}`);
       }
     }
-    
+
     if (route.method === 'POST' || route.method === 'PUT' || route.method === 'PATCH') {
       callParams.push('variables.data');
     }
-    
+
     callParams.push('{}');
-    
+
     lines.push(`      const result = await client.${methodName}(${callParams.join(', ')});`);
     lines.push(`      setData(result);`);
     lines.push(`      options?.onSuccess?.(result);`);
@@ -1087,7 +1129,7 @@ export class ClientGenerator {
     lines.push(`    }`);
     lines.push(`  }, [client, options]);`);
     lines.push('');
-    
+
     // Reset function
     lines.push(`  const reset = useCallback(() => {`);
     lines.push(`    setData(null);`);
@@ -1095,10 +1137,10 @@ export class ClientGenerator {
     lines.push(`    setIsLoading(false);`);
     lines.push(`  }, []);`);
     lines.push('');
-    
+
     lines.push(`  return { data, isLoading, error, mutate, reset };`);
     lines.push(`}`);
-    
+
     return lines;
   }
 
@@ -1108,22 +1150,22 @@ export class ClientGenerator {
   generateToFiles(): Map<string, string> {
     const files = new Map<string, string>();
     const generated = this.generate();
-    
+
     files.set('types.ts', generated.types);
     files.set('client.ts', generated.client);
-    
+
     if (generated.errors) {
       files.set('errors.ts', generated.errors);
     }
-    
+
     if (generated.utils) {
       files.set('utils.ts', generated.utils);
     }
-    
+
     if (generated.hooks) {
       files.set('hooks.ts', generated.hooks);
     }
-    
+
     // Generate index file
     const indexLines: string[] = [];
     indexLines.push('/**');
@@ -1142,9 +1184,9 @@ export class ClientGenerator {
       indexLines.push(`export * from './hooks';`);
     }
     indexLines.push('');
-    
+
     files.set('index.ts', indexLines.join('\n'));
-    
+
     return files;
   }
 }

@@ -42,4 +42,8 @@ export {
 } from './sampler';
 
 // Middleware
-export { createTracingMiddleware, type SimpleRequest, type SimpleResponse } from './tracing-middleware';
+export {
+  createTracingMiddleware,
+  type SimpleRequest,
+  type SimpleResponse,
+} from './tracing-middleware';

@@ -1,13 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-  configureLogger,
-  success,
-  error,
-  warn,
-  info,
-  debug,
-  log,
-} from '../utils/logger.js';
+import { configureLogger, success, error, warn, info, debug, log } from '../utils/logger.js';
 
 describe('Logger', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
@@ -18,7 +10,7 @@ describe('Logger', () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    
+
     // Reset logger config
     configureLogger({ debug: false, color: true });
   });

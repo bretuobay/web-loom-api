@@ -74,9 +74,9 @@ function buildOperationId(method: string, urlPath: string): string {
     .filter(Boolean)
     .map((seg) => {
       if (seg.startsWith(':')) {
-        return 'By' + seg[1]!.toUpperCase() + seg.slice(2);
+        return 'By' + seg.charAt(1).toUpperCase() + seg.slice(2);
       }
-      return seg[0]!.toUpperCase() + seg.slice(1);
+      return seg.charAt(0).toUpperCase() + seg.slice(1);
     });
   if (segments.length === 0) segments.push('Index');
   return method.toLowerCase() + segments.join('');
@@ -205,9 +205,7 @@ function generateClientMethod(route: RouteInfo): string {
   const paramArgs = pathParams.map((p) => `${p}: string`).join(', ');
   const hasBody = ['POST', 'PUT', 'PATCH'].includes(method);
   const bodyArg = hasBody ? (paramArgs ? ', body: unknown' : 'body: unknown') : '';
-  const args = [paramArgs, bodyArg, 'options?: RequestOptions']
-    .filter(Boolean)
-    .join(', ');
+  const args = [paramArgs, bodyArg, 'options?: RequestOptions'].filter(Boolean).join(', ');
   const bodyPart = hasBody ? '\n      body: JSON.stringify(body),' : '';
 
   return `
@@ -307,11 +305,18 @@ export const createGenerateClientCommand = (): Command => {
           const files: Array<{ name: string; content: string }> = [
             { name: 'types.ts', content: generateTypesFile() },
             { name: 'utils.ts', content: generateUtilsFile() },
-            { name: 'client.ts', content: generateClientFile(options.className, options.baseUrl, routes) },
+            {
+              name: 'client.ts',
+              content: generateClientFile(options.className, options.baseUrl, routes),
+            },
           ];
           if (options.errors) files.push({ name: 'errors.ts', content: generateErrorsFile() });
-          if (options.hooks) files.push({ name: 'hooks.ts', content: generateHooksFile(options.className) });
-          files.push({ name: 'index.ts', content: generateIndexFile(options.errors, options.hooks) });
+          if (options.hooks)
+            files.push({ name: 'hooks.ts', content: generateHooksFile(options.className) });
+          files.push({
+            name: 'index.ts',
+            content: generateIndexFile(options.errors, options.hooks),
+          });
 
           for (const file of files) {
             fs.writeFileSync(path.join(outputDir, file.name), file.content, 'utf-8');

@@ -15,11 +15,11 @@ import { relative } from 'node:path';
  */
 export function filePathToMountPath(filePath: string, baseDir: string): string {
   const rel = relative(baseDir, filePath)
-    .replace(/\\/g, '/')          // normalise Windows separators
-    .replace(/\.ts$/, '')         // strip .ts extension
-    .replace(/\/index$/, '')      // /index → empty (directory root)
-    .replace(/^index$/, '')       // top-level index.ts → root
-    .replace(/\[\.\.\.(\w+)\]/g, '*')  // [...slug] → *
+    .replace(/\\/g, '/') // normalise Windows separators
+    .replace(/\.ts$/, '') // strip .ts extension
+    .replace(/\/index$/, '') // /index → empty (directory root)
+    .replace(/^index$/, '') // top-level index.ts → root
+    .replace(/\[\.\.\.(\w+)\]/g, '*') // [...slug] → *
     .replace(/\[(\w+)\]/g, ':$1'); // [id] → :id
 
   return rel ? `/${rel}` : '/';

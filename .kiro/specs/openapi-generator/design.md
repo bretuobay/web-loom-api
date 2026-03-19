@@ -60,7 +60,8 @@ export function getRouteMeta(middleware: MiddlewareHandler): RouteMeta | undefin
 Usage:
 
 ```typescript
-app.get('/users/export',
+app.get(
+  '/users/export',
   openApiMeta({
     summary: 'Export all users as CSV',
     tags: ['users'],
@@ -68,7 +69,9 @@ app.get('/users/export',
       200: { description: 'CSV file', schema: z.string() },
     },
   }),
-  async (c) => { /* ... */ }
+  async (c) => {
+    /* ... */
+  }
 );
 ```
 
@@ -160,7 +163,10 @@ function buildCrudPathItems(
       operationId: `list${name}`,
       parameters: listQueryParams,
       responses: {
-        200: { description: 'Paginated list', content: { 'application/json': { schema: paginatedSchema(selectRef) } } },
+        200: {
+          description: 'Paginated list',
+          content: { 'application/json': { schema: paginatedSchema(selectRef) } },
+        },
         ...standardErrorResponses,
       },
     },
@@ -170,7 +176,10 @@ function buildCrudPathItems(
       operationId: `create${name}`,
       requestBody: { required: true, content: { 'application/json': { schema: insertRef } } },
       responses: {
-        201: { description: `${name} created`, content: { 'application/json': { schema: selectRef } } },
+        201: {
+          description: `${name} created`,
+          content: { 'application/json': { schema: selectRef } },
+        },
         ...standardErrorResponses,
       },
     },
@@ -188,16 +197,22 @@ function buildCrudPathItems(
         ...standardErrorResponses,
       },
     },
-    put: { /* replace */ },
+    put: {
+      /* replace */
+    },
     patch: {
       summary: `Update ${name}`,
       operationId: `patch${name}`,
       tags: [name],
       parameters: [pkParam],
       requestBody: { required: true, content: { 'application/json': { schema: updateRef } } },
-      responses: { /* ... */ },
+      responses: {
+        /* ... */
+      },
     },
-    delete: { /* ... */ },
+    delete: {
+      /* ... */
+    },
   };
 }
 ```
@@ -207,10 +222,7 @@ function buildCrudPathItems(
 ```typescript
 // packages/api-generators/openapi/src/serve-openapi.ts
 
-export function registerOpenApiRoutes(
-  app: Hono,
-  generator: () => OpenAPIV3_1.Document
-): void {
+export function registerOpenApiRoutes(app: Hono, generator: () => OpenAPIV3_1.Document): void {
   app.get('/openapi.json', (c) => c.json(generator()));
   app.get('/openapi.yaml', (c) => {
     const yaml = require('js-yaml').dump(generator());

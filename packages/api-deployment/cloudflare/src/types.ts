@@ -12,7 +12,11 @@ export interface KVNamespace {
   get(key: string, options: { type: 'json' }): Promise<unknown | null>;
   get(key: string, options: { type: 'arrayBuffer' }): Promise<ArrayBuffer | null>;
   get(key: string, options?: { type?: string }): Promise<unknown | null>;
-  put(key: string, value: string | ArrayBuffer | ReadableStream, options?: KVPutOptions): Promise<void>;
+  put(
+    key: string,
+    value: string | ArrayBuffer | ReadableStream,
+    options?: KVPutOptions
+  ): Promise<void>;
   delete(key: string): Promise<void>;
   list(options?: KVListOptions): Promise<KVListResult>;
 }
@@ -71,7 +75,6 @@ export interface D1ExecResult {
   count: number;
   duration: number;
 }
-
 
 /** Cloudflare Durable Object Namespace */
 export interface DurableObjectNamespace {
@@ -141,7 +144,7 @@ export interface CacheStore {
 export type CloudflareFetchHandler = (
   request: Request,
   env: CloudflareEnv,
-  ctx: ExecutionContext,
+  ctx: ExecutionContext
 ) => Promise<Response>;
 
 /** Workers AI text generation options */

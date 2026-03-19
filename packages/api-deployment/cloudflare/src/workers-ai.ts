@@ -36,7 +36,7 @@ export class WorkersAIHelper {
    */
   async textGeneration(
     prompt: string,
-    options: TextGenerationOptions = {},
+    options: TextGenerationOptions = {}
   ): Promise<TextGenerationResult> {
     const { maxTokens, temperature, topP, stream = false } = options;
     const inputs: Record<string, unknown> = {
@@ -49,7 +49,6 @@ export class WorkersAIHelper {
     return this.run<TextGenerationResult>('@cf/meta/llama-2-7b-chat-int8', inputs);
   }
 
-
   /**
    * Generate text embeddings for semantic search or similarity.
    */
@@ -61,9 +60,7 @@ export class WorkersAIHelper {
   /**
    * Classify an image using a vision model.
    */
-  async imageClassification(
-    image: ArrayBuffer | number[],
-  ): Promise<ImageClassificationResult[]> {
+  async imageClassification(image: ArrayBuffer | number[]): Promise<ImageClassificationResult[]> {
     return this.run<ImageClassificationResult[]>('@cf/microsoft/resnet-50', { image });
   }
 }

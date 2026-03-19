@@ -73,11 +73,10 @@ describe('MetricsRegistry', () => {
     it('should throw if name exists with different type', () => {
       registry.createCounter({ name: 'conflict', help: 'Counter' });
       expect(() => registry.createGauge({ name: 'conflict', help: 'Gauge' })).toThrow(
-        'Metric "conflict" already exists as counter',
+        'Metric "conflict" already exists as counter'
       );
     });
   });
-
 
   describe('Gauge', () => {
     it('should create and set a gauge', () => {
@@ -192,14 +191,16 @@ describe('MetricsRegistry', () => {
     });
   });
 
-
   describe('Prometheus serialization', () => {
     it('should serialize empty registry', () => {
       expect(registry.serialize()).toBe('');
     });
 
     it('should serialize counter in Prometheus format', () => {
-      const counter = registry.createCounter({ name: 'http_requests_total', help: 'Total HTTP requests' });
+      const counter = registry.createCounter({
+        name: 'http_requests_total',
+        help: 'Total HTTP requests',
+      });
       counter.inc({ method: 'GET', status: '200' }, 5);
 
       const output = registry.serialize();

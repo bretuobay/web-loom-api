@@ -1,6 +1,6 @@
 /**
  * Migration Up Command
- * 
+ *
  * Applies pending migrations
  */
 
@@ -18,7 +18,7 @@ export const upCommand = new Command('up')
       console.log('');
 
       const migrationsDir = path.resolve(process.cwd(), options.dir);
-      
+
       // Check if migrations directory exists
       if (!fs.existsSync(migrationsDir)) {
         console.log('No migrations directory found.');
@@ -29,8 +29,9 @@ export const upCommand = new Command('up')
       }
 
       // Get all migration files
-      const files = fs.readdirSync(migrationsDir)
-        .filter(file => file.endsWith('.ts') || file.endsWith('.js'))
+      const files = fs
+        .readdirSync(migrationsDir)
+        .filter((file) => file.endsWith('.ts') || file.endsWith('.js'))
         .sort();
 
       if (files.length === 0) {
@@ -44,7 +45,7 @@ export const upCommand = new Command('up')
       const appliedMigrations = loadAppliedMigrations(migrationsDir);
 
       // Find pending migrations
-      const pendingMigrations = files.filter(file => !appliedMigrations.includes(file));
+      const pendingMigrations = files.filter((file) => !appliedMigrations.includes(file));
 
       if (pendingMigrations.length === 0) {
         console.log('✓ No pending migrations. Database is up to date.');
@@ -59,31 +60,30 @@ export const upCommand = new Command('up')
 
       // Determine how many migrations to apply
       const stepsToApply = parseInt(options.steps, 10);
-      const migrationsToApply = stepsToApply > 0 
-        ? pendingMigrations.slice(0, stepsToApply)
-        : pendingMigrations;
+      const migrationsToApply =
+        stepsToApply > 0 ? pendingMigrations.slice(0, stepsToApply) : pendingMigrations;
 
       console.log(`Applying ${migrationsToApply.length} migration(s)...`);
       console.log('');
 
       // Note: In a real implementation, this would connect to the database
       // and execute the migrations. For now, we'll simulate the process.
-      
+
       for (const file of migrationsToApply) {
         const filePath = path.join(migrationsDir, file);
-        
+
         try {
           console.log(`→ Applying: ${file}`);
-          
+
           // In a real implementation:
           // 1. Import the migration class
           // 2. Create an instance
           // 3. Call the up() method with database connection
           // 4. Record the migration in the migrations table
-          
+
           // For now, just validate the file exists and has the right structure
           const content = fs.readFileSync(filePath, 'utf-8');
-          
+
           if (!content.includes('async up(') || !content.includes('async down(')) {
             throw new Error('Migration file must have up() and down() methods');
           }
@@ -91,14 +91,14 @@ export const upCommand = new Command('up')
           // Mark as applied
           appliedMigrations.push(file);
           saveAppliedMigrations(migrationsDir, appliedMigrations);
-          
+
           console.log(`  ✓ Applied: ${file}`);
         } catch (error) {
           console.error(`  ✗ Failed: ${file}`);
           console.error(`    Error: ${error instanceof Error ? error.message : error}`);
           console.log('');
           console.log('Migration failed. Rolling back...');
-          
+
           // In a real implementation, this would rollback the transaction
           process.exit(1);
         }
@@ -120,7 +120,7 @@ export const upCommand = new Command('up')
  */
 function loadAppliedMigrations(migrationsDir: string): string[] {
   const trackingFile = path.join(migrationsDir, '.migrations.json');
-  
+
   if (!fs.existsSync(trackingFile)) {
     return [];
   }
@@ -143,6 +143,6 @@ function saveAppliedMigrations(migrationsDir: string, applied: string[]): void {
     applied,
     lastUpdated: new Date().toISOString(),
   };
-  
+
   fs.writeFileSync(trackingFile, JSON.stringify(data, null, 2), 'utf-8');
 }

@@ -17,8 +17,8 @@
  *   binding = "CACHE"
  *   id = "your-kv-namespace-id"
  */
-import { createCloudflareHandler } from "@web-loom/api-deployment-cloudflare";
-import { getApp } from "../shared/app";
+import { createCloudflareHandler } from '@web-loom/api-deployment-cloudflare';
+import { getApp } from '../shared/app';
 
 interface Env {
   DATABASE_URL: string;

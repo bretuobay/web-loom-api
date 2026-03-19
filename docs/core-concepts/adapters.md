@@ -22,15 +22,15 @@ Web Loom API is built directly on [Hono](https://hono.dev), [Drizzle ORM](https:
 [Hono](https://hono.dev) is the HTTP layer. `defineRoutes()` returns a `Hono<{ Variables: WebLoomVariables }>` instance, giving full access to Hono's API.
 
 ```typescript
-import { defineRoutes } from "@web-loom/api-core";
+import { defineRoutes } from '@web-loom/api-core';
 
 const app = defineRoutes();
 
 // Standard Hono handler
-app.get("/hello", (c) => c.text("Hello!"));
+app.get('/hello', (c) => c.text('Hello!'));
 
 // Access Drizzle via c.var.db
-app.get("/users", async (c) => {
+app.get('/users', async (c) => {
   const users = await c.var.db.select().from(usersTable);
   return c.json({ users });
 });
@@ -40,18 +40,18 @@ Web Loom's `Application` wraps Hono. Reach the underlying instance via `app.hono
 
 ```typescript
 const app = await createApp(config);
-app.hono.use("/*", myMiddleware);  // register global middleware
+app.hono.use('/*', myMiddleware); // register global middleware
 ```
 
 ## Database — Drizzle ORM
 
 [Drizzle ORM](https://orm.drizzle.team) is the database layer. Three drivers are supported:
 
-| Driver | Connection type | Install |
-|--------|----------------|---------|
-| `neon-serverless` | Neon Postgres over HTTP (edge-safe) | `@neondatabase/serverless` |
-| `libsql` | Turso / local SQLite via libsql | `@libsql/client` |
-| `pg` | Standard node-postgres (Docker, VMs) | `pg` |
+| Driver            | Connection type                      | Install                    |
+| ----------------- | ------------------------------------ | -------------------------- |
+| `neon-serverless` | Neon Postgres over HTTP (edge-safe)  | `@neondatabase/serverless` |
+| `libsql`          | Turso / local SQLite via libsql      | `@libsql/client`           |
+| `pg`              | Standard node-postgres (Docker, VMs) | `pg`                       |
 
 Configure via `defineConfig()`:
 
@@ -59,18 +59,18 @@ Configure via `defineConfig()`:
 defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: "neon-serverless",
+    driver: 'neon-serverless',
   },
-})
+});
 ```
 
 In route handlers, `c.var.db` is the Drizzle instance. Cast it to your driver type for full inference:
 
 ```typescript
-import type { NeonDatabase } from "drizzle-orm/neon-serverless";
-import * as schema from "./schema";
+import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
+import * as schema from './schema';
 
-app.get("/users", async (c) => {
+app.get('/users', async (c) => {
   const db = c.var.db as NeonDatabase<typeof schema>;
   const users = await db.select().from(schema.usersTable);
   return c.json({ users });
@@ -82,11 +82,11 @@ app.get("/users", async (c) => {
 [Zod](https://zod.dev) is used for all request validation. `defineModel()` generates Zod schemas automatically from Drizzle tables using [drizzle-zod](https://orm.drizzle.team/docs/zod). Use `validate()` to attach them to routes:
 
 ```typescript
-import { validate } from "@web-loom/api-core";
-import { User } from "./schema";
+import { validate } from '@web-loom/api-core';
+import { User } from './schema';
 
-app.post("/", validate("json", User.insertSchema), async (c) => {
-  const data = c.req.valid("json"); // fully typed
+app.post('/', validate('json', User.insertSchema), async (c) => {
+  const data = c.req.valid('json'); // fully typed
   // ...
 });
 ```
@@ -94,16 +94,12 @@ app.post("/", validate("json", User.insertSchema), async (c) => {
 You can also use Zod schemas directly without a model:
 
 ```typescript
-import { z } from "zod";
+import { z } from 'zod';
 
-app.post(
-  "/subscribe",
-  validate("json", z.object({ email: z.string().email() })),
-  async (c) => {
-    const { email } = c.req.valid("json");
-    // ...
-  },
-);
+app.post('/subscribe', validate('json', z.object({ email: z.string().email() })), async (c) => {
+  const { email } = c.req.valid('json');
+  // ...
+});
 ```
 
 ## Authentication — `@web-loom/api-middleware-auth`
@@ -121,7 +117,7 @@ import {
   requirePermission,
   composeAuth,
   csrfProtection,
-} from "@web-loom/api-middleware-auth";
+} from '@web-loom/api-middleware-auth';
 ```
 
 See the [Auth Middleware reference](../api-reference/middleware.md) for full documentation.
@@ -131,14 +127,14 @@ See the [Auth Middleware reference](../api-reference/middleware.md) for full doc
 Email is optional. Pass an `EmailAdapter` implementation to `defineConfig()`:
 
 ```typescript
-import { defineConfig } from "@web-loom/api-core";
-import { ResendAdapter } from "@web-loom/api-shared";
+import { defineConfig } from '@web-loom/api-core';
+import { ResendAdapter } from '@web-loom/api-shared';
 
 export default defineConfig({
-  database: { url: "...", driver: "neon-serverless" },
+  database: { url: '...', driver: 'neon-serverless' },
   email: new ResendAdapter({
     apiKey: process.env.RESEND_API_KEY!,
-    from: "noreply@example.com",
+    from: 'noreply@example.com',
   }),
 });
 ```
@@ -146,11 +142,11 @@ export default defineConfig({
 In route handlers, access via `c.var.email`:
 
 ```typescript
-app.post("/contact", async (c) => {
+app.post('/contact', async (c) => {
   await c.var.email!.send({
-    to: "support@example.com",
-    subject: "New contact form submission",
-    html: "<p>Hello</p>",
+    to: 'support@example.com',
+    subject: 'New contact form submission',
+    html: '<p>Hello</p>',
   });
   return c.body(null, 204);
 });
@@ -167,6 +163,7 @@ OpenAPI document generation is automatic. When `openapi.enabled: true`, the fram
 3. Combines them into a valid OpenAPI 3.1 document
 
 Live endpoints:
+
 - `GET /openapi.json`
 - `GET /openapi.yaml`
 - `GET /docs` (Swagger UI or Scalar)

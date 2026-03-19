@@ -25,7 +25,7 @@ export function buildReplaceHandler<TTable extends Table>(model: Model<TTable>):
       return c.json({ error: { code: 'VALIDATION_ERROR', message: error } }, 400);
     }
 
-    const data = { ...(c.req.valid('json') as Record<string, unknown>) };
+    const data = { ...((await c.req.json()) as Record<string, unknown>) };
     const opts = typeof model.meta.crud === 'object' ? model.meta.crud : {};
 
     if (opts.timestamps) {

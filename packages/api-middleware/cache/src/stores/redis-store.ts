@@ -62,12 +62,7 @@ export class RedisCacheStore implements CacheStore {
 
   async set(key: string, entry: CachedResponse, ttlMs: number): Promise<void> {
     const ttlSeconds = Math.ceil(ttlMs / 1000);
-    await this.client.set(
-      this.prefix + key,
-      JSON.stringify(entry),
-      'EX',
-      ttlSeconds,
-    );
+    await this.client.set(this.prefix + key, JSON.stringify(entry), 'EX', ttlSeconds);
   }
 
   async delete(key: string): Promise<void> {
@@ -75,9 +70,7 @@ export class RedisCacheStore implements CacheStore {
   }
 
   async clear(pattern?: string): Promise<void> {
-    const searchPattern = pattern
-      ? this.prefix + pattern + '*'
-      : this.prefix + '*';
+    const searchPattern = pattern ? this.prefix + pattern + '*' : this.prefix + '*';
     const keys = await this.client.keys(searchPattern);
     if (keys.length > 0) {
       await this.client.del(keys);

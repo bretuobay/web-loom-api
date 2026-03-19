@@ -36,20 +36,15 @@ import type {
  */
 export function createCloudflareHandler(
   app: WebLoomApp,
-  options: CloudflareHandlerOptions = {},
+  options: CloudflareHandlerOptions = {}
 ): CloudflareFetchHandler {
   const { kvNamespace, d1Binding, durableObjectNamespace, aiBinding } = options;
 
-  return async (
-    request: Request,
-    env: CloudflareEnv,
-    ctx: ExecutionContext,
-  ): Promise<Response> => {
+  return async (request: Request, env: CloudflareEnv, ctx: ExecutionContext): Promise<Response> => {
     try {
       // Enrich request headers with Cloudflare context
       const enrichedHeaders = new Headers(request.headers);
       enrichedHeaders.set('x-cf-worker', 'true');
-
 
       // Map KV namespace binding if configured
       if (kvNamespace && env[kvNamespace]) {
@@ -96,7 +91,7 @@ export function createCloudflareHandler(
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        },
+        }
       );
     }
   };

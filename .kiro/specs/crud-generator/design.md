@@ -46,11 +46,26 @@ export function generateCrudRouter<TTable extends Table>(
   const router = new Hono<{ Variables: WebLoomVariables }>();
   const opts = typeof model.meta.crud === 'boolean' ? {} : (model.meta.crud ?? {});
 
-  router.get('/',    ...resolveAuthMiddleware(opts.list),   buildListHandler(model));
-  router.post('/',   ...resolveAuthMiddleware(opts.create), validate('json', model.insertSchema), buildCreateHandler(model));
-  router.get('/:id', ...resolveAuthMiddleware(opts.read),   buildReadHandler(model));
-  router.put('/:id', ...resolveAuthMiddleware(opts.update), validate('json', model.insertSchema), buildReplaceHandler(model));
-  router.patch('/:id', ...resolveAuthMiddleware(opts.update), validate('json', model.updateSchema), buildPatchHandler(model));
+  router.get('/', ...resolveAuthMiddleware(opts.list), buildListHandler(model));
+  router.post(
+    '/',
+    ...resolveAuthMiddleware(opts.create),
+    validate('json', model.insertSchema),
+    buildCreateHandler(model)
+  );
+  router.get('/:id', ...resolveAuthMiddleware(opts.read), buildReadHandler(model));
+  router.put(
+    '/:id',
+    ...resolveAuthMiddleware(opts.update),
+    validate('json', model.insertSchema),
+    buildReplaceHandler(model)
+  );
+  router.patch(
+    '/:id',
+    ...resolveAuthMiddleware(opts.update),
+    validate('json', model.updateSchema),
+    buildPatchHandler(model)
+  );
   router.delete('/:id', ...resolveAuthMiddleware(opts.delete), buildDeleteHandler(model));
 
   return router;
@@ -87,12 +102,16 @@ export function buildListHandler<TTable extends Table>(model: Model<TTable>): Ro
 
     // Execute paginated query
     const [rows, [{ value: total }]] = await Promise.all([
-      db.select().from(model.table)
+      db
+        .select()
+        .from(model.table)
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(...orderClauses)
         .limit(limit)
         .offset(offset),
-      db.select({ value: count() }).from(model.table)
+      db
+        .select({ value: count() })
+        .from(model.table)
         .where(conditions.length ? and(...conditions) : undefined),
     ]);
 
@@ -101,7 +120,9 @@ export function buildListHandler<TTable extends Table>(model: Model<TTable>): Ro
     return c.json({
       data: rows.map(serializeModel),
       pagination: {
-        page, limit, total,
+        page,
+        limit,
+        total,
         totalPages,
         hasNext: page < totalPages,
         hasPrev: page > 1,
@@ -175,10 +196,8 @@ export function buildCreateHandler<TTable extends Table>(model: Model<TTable>): 
 
 import { authenticate, requireRole } from '@web-loom/api-middleware-auth';
 
-export function resolveAuthMiddleware(
-  opts: CrudOperationOptions | undefined
-): MiddlewareHandler[] {
-  if (!opts?.auth) return [];                    // public
+export function resolveAuthMiddleware(opts: CrudOperationOptions | undefined): MiddlewareHandler[] {
+  if (!opts?.auth) return []; // public
   if (opts.auth === true) return [authenticate]; // any authenticated user
   return [authenticate, requireRole(opts.auth)]; // specific role
 }

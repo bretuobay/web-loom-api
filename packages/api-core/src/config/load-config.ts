@@ -1,13 +1,13 @@
 /**
  * Configuration loading with validation and environment variable support
- * 
+ *
  * Provides a complete configuration loading pipeline:
  * 1. Load .env files with environment-specific overrides
  * 2. Load configuration file (webloom.config.ts)
  * 3. Interpolate environment variables
  * 4. Validate configuration
  * 5. Return typed, validated configuration
- * 
+ *
  * @module config/load-config
  */
 
@@ -22,7 +22,7 @@ import { validateConfigOrThrow } from './validation';
 export interface LoadConfigOptions {
   /**
    * Configuration object or path to configuration file
-   * 
+   *
    * Can be:
    * - Configuration object directly
    * - Path to .ts/.js configuration file
@@ -62,7 +62,7 @@ export interface LoadConfigResult {
 
 /**
  * Loads and validates configuration with full environment support
- * 
+ *
  * This is the recommended way to load configuration at application startup.
  * It handles the complete pipeline:
  * 1. Loads .env files (base + environment-specific)
@@ -70,16 +70,16 @@ export interface LoadConfigResult {
  * 3. Interpolates ${ENV_VAR} references
  * 4. Validates against schema
  * 5. Returns typed configuration
- * 
+ *
  * @param options - Loading options
  * @returns Loaded and validated configuration
  * @throws {ConfigurationValidationError} If validation fails
- * 
+ *
  * @example
  * ```typescript
  * // Load configuration with defaults
  * const { config } = loadConfig();
- * 
+ *
  * // Load with custom environment
  * const { config } = loadConfig({
  *   envOptions: {
@@ -87,22 +87,15 @@ export interface LoadConfigResult {
  *     debug: true
  *   }
  * });
- * 
+ *
  * // Load with custom config object
  * const { config } = loadConfig({
  *   config: myConfigObject
  * });
  * ```
  */
-export function loadConfig(
-  options: LoadConfigOptions = {}
-): LoadConfigResult {
-  const {
-    config: configInput,
-    envOptions = {},
-    validate = true,
-    interpolate = true,
-  } = options;
+export function loadConfig(options: LoadConfigOptions = {}): LoadConfigResult {
+  const { config: configInput, envOptions = {}, validate = true, interpolate = true } = options;
 
   // Step 1: Load environment files
   const envResult = loadEnvFiles(envOptions);
@@ -123,14 +116,14 @@ export function loadConfig(
     config = configInput;
   } else {
     // Try to load from default location
-    throw new Error(
-      'No configuration provided. Please pass a config object or file path.'
-    );
+    throw new Error('No configuration provided. Please pass a config object or file path.');
   }
 
   // Step 3: Interpolate environment variables
   if (interpolate) {
-    config = interpolateConfig(config as unknown as Record<string, unknown>) as unknown as WebLoomConfig;
+    config = interpolateConfig(
+      config as unknown as Record<string, unknown>
+    ) as unknown as WebLoomConfig;
   }
 
   // Step 4: Validate configuration
@@ -147,18 +140,18 @@ export function loadConfig(
 
 /**
  * Loads configuration synchronously for startup
- * 
+ *
  * Simplified version that loads config and terminates on error.
  * Suitable for application startup where you want to fail fast.
- * 
+ *
  * @param config - Configuration object
  * @param envOptions - Environment loading options
  * @returns Validated configuration
- * 
+ *
  * @example
  * ```typescript
  * import config from './webloom.config';
- * 
+ *
  * const validConfig = loadConfigSync(config, {
  *   environment: process.env.NODE_ENV
  * });

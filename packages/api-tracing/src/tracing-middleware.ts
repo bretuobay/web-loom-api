@@ -25,7 +25,7 @@ export function createTracingMiddleware(options: TracingMiddlewareOptions) {
   return function tracingMiddleware(
     req: SimpleRequest,
     res: SimpleResponse,
-    next: (error?: Error) => void,
+    next: (error?: Error) => void
   ): void {
     // Skip excluded paths
     if (excludePaths.has(req.url)) {
@@ -47,12 +47,8 @@ export function createTracingMiddleware(options: TracingMiddlewareOptions) {
     if (parentCtx?.spanId !== undefined) spanOpts.parentSpanId = parentCtx.spanId;
     const span = tracer.createSpan(`${req.method} ${req.url}`, spanOpts);
 
-
     // Inject trace context into response headers
-    injectTraceContext(
-      { traceId: span.traceId, spanId: span.spanId, traceFlags: 1 },
-      res.headers,
-    );
+    injectTraceContext({ traceId: span.traceId, spanId: span.spanId, traceFlags: 1 }, res.headers);
 
     // Wrap next to capture completion
     const originalNext = next;

@@ -96,7 +96,12 @@ export interface DeliveryOptions {
 
 export interface HttpTransport {
   /** Send a POST request and return the status code */
-  post(url: string, body: string, headers: Record<string, string>, timeout: number): Promise<number>;
+  post(
+    url: string,
+    body: string,
+    headers: Record<string, string>,
+    timeout: number
+  ): Promise<number>;
 }
 
 // -----------------------------------------------------------------------

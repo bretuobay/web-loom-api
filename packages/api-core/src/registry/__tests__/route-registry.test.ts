@@ -85,9 +85,7 @@ describe('RouteRegistry', () => {
       registry.register(route);
 
       expect(() => registry.register(route)).toThrow(ConflictError);
-      expect(() => registry.register(route)).toThrow(
-        'Route already registered: GET /users'
-      );
+      expect(() => registry.register(route)).toThrow('Route already registered: GET /users');
     });
 
     it('should normalize paths by removing trailing slashes', () => {
@@ -130,9 +128,7 @@ describe('RouteRegistry', () => {
 
     it('should throw NotFoundError for non-existent routes', () => {
       expect(() => registry.unregister('/users', 'GET')).toThrow(NotFoundError);
-      expect(() => registry.unregister('/users', 'GET')).toThrow(
-        'Route not found: GET /users'
-      );
+      expect(() => registry.unregister('/users', 'GET')).toThrow('Route not found: GET /users');
     });
   });
 

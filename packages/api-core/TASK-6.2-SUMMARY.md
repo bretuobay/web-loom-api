@@ -11,6 +11,7 @@ Successfully implemented the file-based route discovery system for the Web Loom 
 #### 1. RouteDiscovery Class (`src/registry/route-discovery.ts`)
 
 **Key Features:**
+
 - Recursive directory scanning for route files
 - File-based routing conventions (Next.js-style)
 - Dynamic segment mapping: `[id]` → `:id`
@@ -22,34 +23,36 @@ Successfully implemented the file-based route discovery system for the Web Loom 
 - Route statistics tracking
 
 **Public API:**
+
 ```typescript
 class RouteDiscovery {
-  constructor(registry: RouteRegistry)
-  
+  constructor(registry: RouteRegistry);
+
   // Discover and register all routes from a directory
-  async discover(routesDir: string): Promise<void>
-  
+  async discover(routesDir: string): Promise<void>;
+
   // Get statistics about discovered routes
-  getStats(): { 
-    totalRoutes: number; 
-    routesByMethod: Record<HTTPMethod, number> 
-  }
+  getStats(): {
+    totalRoutes: number;
+    routesByMethod: Record<HTTPMethod, number>;
+  };
 }
 ```
 
 **File-Based Routing Conventions:**
 
-| File Path | URL Path |
-|-----------|----------|
-| `index.ts` | `/` |
-| `users.ts` | `/users` |
-| `users/[id].ts` | `/users/:id` |
+| File Path             | URL Path           |
+| --------------------- | ------------------ |
+| `index.ts`            | `/`                |
+| `users.ts`            | `/users`           |
+| `users/[id].ts`       | `/users/:id`       |
 | `users/[id]/posts.ts` | `/users/:id/posts` |
-| `[...path].ts` | `/*` |
+| `[...path].ts`        | `/*`               |
 
 #### 2. Comprehensive Test Suite (`src/registry/__tests__/route-discovery.test.ts`)
 
 **Test Coverage (29 tests, all passing):**
+
 - ✅ Directory validation and error handling
 - ✅ Basic route discovery (index.ts, named files)
 - ✅ Nested directory support
@@ -65,6 +68,7 @@ class RouteDiscovery {
 - ✅ Edge cases (empty directories, deeply nested, .js files)
 
 **Test Results:**
+
 ```
 ✓ src/registry/__tests__/route-discovery.test.ts (29)
   ✓ RouteDiscovery (29)
@@ -80,6 +84,7 @@ Test Files  1 passed (1)
 #### 3. Documentation
 
 **Updated Files:**
+
 - `src/registry/README.md` - Added comprehensive RouteDiscovery documentation
   - File-based routing conventions
   - Usage examples
@@ -89,6 +94,7 @@ Test Files  1 passed (1)
   - Best practices
 
 **Created Files:**
+
 - `examples/route-discovery-example.ts` - Working example demonstrating all features
 
 ### Technical Implementation
@@ -114,15 +120,15 @@ The `importRouteModule()` method handles cross-platform file imports:
 private async importRouteModule(filePath: string): Promise<Record<string, unknown>> {
   // Normalize path for Windows compatibility
   const normalizedPath = filePath.replace(/\\/g, '/');
-  
+
   // Create proper file:// URL
-  const fileUrl = normalizedPath.startsWith('/') 
+  const fileUrl = normalizedPath.startsWith('/')
     ? `file://${normalizedPath}`
     : `file:///${normalizedPath}`;
-  
+
   // Dynamic import
   const module = await import(fileUrl);
-  
+
   return module;
 }
 ```
@@ -132,6 +138,7 @@ private async importRouteModule(filePath: string): Promise<Record<string, unknow
 #### HTTP Method Handler Registration
 
 The `registerHandlers()` method:
+
 1. Iterates through all HTTP methods
 2. Checks if module exports a function with that method name
 3. Creates a `RouteDefinition` for each found handler
@@ -143,19 +150,21 @@ The `registerHandlers()` method:
 #### Fixed Type Conflict
 
 **Issue:** `RateLimitConfig` was exported from both:
+
 - `config/types.ts` (global rate limiting config)
 - `registry/route-types.ts` (route-level rate limiting)
 
 **Solution:** Renamed route-level type to `RouteRateLimitConfig` to avoid ambiguity.
 
 **Updated Exports:**
+
 ```typescript
 // src/registry/index.ts
 export type {
   RouteDefinition,
   RouteValidation,
   AuthRequirement,
-  RouteRateLimitConfig,  // Renamed from RateLimitConfig
+  RouteRateLimitConfig, // Renamed from RateLimitConfig
   CacheConfig,
   RouteMetadata,
   ResponseDefinition,
@@ -166,24 +175,29 @@ export type {
 ## Requirements Compliance
 
 ### ✅ Requirement 6.1: File-Based Routing Convention
+
 - Scans `src/routes` directory for route files
 - Maps file paths to URL paths following conventions
 
 ### ✅ Requirement 6.2: Dynamic Segments
+
 - Supports `[param]` syntax in filenames
 - Maps to `:param` in URL paths
 - Extracts parameter values from URLs
 
 ### ✅ Requirement 6.3: Catch-All Routes
+
 - Supports `[...path]` syntax in filenames
 - Maps to `*` wildcard in URL paths
 
 ### ✅ Requirement 6.4: Nested Routes
+
 - Recursively scans subdirectories
 - Creates nested paths from directory structure
 - Example: `users/[id]/posts.ts` → `/users/:id/posts`
 
 ### ✅ Requirement 1.3: Route Discovery During Initialization
+
 - Provides `discover()` method for Core Runtime
 - Registers all discovered routes in RouteRegistry
 - Completes efficiently for serverless cold start optimization
@@ -191,6 +205,7 @@ export type {
 ## Design Compliance
 
 ### ✅ File-Based Route Discovery (Design Section)
+
 - Scan `src/routes` directory recursively ✓
 - Map file paths to URL paths ✓
 - Support dynamic segments: `[param]` → `:param` ✓
@@ -198,6 +213,7 @@ export type {
 - Detect conflicts and report errors ✓
 
 ### ✅ Route Registry Integration
+
 - Uses existing `RouteRegistry` for registration
 - Leverages conflict detection
 - Maintains route metadata
@@ -253,10 +269,10 @@ class CoreRuntime {
   async initialize() {
     this.routeRegistry = new RouteRegistry();
     this.routeDiscovery = new RouteDiscovery(this.routeRegistry);
-    
+
     // Discover routes from file system
     await this.routeDiscovery.discover('./src/routes');
-    
+
     console.log(`Initialized with ${this.routeRegistry.size()} routes`);
   }
 }
@@ -265,6 +281,7 @@ class CoreRuntime {
 ## Testing Strategy
 
 ### Unit Tests
+
 - **29 comprehensive tests** covering all functionality
 - **File system operations** with temporary test directories
 - **Edge cases** (empty dirs, invalid files, no handlers)
@@ -272,6 +289,7 @@ class CoreRuntime {
 - **Cross-platform** compatibility (Windows/Unix paths)
 
 ### Test Approach
+
 1. Create temporary test directory for each test
 2. Write route files with various structures
 3. Run discovery
@@ -279,9 +297,10 @@ class CoreRuntime {
 5. Clean up test directory
 
 ### Key Test Cases
+
 - ✅ Basic file discovery (index.ts, named files)
 - ✅ Dynamic segments ([id].ts → :id)
-- ✅ Catch-all routes ([...path].ts → *)
+- ✅ Catch-all routes ([...path].ts → \*)
 - ✅ Nested structures (users/[id]/posts/[postId].ts)
 - ✅ All HTTP methods (GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD)
 - ✅ File filtering (test files, spec files, .d.ts files)
@@ -291,6 +310,7 @@ class CoreRuntime {
 ## Build Verification
 
 ### ✅ TypeScript Compilation
+
 ```
 DTS ⚡️ Build success in 862ms
 DTS dist/index.d.cts 103.26 KB
@@ -298,6 +318,7 @@ DTS dist/index.d.ts  103.26 KB
 ```
 
 ### ✅ All Tests Passing
+
 ```
 Test Files  7 passed (7)
      Tests  187 passed (187)
@@ -305,6 +326,7 @@ Test Files  7 passed (7)
 ```
 
 ### ✅ Example Execution
+
 ```
 $ npx tsx examples/route-discovery-example.ts
 === Route Discovery Example ===
@@ -316,12 +338,14 @@ $ npx tsx examples/route-discovery-example.ts
 ## Files Created/Modified
 
 ### Created
+
 - ✅ `src/registry/route-discovery.ts` (267 lines)
 - ✅ `src/registry/__tests__/route-discovery.test.ts` (543 lines)
 - ✅ `examples/route-discovery-example.ts` (175 lines)
 - ✅ `TASK-6.2-SUMMARY.md` (this file)
 
 ### Modified
+
 - ✅ `src/registry/index.ts` - Added RouteDiscovery export
 - ✅ `src/registry/route-types.ts` - Renamed RateLimitConfig to RouteRateLimitConfig
 - ✅ `src/registry/README.md` - Added RouteDiscovery documentation (300+ lines)
@@ -331,7 +355,7 @@ $ npx tsx examples/route-discovery-example.ts
 1. ✅ **Automatic Route Discovery** - Scans directories recursively
 2. ✅ **File-Based Routing** - Next.js-style conventions
 3. ✅ **Dynamic Segments** - [id] → :id mapping
-4. ✅ **Catch-All Routes** - [...path] → * mapping
+4. ✅ **Catch-All Routes** - [...path] → \* mapping
 5. ✅ **Nested Routes** - Directory structure → URL paths
 6. ✅ **HTTP Method Support** - All 7 HTTP methods
 7. ✅ **File Filtering** - Ignores test/spec/type files
@@ -349,6 +373,7 @@ $ npx tsx examples/route-discovery-example.ts
 ## Next Steps
 
 The RouteDiscovery is now ready to be used by:
+
 - **Core Runtime** (Task 7.x) - Integration during initialization
 - **Development Server** (Task 24.x) - Hot reload on file changes
 - **CLI Tool** (Task 17.x+) - Route scaffolding and management
@@ -356,6 +381,7 @@ The RouteDiscovery is now ready to be used by:
 ## Conclusion
 
 Task 6.2 is **complete** with:
+
 - ✅ Full implementation of file-based route discovery
 - ✅ Comprehensive test coverage (29 tests, all passing)
 - ✅ Complete documentation and examples

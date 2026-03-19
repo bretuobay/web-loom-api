@@ -30,33 +30,30 @@ describe('PluginManager – loadPlugin', () => {
   it('rejects duplicate plugin names', () => {
     const mgr = new PluginManager();
     mgr.loadPlugin(makePlugin({ name: 'dup' }));
-    expect(() => mgr.loadPlugin(makePlugin({ name: 'dup' }))).toThrow(
-      'already loaded',
-    );
+    expect(() => mgr.loadPlugin(makePlugin({ name: 'dup' }))).toThrow('already loaded');
   });
 
   it('rejects plugin without name', () => {
     const mgr = new PluginManager();
     expect(() => mgr.loadPlugin({ name: '', version: '1', register: vi.fn() })).toThrow(
-      'non-empty "name"',
+      'non-empty "name"'
     );
   });
 
   it('rejects plugin without version', () => {
     const mgr = new PluginManager();
-    expect(() =>
-      mgr.loadPlugin({ name: 'x', version: '', register: vi.fn() }),
-    ).toThrow('non-empty "version"');
+    expect(() => mgr.loadPlugin({ name: 'x', version: '', register: vi.fn() })).toThrow(
+      'non-empty "version"'
+    );
   });
 
   it('rejects plugin without register function', () => {
     const mgr = new PluginManager();
-    expect(() =>
-      mgr.loadPlugin({ name: 'x', version: '1' } as unknown as Plugin),
-    ).toThrow('"register" function');
+    expect(() => mgr.loadPlugin({ name: 'x', version: '1' } as unknown as Plugin)).toThrow(
+      '"register" function'
+    );
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // Lifecycle: initializeAll
@@ -70,9 +67,15 @@ describe('PluginManager – initializeAll', () => {
     mgr.loadPlugin({
       name: 'a',
       version: '1.0.0',
-      register: () => { order.push('a:register'); },
-      onInit: () => { order.push('a:init'); },
-      onReady: () => { order.push('a:ready'); },
+      register: () => {
+        order.push('a:register');
+      },
+      onInit: () => {
+        order.push('a:init');
+      },
+      onReady: () => {
+        order.push('a:ready');
+      },
     });
 
     await mgr.initializeAll();
@@ -88,14 +91,18 @@ describe('PluginManager – initializeAll', () => {
     mgr.loadPlugin({
       name: 'base',
       version: '1.0.0',
-      register: () => { order.push('base:register'); },
+      register: () => {
+        order.push('base:register');
+      },
     });
 
     mgr.loadPlugin({
       name: 'dependent',
       version: '1.0.0',
       dependencies: ['base'],
-      register: () => { order.push('dependent:register'); },
+      register: () => {
+        order.push('dependent:register');
+      },
     });
 
     await mgr.initializeAll();
@@ -142,7 +149,9 @@ describe('PluginManager – initializeAll', () => {
     mgr.loadPlugin({
       name: 'bad',
       version: '1.0.0',
-      register: () => { throw new Error('boom'); },
+      register: () => {
+        throw new Error('boom');
+      },
     });
 
     await expect(mgr.initializeAll()).rejects.toThrow('failed during register');
@@ -156,14 +165,15 @@ describe('PluginManager – initializeAll', () => {
       name: 'bad-init',
       version: '1.0.0',
       register: vi.fn(),
-      onInit: () => { throw new Error('init-boom'); },
+      onInit: () => {
+        throw new Error('init-boom');
+      },
     });
 
     await expect(mgr.initializeAll()).rejects.toThrow('failed during onInit');
     expect(mgr.getPluginState('bad-init')).toBe('error');
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // Lifecycle: shutdownAll
@@ -178,7 +188,9 @@ describe('PluginManager – shutdownAll', () => {
       name: 'base',
       version: '1.0.0',
       register: vi.fn(),
-      onShutdown: () => { order.push('base:shutdown'); },
+      onShutdown: () => {
+        order.push('base:shutdown');
+      },
     });
 
     mgr.loadPlugin({
@@ -186,7 +198,9 @@ describe('PluginManager – shutdownAll', () => {
       version: '1.0.0',
       dependencies: ['base'],
       register: vi.fn(),
-      onShutdown: () => { order.push('child:shutdown'); },
+      onShutdown: () => {
+        order.push('child:shutdown');
+      },
     });
 
     await mgr.initializeAll();
@@ -212,7 +226,9 @@ describe('PluginManager – shutdownAll', () => {
       name: 'bad',
       version: '1.0.0',
       register: vi.fn(),
-      onShutdown: () => { throw new Error('shutdown-fail'); },
+      onShutdown: () => {
+        throw new Error('shutdown-fail');
+      },
     });
 
     await mgr.initializeAll();

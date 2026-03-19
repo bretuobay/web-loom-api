@@ -126,12 +126,15 @@ process.on('SIGINT', async () => {
 Initialize the runtime with configuration. Must be called before `start()`.
 
 **Parameters:**
+
 - `config`: Web Loom configuration object
 
 **Throws:**
+
 - `Error` if already initialized or initialization fails
 
 **Example:**
+
 ```typescript
 await runtime.initialize(config);
 ```
@@ -141,9 +144,11 @@ await runtime.initialize(config);
 Start the application and begin accepting requests. Must be called after `initialize()`.
 
 **Throws:**
+
 - `Error` if not in ready state or start fails
 
 **Example:**
+
 ```typescript
 await runtime.start();
 ```
@@ -153,12 +158,15 @@ await runtime.start();
 Gracefully shutdown the application.
 
 **Parameters:**
+
 - `timeout`: Maximum time to wait for graceful shutdown in milliseconds (default: 10000)
 
 **Throws:**
+
 - `Error` if shutdown fails or times out
 
 **Example:**
+
 ```typescript
 await runtime.shutdown(5000); // 5 second timeout
 ```
@@ -170,6 +178,7 @@ Get the model registry instance.
 **Returns:** `ModelRegistry`
 
 **Example:**
+
 ```typescript
 const registry = runtime.getModelRegistry();
 const models = registry.getAll();
@@ -182,6 +191,7 @@ Get the route registry instance.
 **Returns:** `RouteRegistry`
 
 **Example:**
+
 ```typescript
 const registry = runtime.getRouteRegistry();
 const routes = registry.getAll();
@@ -192,14 +202,17 @@ const routes = registry.getAll();
 Get an adapter by type. Lazy-loaded adapters are initialized on first access.
 
 **Parameters:**
+
 - `type`: Adapter type ('api', 'database', 'validation', 'auth', 'email')
 
 **Returns:** Adapter instance
 
 **Throws:**
+
 - `Error` if adapter not found or initialization fails
 
 **Example:**
+
 ```typescript
 const dbAdapter = runtime.getAdapter<DatabaseAdapter>('database');
 ```
@@ -211,6 +224,7 @@ Get the current runtime state.
 **Returns:** `RuntimeState` - One of: 'uninitialized', 'initializing', 'ready', 'starting', 'running', 'shutting_down', 'stopped'
 
 **Example:**
+
 ```typescript
 const state = runtime.getState();
 console.log('Current state:', state);
@@ -223,6 +237,7 @@ Check if the runtime is ready to handle requests.
 **Returns:** `boolean` - True if running, false otherwise
 
 **Example:**
+
 ```typescript
 if (runtime.isReady()) {
   // Handle request
@@ -257,6 +272,7 @@ The runtime performs a graceful shutdown sequence:
 5. **Timeout Protection**: Enforce maximum shutdown time
 
 **Example:**
+
 ```typescript
 // Shutdown with 5 second timeout
 await runtime.shutdown(5000);
@@ -287,6 +303,7 @@ The runtime includes comprehensive unit tests covering:
 - Graceful shutdown
 
 Run tests:
+
 ```bash
 npm test -- src/runtime/__tests__/core-runtime.test.ts
 ```
@@ -302,6 +319,7 @@ See `examples/core-runtime-example.ts` for complete usage examples:
 - Lifecycle management
 
 Run examples:
+
 ```bash
 npx tsx examples/core-runtime-example.ts
 ```

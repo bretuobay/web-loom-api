@@ -1,6 +1,6 @@
 /**
  * Documentation Server
- * 
+ *
  * Serves interactive API documentation using Scalar UI
  */
 

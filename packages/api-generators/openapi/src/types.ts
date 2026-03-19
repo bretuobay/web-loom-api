@@ -187,41 +187,41 @@ export interface OpenAPISchema {
   default?: unknown;
   enum?: unknown[];
   const?: unknown;
-  
+
   // Number validation
   minimum?: number;
   maximum?: number;
   exclusiveMinimum?: number;
   exclusiveMaximum?: number;
   multipleOf?: number;
-  
+
   // String validation
   minLength?: number;
   maxLength?: number;
   pattern?: string;
-  
+
   // Array validation
   items?: OpenAPISchema;
   minItems?: number;
   maxItems?: number;
   uniqueItems?: boolean;
-  
+
   // Object validation
   properties?: Record<string, OpenAPISchema>;
   required?: string[];
   additionalProperties?: boolean | OpenAPISchema;
   minProperties?: number;
   maxProperties?: number;
-  
+
   // Composition
   allOf?: OpenAPISchema[];
   oneOf?: OpenAPISchema[];
   anyOf?: OpenAPISchema[];
   not?: OpenAPISchema;
-  
+
   // Reference
   $ref?: string;
-  
+
   // Metadata
   deprecated?: boolean;
   readOnly?: boolean;
@@ -292,37 +292,37 @@ export interface OpenAPIExternalDocs {
 export interface OpenAPIGeneratorOptions {
   /** API title */
   title?: string;
-  
+
   /** API version */
   version?: string;
-  
+
   /** API description */
   description?: string;
-  
+
   /** Server URLs */
   servers?: OpenAPIServer[];
-  
+
   /** Contact information */
   contact?: OpenAPIContact;
-  
+
   /** License information */
   license?: OpenAPILicense;
-  
+
   /** Security schemes */
   securitySchemes?: Record<string, OpenAPISecurityScheme>;
-  
+
   /** Global security requirements */
   security?: OpenAPISecurityRequirement[];
-  
+
   /** Tags for grouping operations */
   tags?: OpenAPITag[];
-  
+
   /** External documentation */
   externalDocs?: OpenAPIExternalDocs;
-  
+
   /** Include examples in schemas */
   includeExamples?: boolean;
-  
+
   /** Include deprecated routes */
   includeDeprecated?: boolean;
 }

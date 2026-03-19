@@ -138,7 +138,7 @@ describe('Error Handler', () => {
       expect(response.headers.get('Content-Type')).toBe('application/json');
       expect(response.headers.get('X-Request-ID')).toBeDefined();
 
-      const body = await response.json() as any;
+      const body = (await response.json()) as any;
       expect(body.error.code).toBe(ErrorCode.NOT_FOUND);
       expect(body.error.message).toBe('User not found');
     });
@@ -150,7 +150,7 @@ describe('Error Handler', () => {
 
       expect(response.status).toBe(500);
 
-      const body = await response.json() as any;
+      const body = (await response.json()) as any;
       expect(body.error.code).toBe(ErrorCode.INTERNAL_ERROR);
       expect(body.error.message).toBe('An unexpected error occurred');
     });
@@ -170,11 +170,14 @@ describe('Error Handler', () => {
 
       await handler(error, makeRequest('/api/users'));
 
-      expect(logger).toHaveBeenCalledWith(error, expect.objectContaining({
-        requestId: expect.any(String),
-        path: '/api/users',
-        method: 'GET',
-      }));
+      expect(logger).toHaveBeenCalledWith(
+        error,
+        expect.objectContaining({
+          requestId: expect.any(String),
+          path: '/api/users',
+          method: 'GET',
+        })
+      );
     });
 
     it('should handle different error types with correct status codes', async () => {

@@ -1,6 +1,6 @@
 /**
  * Authentication Example
- * 
+ *
  * Demonstrates client usage with authentication
  */
 

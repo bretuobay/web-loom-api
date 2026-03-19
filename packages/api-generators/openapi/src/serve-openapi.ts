@@ -15,7 +15,7 @@ export async function setupOpenApiRoutes(
   app: Hono<any>,
   models: AnyModel[],
   routeMetas: RouteMetaEntry[],
-  config: OpenApiConfig,
+  config: OpenApiConfig
 ): Promise<void> {
   if (config.enabled === false) return;
 

@@ -36,22 +36,22 @@ Web Loom API is a TypeScript meta-framework for building REST APIs on top of [Ho
 
 ## Example Projects
 
-| Example | Description |
-|---------|-------------|
-| [`examples/minimal`](../examples/minimal) | Bare-bones API with one model and one route file |
+| Example                                         | Description                                             |
+| ----------------------------------------------- | ------------------------------------------------------- |
+| [`examples/minimal`](../examples/minimal)       | Bare-bones API with one model and one route file        |
 | [`examples/serverless`](../examples/serverless) | Same app deployed to Vercel, Cloudflare, and AWS Lambda |
-| [`examples/full-stack`](../examples/full-stack) | Production API with auth, OpenAPI docs, and email |
+| [`examples/full-stack`](../examples/full-stack) | Production API with auth, OpenAPI docs, and email       |
 
 ## Package Overview
 
-| Package | Description |
-|---------|-------------|
-| `@web-loom/api-core` | Core runtime, model registry, route discovery, `defineModel`, `defineRoutes`, `validate`, `openApiMeta` |
-| `@web-loom/api-shared` | Shared types and utilities |
-| `@web-loom/api-cli` | `webloom` CLI — `init`, `dev`, `generate openapi`, `generate client` |
-| `@web-loom/api-middleware-auth` | JWT, session, API key auth; RBAC guards; CSRF protection |
-| `@web-loom/api-generator-crud` | Auto-generated CRUD endpoints from model definitions |
-| `@web-loom/api-generator-openapi` | OpenAPI 3.1 document + Swagger/Scalar UI serving |
-| `@web-loom/api-deployment-vercel` | Vercel deployment handler |
-| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers deployment handler |
-| `@web-loom/api-deployment-aws` | AWS Lambda deployment handler |
+| Package                               | Description                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `@web-loom/api-core`                  | Core runtime, model registry, route discovery, `defineModel`, `defineRoutes`, `validate`, `openApiMeta` |
+| `@web-loom/api-shared`                | Shared types and utilities                                                                              |
+| `@web-loom/api-cli`                   | `webloom` CLI — `init`, `dev`, `generate openapi`, `generate client`                                    |
+| `@web-loom/api-middleware-auth`       | JWT, session, API key auth; RBAC guards; CSRF protection                                                |
+| `@web-loom/api-generator-crud`        | Auto-generated CRUD endpoints from model definitions                                                    |
+| `@web-loom/api-generator-openapi`     | OpenAPI 3.1 document + Swagger/Scalar UI serving                                                        |
+| `@web-loom/api-deployment-vercel`     | Vercel deployment handler                                                                               |
+| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers deployment handler                                                                   |
+| `@web-loom/api-deployment-aws`        | AWS Lambda deployment handler                                                                           |

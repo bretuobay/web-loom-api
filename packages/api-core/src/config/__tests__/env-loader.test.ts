@@ -37,10 +37,7 @@ describe('Environment File Loading', () => {
 
   describe('loadEnvFiles', () => {
     it('should load base .env file', () => {
-      writeFileSync(
-        resolve(testDir, '.env'),
-        'TEST_VAR=base\nTEST_VAR2=value2'
-      );
+      writeFileSync(resolve(testDir, '.env'), 'TEST_VAR=base\nTEST_VAR2=value2');
 
       const result = loadEnvFiles({ cwd: testDir });
 
@@ -74,12 +71,7 @@ describe('Environment File Loading', () => {
         environment: 'test',
       });
 
-      expect(result.loaded).toEqual([
-        '.env',
-        '.env.local',
-        '.env.test',
-        '.env.test.local',
-      ]);
+      expect(result.loaded).toEqual(['.env', '.env.local', '.env.test', '.env.test.local']);
       expect(process.env.TEST_VAR).toBe('test-local'); // Last file wins
     });
 

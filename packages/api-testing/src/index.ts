@@ -81,5 +81,5 @@ export type {
 } from './contract-testing';
 
 // Model Serializer
-export { serialize, deserialize, validateDeserialized, ValidationError } from "./model-serializer";
-export type { ModelSchema, FieldDef, FieldType } from "./model-serializer";
+export { serialize, deserialize, validateDeserialized, ValidationError } from './model-serializer';
+export type { ModelSchema, FieldDef, FieldType } from './model-serializer';

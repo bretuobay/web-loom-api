@@ -58,7 +58,6 @@ function runStoreTests(name: string, createStore: () => JobStore) {
       expect(dequeued!.status).toBe('processing');
     });
 
-
     it('dequeues by createdAt when priority is equal', async () => {
       const older = createTestJob({ id: 'older', createdAt: 1000 });
       const newer = createTestJob({ id: 'newer', createdAt: 2000 });

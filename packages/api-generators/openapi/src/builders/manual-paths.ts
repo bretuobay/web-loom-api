@@ -16,13 +16,14 @@ function toOpenApiPath(path: string): string {
 export function buildManualPathItems(
   entries: RouteMetaEntry[],
   paths: PathsObject,
-  schemas: Record<string, SchemaObject>,
+  schemas: Record<string, SchemaObject>
 ): void {
   for (const entry of entries) {
     const { path, method, meta } = entry;
     const openApiPath = toOpenApiPath(path);
     const httpMethod = method.toLowerCase();
-    const operationId = meta.operationId ?? `${httpMethod}${openApiPath.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const operationId =
+      meta.operationId ?? `${httpMethod}${openApiPath.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
     const operation: Record<string, unknown> = {};
 

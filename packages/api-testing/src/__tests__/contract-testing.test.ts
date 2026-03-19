@@ -83,7 +83,6 @@ function createOpenApiSpec(overrides?: Record<string, unknown>) {
   };
 }
 
-
 function createMockHandler(
   responses: Record<string, { status: number; body: unknown; headers?: Record<string, string> }>
 ): RequestHandler {
@@ -204,7 +203,6 @@ describe('validateResponseSchema', () => {
   });
 });
 
-
 // ---- validateStatusCode ----
 
 describe('validateStatusCode', () => {
@@ -230,19 +228,18 @@ describe('validateResponseHeaders', () => {
   });
 
   it('should report missing headers', () => {
-    const result = validateResponseHeaders(
-      { 'content-type': 'application/json' },
-      ['content-type', 'x-request-id']
-    );
+    const result = validateResponseHeaders({ 'content-type': 'application/json' }, [
+      'content-type',
+      'x-request-id',
+    ]);
     expect(result.valid).toBe(false);
     expect(result.missing).toContain('x-request-id');
   });
 
   it('should be case-insensitive for header names', () => {
-    const result = validateResponseHeaders(
-      { 'Content-Type': 'application/json' },
-      ['content-type']
-    );
+    const result = validateResponseHeaders({ 'Content-Type': 'application/json' }, [
+      'content-type',
+    ]);
     expect(result.valid).toBe(true);
   });
 });
@@ -293,7 +290,6 @@ describe('parseOpenApiSpec', () => {
     expect(parsed.endpoints).toHaveLength(0);
   });
 });
-
 
 // ---- testContract ----
 

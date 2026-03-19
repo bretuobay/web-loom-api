@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { pgTable, uuid, text, timestamp, integer } from 'drizzle-orm/pg-core';
-import { sqliteTable } from 'drizzle-orm/sqlite-core';
+import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import { sqliteTable, integer as sqliteInteger, text as sqliteText } from 'drizzle-orm/sqlite-core';
 import { z } from 'zod';
 import { defineModel } from '../define-model';
 import { ModelRegistry, modelRegistry } from '../registry';
@@ -23,9 +23,9 @@ const usersTable = pgTable('users', {
 });
 
 const postsTable = sqliteTable('posts', {
-  id: integer('id').primaryKey(),
-  title: text('title').notNull(),
-  body: text('body'),
+  id: sqliteInteger('id').primaryKey({ autoIncrement: true }),
+  title: sqliteText('title').notNull(),
+  body: sqliteText('body'),
 });
 
 // ---------------------------------------------------------------------------
@@ -174,9 +174,13 @@ describe('defineModel', () => {
   });
 
   it('applies insert schema override', () => {
-    const User = defineModel(usersTable, { name: 'User' }, {
-      insert: (schema) => schema.extend({ email: z.string().email() }),
-    });
+    const User = defineModel(
+      usersTable,
+      { name: 'User' },
+      {
+        insert: (schema) => schema.extend({ email: z.string().email() }),
+      }
+    );
 
     const invalid = User.insertSchema.safeParse({ name: 'Alice', email: 'not-an-email' });
     expect(invalid.success).toBe(false);
@@ -186,9 +190,13 @@ describe('defineModel', () => {
   });
 
   it('applies update schema override', () => {
-    const User = defineModel(usersTable, { name: 'User' }, {
-      update: (schema) => schema.extend({ email: z.string().email().optional() }),
-    });
+    const User = defineModel(
+      usersTable,
+      { name: 'User' },
+      {
+        update: (schema) => schema.extend({ email: z.string().email().optional() }),
+      }
+    );
 
     const invalid = User.updateSchema.safeParse({ email: 'bad-email' });
     expect(invalid.success).toBe(false);

@@ -12,14 +12,14 @@ Deploy your Web Loom API to Cloudflare's global edge network.
 
 ```typescript
 // src/shared/app.ts
-import { createApp, defineConfig } from "@web-loom/api-core";
-import "./schema"; // register models
+import { createApp, defineConfig } from '@web-loom/api-core';
+import './schema'; // register models
 
 const config = defineConfig({
-  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
+  database: { url: process.env.DATABASE_URL!, driver: 'neon-serverless' },
   features: { crud: true },
   openapi: { enabled: true },
-  observability: { logging: { level: "warn", format: "json" } },
+  observability: { logging: { level: 'warn', format: 'json' } },
 });
 
 let appPromise: ReturnType<typeof createApp> | null = null;
@@ -33,7 +33,7 @@ export function getApp() {
 
 ```typescript
 // src/worker.ts
-import { getApp } from "./shared/app";
+import { getApp } from './shared/app';
 
 interface Env {
   DATABASE_URL: string;
@@ -56,7 +56,7 @@ export default {
     process.env.DATABASE_URL = env.DATABASE_URL;
     const app = await getApp();
     // Run scheduled maintenance via the Drizzle instance
-    await app.db.execute("DELETE FROM sessions WHERE expires_at < NOW()");
+    await app.db.execute('DELETE FROM sessions WHERE expires_at < NOW()');
   },
 };
 ```
@@ -118,10 +118,10 @@ crons = ["0 * * * *"]  # Every hour
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string (secret) |
-| `ENVIRONMENT` | No | Runtime environment |
+| Variable       | Required | Description                           |
+| -------------- | -------- | ------------------------------------- |
+| `DATABASE_URL` | Yes      | PostgreSQL connection string (secret) |
+| `ENVIRONMENT`  | No       | Runtime environment                   |
 
 ## Optimizations
 

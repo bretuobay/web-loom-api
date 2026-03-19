@@ -13,10 +13,7 @@ export function requireRole(role: string): MiddlewareHandler {
       return c.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, 401);
     }
     if (user.role !== role) {
-      return c.json(
-        { error: { code: 'FORBIDDEN', message: `Requires role: ${role}` } },
-        403,
-      );
+      return c.json({ error: { code: 'FORBIDDEN', message: `Requires role: ${role}` } }, 403);
     }
     await next();
     return;
@@ -38,7 +35,7 @@ export function requirePermission(permission: string): MiddlewareHandler {
     if (!user.permissions?.includes(permission)) {
       return c.json(
         { error: { code: 'FORBIDDEN', message: `Requires permission: ${permission}` } },
-        403,
+        403
       );
     }
     await next();

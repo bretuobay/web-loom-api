@@ -27,9 +27,6 @@ function formatLabels(key: string): string {
   return `{${key}}`;
 }
 
-
-
-
 // ---- Internal metric implementations with accessible state ----
 
 class CounterImpl implements Counter {
@@ -171,7 +168,6 @@ class SummaryImpl implements Summary {
   }
 }
 
-
 // ---- Prometheus serialization helpers ----
 
 function serializeCounter(metric: CounterImpl): string[] {
@@ -212,8 +208,10 @@ function serializeHistogram(metric: HistogramImpl): string[] {
       const labelPrefix = key ? key + ',' : '';
       let cumulative = 0;
       for (let i = 0; i < metric.buckets.length; i++) {
-        cumulative += (data.bucketCounts[i] ?? 0);
-        lines.push(`${metric.name}_bucket{${labelPrefix}le="${(metric.buckets[i] ?? 0)}"} ${cumulative}`);
+        cumulative += data.bucketCounts[i] ?? 0;
+        lines.push(
+          `${metric.name}_bucket{${labelPrefix}le="${metric.buckets[i] ?? 0}"} ${cumulative}`
+        );
       }
       lines.push(`${metric.name}_bucket{${labelPrefix}le="+Inf"} ${data.count}`);
       lines.push(`${metric.name}_sum${formatLabels(key)} ${data.sum}`);
@@ -228,7 +226,7 @@ function calculateQuantile(sorted: number[], q: number): number {
   const pos = q * (sorted.length - 1);
   const lower = Math.floor(pos);
   const upper = Math.ceil(pos);
-  if (lower === upper) return (sorted[lower] ?? 0);
+  if (lower === upper) return sorted[lower] ?? 0;
   return (sorted[lower] ?? 0) + (pos - lower) * ((sorted[upper] ?? 0) - (sorted[lower] ?? 0));
 }
 
@@ -254,7 +252,6 @@ function serializeSummary(metric: SummaryImpl): string[] {
   }
   return lines;
 }
-
 
 // ---- MetricsRegistry (singleton) ----
 
@@ -285,7 +282,8 @@ export class MetricsRegistry {
     if (this.metrics.has(options.name)) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
-      if (existing.type !== 'counter') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
+      if (existing.type !== 'counter')
+        throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Counter;
     }
     const counter = new CounterImpl(options);
@@ -297,7 +295,8 @@ export class MetricsRegistry {
     if (this.metrics.has(options.name)) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
-      if (existing.type !== 'gauge') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
+      if (existing.type !== 'gauge')
+        throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Gauge;
     }
     const gauge = new GaugeImpl(options);
@@ -309,7 +308,8 @@ export class MetricsRegistry {
     if (this.metrics.has(options.name)) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
-      if (existing.type !== 'histogram') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
+      if (existing.type !== 'histogram')
+        throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Histogram;
     }
     const histogram = new HistogramImpl(options);
@@ -321,7 +321,8 @@ export class MetricsRegistry {
     if (this.metrics.has(options.name)) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const existing = this.metrics.get(options.name)!;
-      if (existing.type !== 'summary') throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
+      if (existing.type !== 'summary')
+        throw new Error(`Metric "${options.name}" already exists as ${existing.type}`);
       return existing as Summary;
     }
     const summary = new SummaryImpl(options);

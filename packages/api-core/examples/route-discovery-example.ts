@@ -1,6 +1,6 @@
 /**
  * Route Discovery Example
- * 
+ *
  * This example demonstrates how to use the RouteDiscovery class to automatically
  * discover and register routes from a file-based routing structure.
  */
@@ -104,7 +104,7 @@ async function main() {
   console.log('    this.routeDiscovery = new RouteDiscovery(this.routeRegistry);');
   console.log('');
   console.log('    // Discover routes from file system');
-  console.log('    await this.routeDiscovery.discover(\'./src/routes\');');
+  console.log("    await this.routeDiscovery.discover('./src/routes');");
   console.log('');
   console.log('    // Routes are now registered and ready to use');
   console.log('    const stats = this.routeDiscovery.getStats();');

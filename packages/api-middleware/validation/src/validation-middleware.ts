@@ -52,7 +52,7 @@ export function createQueryValidation<T extends ZodTypeAny>(
   schema: T
 ): (c: Context, next: Next) => Promise<void> {
   return async (c: Context, next: Next): Promise<void> => {
-    const query = c.req.queries();
+    const query = c.req.query();
     const result = schema.safeParse(query);
 
     if (!result.success) {
@@ -110,13 +110,15 @@ export function createParamsValidation<T extends ZodTypeAny>(
 /**
  * @deprecated Use the `validate()` helper from `@web-loom/api-core` instead.
  */
-export function createValidation<TBody extends ZodTypeAny, TQuery extends ZodTypeAny, TParams extends ZodTypeAny>(
-  schemas: {
-    body?: TBody;
-    query?: TQuery;
-    params?: TParams;
-  }
-): (c: Context, next: Next) => Promise<void> {
+export function createValidation<
+  TBody extends ZodTypeAny,
+  TQuery extends ZodTypeAny,
+  TParams extends ZodTypeAny,
+>(schemas: {
+  body?: TBody;
+  query?: TQuery;
+  params?: TParams;
+}): (c: Context, next: Next) => Promise<void> {
   return async (c: Context, next: Next): Promise<void> => {
     const errors: Array<{ field: string; message: string; code: string }> = [];
 
@@ -135,7 +137,7 @@ export function createValidation<TBody extends ZodTypeAny, TQuery extends ZodTyp
     }
 
     if (schemas.query) {
-      const result = schemas.query.safeParse(c.req.queries());
+      const result = schemas.query.safeParse(c.req.query());
       if (!result.success) {
         errors.push(
           ...result.error.issues.map((issue) => ({

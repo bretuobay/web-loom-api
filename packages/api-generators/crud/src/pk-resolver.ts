@@ -16,6 +16,6 @@ export function getPrimaryKeyColumn(table: Table): PrimaryKey {
     }
   }
   throw new Error(
-    `Table "${(table as any)[Symbol.for('drizzle:Name')] ?? 'unknown'}" has no primary key column. Mark one column with .primaryKey().`,
+    `Table "${(table as any)[Symbol.for('drizzle:Name')] ?? 'unknown'}" has no primary key column. Mark one column with .primaryKey().`
   );
 }

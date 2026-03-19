@@ -1,14 +1,14 @@
 /**
  * Environment file loading with environment-specific overrides
- * 
+ *
  * Loads .env files with support for environment-specific overrides:
  * - .env (base configuration)
  * - .env.local (local overrides, not committed)
  * - .env.[environment] (environment-specific, e.g., .env.development)
  * - .env.[environment].local (environment-specific local overrides)
- * 
+ *
  * Files are loaded in order, with later files overriding earlier ones.
- * 
+ *
  * @module config/env-loader
  */
 
@@ -59,16 +59,16 @@ export interface EnvLoaderResult {
 
 /**
  * Loads environment variables from .env files with environment-specific overrides
- * 
+ *
  * Loading order (later files override earlier ones):
  * 1. .env - Base configuration (committed to version control)
  * 2. .env.local - Local overrides (not committed, in .gitignore)
  * 3. .env.[environment] - Environment-specific (e.g., .env.development)
  * 4. .env.[environment].local - Environment-specific local overrides
- * 
+ *
  * @param options - Loading options
  * @returns Result with loaded files and parsed variables
- * 
+ *
  * @example
  * ```typescript
  * // Load environment files for development
@@ -76,14 +76,12 @@ export interface EnvLoaderResult {
  *   environment: 'development',
  *   debug: true
  * });
- * 
+ *
  * console.log('Loaded files:', result.loaded);
  * console.log('Environment variables:', result.parsed);
  * ```
  */
-export function loadEnvFiles(
-  options: EnvLoaderOptions = {}
-): EnvLoaderResult {
+export function loadEnvFiles(options: EnvLoaderOptions = {}): EnvLoaderResult {
   const {
     cwd = process.cwd(),
     environment = process.env.NODE_ENV || 'development',
@@ -96,12 +94,7 @@ export function loadEnvFiles(
   const parsed: Record<string, string> = {};
 
   // Define the order of .env files to load
-  const envFiles = [
-    '.env',
-    '.env.local',
-    `.env.${environment}`,
-    `.env.${environment}.local`,
-  ];
+  const envFiles = ['.env', '.env.local', `.env.${environment}`, `.env.${environment}.local`];
 
   // Load each file in order
   // Later files should override earlier ones, so we always use override: true
@@ -141,13 +134,13 @@ export function loadEnvFiles(
 
 /**
  * Loads environment files and returns a specific variable
- * 
+ *
  * Convenience function for loading env files and immediately accessing a variable.
- * 
+ *
  * @param key - Environment variable key
  * @param options - Loading options
  * @returns Value of the environment variable, or undefined if not found
- * 
+ *
  * @example
  * ```typescript
  * const databaseUrl = loadEnvVar('DATABASE_URL', {
@@ -155,21 +148,18 @@ export function loadEnvFiles(
  * });
  * ```
  */
-export function loadEnvVar(
-  key: string,
-  options: EnvLoaderOptions = {}
-): string | undefined {
+export function loadEnvVar(key: string, options: EnvLoaderOptions = {}): string | undefined {
   loadEnvFiles(options);
   return process.env[key];
 }
 
 /**
  * Loads environment files and returns multiple variables
- * 
+ *
  * @param keys - Array of environment variable keys
  * @param options - Loading options
  * @returns Object with requested environment variables
- * 
+ *
  * @example
  * ```typescript
  * const { DATABASE_URL, API_KEY } = loadEnvVars(

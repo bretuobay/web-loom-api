@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { rateLimit } from '../rate-limit';
 import { MemoryRateLimitStore } from '../stores/memory-store';
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 import type { RateLimitInfo, RateLimitStore } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -180,9 +180,9 @@ describe('rateLimit middleware', () => {
   });
 
   it('throws when custom strategy has no keyGenerator', () => {
-    expect(() =>
-      rateLimit({ keyStrategy: 'custom', store }),
-    ).toThrow('keyGenerator function is required');
+    expect(() => rateLimit({ keyStrategy: 'custom', store })).toThrow(
+      'keyGenerator function is required'
+    );
   });
 
   it('stores rate limit info on context metadata', async () => {
@@ -217,9 +217,15 @@ describe('rateLimit middleware', () => {
 
   it('supports failOpen mode on store errors', async () => {
     const failingStore: RateLimitStore = {
-      get: async () => { throw new Error('store down'); },
-      set: async () => { throw new Error('store down'); },
-      reset: async () => { throw new Error('store down'); },
+      get: async () => {
+        throw new Error('store down');
+      },
+      set: async () => {
+        throw new Error('store down');
+      },
+      reset: async () => {
+        throw new Error('store down');
+      },
     };
 
     const mw = rateLimit({ maxTokens: 1, store: failingStore, failOpen: true });
@@ -232,9 +238,15 @@ describe('rateLimit middleware', () => {
 
   it('throws on store errors when failOpen is false', async () => {
     const failingStore: RateLimitStore = {
-      get: async () => { throw new Error('store down'); },
-      set: async () => { throw new Error('store down'); },
-      reset: async () => { throw new Error('store down'); },
+      get: async () => {
+        throw new Error('store down');
+      },
+      set: async () => {
+        throw new Error('store down');
+      },
+      reset: async () => {
+        throw new Error('store down');
+      },
     };
 
     const mw = rateLimit({ maxTokens: 1, store: failingStore, failOpen: false });

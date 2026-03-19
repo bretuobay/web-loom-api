@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { cors } from '../cors';
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function createContext(
-  overrides: Partial<RequestContext> & { method?: string; headers?: Record<string, string> } = {},
+  overrides: Partial<RequestContext> & { method?: string; headers?: Record<string, string> } = {}
 ): RequestContext {
   const { method = 'GET', headers: extraHeaders = {}, ...rest } = overrides;
   const hdrs = new Headers(extraHeaders);
@@ -30,7 +30,11 @@ function okNext(): NextFunction {
     });
 }
 
-function preflightContext(origin: string, requestMethod = 'POST', requestHeaders?: string): RequestContext {
+function preflightContext(
+  origin: string,
+  requestMethod = 'POST',
+  requestHeaders?: string
+): RequestContext {
   const headers: Record<string, string> = {
     Origin: origin,
     'Access-Control-Request-Method': requestMethod,
@@ -44,7 +48,6 @@ function preflightContext(origin: string, requestMethod = 'POST', requestHeaders
 function actualContext(origin: string, method = 'GET'): RequestContext {
   return createContext({ method, headers: { Origin: origin } });
 }
-
 
 // ---------------------------------------------------------------------------
 // Tests

@@ -120,7 +120,7 @@ describe('api-shared', () => {
     it('should work with Prettify type', () => {
       type Original = { a: string } & { b: number };
       type Pretty = Prettify<Original>;
-      
+
       const obj: Pretty = { a: 'test', b: 123 };
       expect(obj.a).toBe('test');
       expect(obj.b).toBe(123);

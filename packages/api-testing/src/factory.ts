@@ -46,7 +46,6 @@ export function resetSequence(): void {
   _sequenceCounter = 0;
 }
 
-
 // ---- Factory types ----
 
 export type FactoryAttrs<T> = Partial<T> | (() => Partial<T>);
@@ -177,15 +176,13 @@ function createFactory<T extends Record<string, unknown>>(
 /**
  * Bulk seed data using multiple factories.
  */
-export async function seed<T extends Record<string, Record<string, unknown>>>(
-  factories: {
-    [K in keyof T]: {
-      factory: Factory<T[K]>;
-      count: number;
-      overrides?: Partial<T[K]>;
-    };
-  }
-): Promise<{ [K in keyof T]: T[K][] }> {
+export async function seed<T extends Record<string, Record<string, unknown>>>(factories: {
+  [K in keyof T]: {
+    factory: Factory<T[K]>;
+    count: number;
+    overrides?: Partial<T[K]>;
+  };
+}): Promise<{ [K in keyof T]: T[K][] }> {
   const result = {} as { [K in keyof T]: T[K][] };
 
   for (const key of Object.keys(factories) as (keyof T)[]) {

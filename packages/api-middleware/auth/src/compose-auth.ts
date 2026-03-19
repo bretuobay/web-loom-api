@@ -32,9 +32,6 @@ export function composeAuth(...middlewares: MiddlewareHandler[]): MiddlewareHand
       }
     }
 
-    return c.json(
-      { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
-      401,
-    );
+    return c.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, 401);
   };
 }

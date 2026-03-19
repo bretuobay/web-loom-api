@@ -13,7 +13,7 @@
 export type MiddlewareHandler = (
   req: unknown,
   res: unknown,
-  next: () => Promise<void> | void,
+  next: () => Promise<void> | void
 ) => Promise<void> | void;
 
 /** Route definition registered by a plugin */
@@ -51,8 +51,6 @@ export interface PluginContext {
   /** Read current configuration */
   getConfig(): Record<string, unknown>;
 }
-
-
 
 // -----------------------------------------------------------------------
 // Plugin Interface

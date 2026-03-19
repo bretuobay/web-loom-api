@@ -1,13 +1,19 @@
 /**
  * Web Loom CLI Program Configuration
- * 
+ *
  * Configures the Commander.js program with all commands,
  * global options, and help text.
  */
 
 import { Command } from 'commander';
 import { CLI_VERSION } from './version.js';
-import { createInitCommand, createGenerateCommand, migrateCommand, createDevCommand, createSeedCommand } from './commands/index.js';
+import {
+  createInitCommand,
+  createGenerateCommand,
+  migrateCommand,
+  createDevCommand,
+  createSeedCommand,
+} from './commands/index.js';
 
 /**
  * Create and configure the CLI program

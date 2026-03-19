@@ -54,7 +54,6 @@ export class HealthChecker {
     });
   }
 
-
   /**
    * Get uptime in seconds since the HealthChecker was created.
    */
@@ -107,7 +106,10 @@ export class HealthChecker {
       const result = await Promise.race([
         check.fn(),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Check '${check.name}' timed out after ${check.timeout}ms`)), check.timeout)
+          setTimeout(
+            () => reject(new Error(`Check '${check.name}' timed out after ${check.timeout}ms`)),
+            check.timeout
+          )
         ),
       ]);
 

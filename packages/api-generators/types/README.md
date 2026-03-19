@@ -72,6 +72,7 @@ for (const [filename, content] of files) {
 The generator creates the following files:
 
 #### models.ts
+
 ```typescript
 /**
  * User model
@@ -98,6 +99,7 @@ export type UpdateUser = Partial<Omit<User, 'id' | 'createdAt'>>;
 ```
 
 #### enums.ts
+
 ```typescript
 /**
  * User role enum
@@ -113,6 +115,7 @@ export enum UserRole {
 ```
 
 #### api.ts
+
 ```typescript
 /**
  * API Response wrapper
@@ -143,6 +146,7 @@ export type UserPOSTResponse = User;
 ```
 
 #### utils.ts
+
 ```typescript
 /**
  * Make all properties optional recursively
@@ -230,7 +234,7 @@ export interface Post {
    * @example "My First Post"
    */
   title: string;
-  
+
   /**
    * Post status
    * @example "published"
@@ -261,30 +265,30 @@ export interface User {
 
 ### TypeGeneratorOptions
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `includeJSDoc` | `boolean` | `true` | Include JSDoc comments |
-| `generateEnums` | `boolean` | `true` | Generate enum types |
-| `generateRequestResponseTypes` | `boolean` | `true` | Generate request/response types |
-| `exportFormat` | `'esm' \| 'cjs' \| 'both'` | `'esm'` | Export format |
-| `readonly` | `boolean` | `false` | Add readonly modifiers |
-| `generateUtilityTypes` | `boolean` | `true` | Generate utility types |
+| Option                         | Type                       | Default | Description                     |
+| ------------------------------ | -------------------------- | ------- | ------------------------------- |
+| `includeJSDoc`                 | `boolean`                  | `true`  | Include JSDoc comments          |
+| `generateEnums`                | `boolean`                  | `true`  | Generate enum types             |
+| `generateRequestResponseTypes` | `boolean`                  | `true`  | Generate request/response types |
+| `exportFormat`                 | `'esm' \| 'cjs' \| 'both'` | `'esm'` | Export format                   |
+| `readonly`                     | `boolean`                  | `false` | Add readonly modifiers          |
+| `generateUtilityTypes`         | `boolean`                  | `true`  | Generate utility types          |
 
 ## Field Types
 
 Supported field types and their TypeScript mappings:
 
-| Field Type | TypeScript Type |
-|------------|----------------|
-| `string` | `string` |
-| `number` | `number` |
-| `boolean` | `boolean` |
-| `date` | `Date` |
-| `uuid` | `string` |
-| `enum` | Union of string literals |
-| `json` | `Record<string, unknown>` |
-| `array` | `T[]` (where T is arrayItemType) |
-| `decimal` | `number` |
+| Field Type | TypeScript Type                  |
+| ---------- | -------------------------------- |
+| `string`   | `string`                         |
+| `number`   | `number`                         |
+| `boolean`  | `boolean`                        |
+| `date`     | `Date`                           |
+| `uuid`     | `string`                         |
+| `enum`     | Union of string literals         |
+| `json`     | `Record<string, unknown>`        |
+| `array`    | `T[]` (where T is arrayItemType) |
+| `decimal`  | `number`                         |
 
 ## Generated Types
 
@@ -313,27 +317,35 @@ The generator includes useful utility types:
 #### Methods
 
 ##### `registerModel(model: ModelDefinition): void`
+
 Register a single model definition.
 
 ##### `registerModels(models: ModelDefinition[]): void`
+
 Register multiple model definitions.
 
 ##### `registerEnum(enumDef: EnumDefinition): void`
+
 Register a single enum definition.
 
 ##### `registerEnums(enums: EnumDefinition[]): void`
+
 Register multiple enum definitions.
 
 ##### `registerRoute(route: RouteDefinition): void`
+
 Register a single route definition.
 
 ##### `registerRoutes(routes: RouteDefinition[]): void`
+
 Register multiple route definitions.
 
 ##### `generate(): GeneratedTypes`
+
 Generate all types and return as object.
 
 ##### `generateToFiles(): Map<string, string>`
+
 Generate all types and return as file map.
 
 ## Examples

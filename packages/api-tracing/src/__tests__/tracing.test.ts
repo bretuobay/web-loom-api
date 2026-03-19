@@ -42,7 +42,6 @@ describe('Span', () => {
     expect(span.parentSpanId).toBe(parentSpanId);
   });
 
-
   it('should set attributes', () => {
     const span = new Span('test-span');
     span.setAttribute('http.method', 'GET');
@@ -127,7 +126,6 @@ describe('ID generation', () => {
   });
 });
 
-
 // ============================================================================
 // W3C Trace Context Tests
 // ============================================================================
@@ -152,15 +150,21 @@ describe('W3C Trace Context', () => {
     });
 
     it('should reject version ff', () => {
-      expect(parseTraceparent('ff-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01')).toBeNull();
+      expect(
+        parseTraceparent('ff-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01')
+      ).toBeNull();
     });
 
     it('should reject all-zero traceId', () => {
-      expect(parseTraceparent('00-00000000000000000000000000000000-00f067aa0ba902b7-01')).toBeNull();
+      expect(
+        parseTraceparent('00-00000000000000000000000000000000-00f067aa0ba902b7-01')
+      ).toBeNull();
     });
 
     it('should reject all-zero spanId', () => {
-      expect(parseTraceparent('00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000000-01')).toBeNull();
+      expect(
+        parseTraceparent('00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000000-01')
+      ).toBeNull();
     });
   });
 
@@ -185,7 +189,10 @@ describe('W3C Trace Context', () => {
   describe('parseTracestate', () => {
     it('should parse tracestate header', () => {
       const entries = parseTracestate('vendor1=value1,vendor2=value2');
-      expect(entries).toEqual([['vendor1', 'value1'], ['vendor2', 'value2']]);
+      expect(entries).toEqual([
+        ['vendor1', 'value1'],
+        ['vendor2', 'value2'],
+      ]);
     });
 
     it('should handle empty string', () => {
@@ -195,7 +202,10 @@ describe('W3C Trace Context', () => {
 
   describe('formatTracestate', () => {
     it('should format tracestate entries', () => {
-      const result = formatTracestate([['vendor1', 'value1'], ['vendor2', 'value2']]);
+      const result = formatTracestate([
+        ['vendor1', 'value1'],
+        ['vendor2', 'value2'],
+      ]);
       expect(result).toBe('vendor1=value1,vendor2=value2');
     });
   });
@@ -222,15 +232,21 @@ describe('W3C Trace Context', () => {
     it('should inject context into headers', () => {
       const headers: Record<string, string> = {};
       injectTraceContext(
-        { traceId: '4bf92f3577b34da6a3ce929d0e0e4736', spanId: '00f067aa0ba902b7', traceFlags: 1, traceState: 'vendor=val' },
-        headers,
+        {
+          traceId: '4bf92f3577b34da6a3ce929d0e0e4736',
+          spanId: '00f067aa0ba902b7',
+          traceFlags: 1,
+          traceState: 'vendor=val',
+        },
+        headers
       );
-      expect(headers['traceparent']).toBe('00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01');
+      expect(headers['traceparent']).toBe(
+        '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'
+      );
       expect(headers['tracestate']).toBe('vendor=val');
     });
   });
 });
-
 
 // ============================================================================
 // Tracer Tests
@@ -315,7 +331,6 @@ describe('Tracer', () => {
   });
 });
 
-
 // ============================================================================
 // Sampler Tests
 // ============================================================================
@@ -348,7 +363,9 @@ describe('Samplers', () => {
       // Test with multiple trace IDs
       for (let i = 0; i < 20; i++) {
         const traceId = generateTraceId();
-        expect(sampler.shouldSample(traceId, 'test').decision).toBe(SamplingDecision.RECORD_AND_SAMPLE);
+        expect(sampler.shouldSample(traceId, 'test').decision).toBe(
+          SamplingDecision.RECORD_AND_SAMPLE
+        );
       }
     });
 
@@ -401,7 +418,6 @@ describe('Samplers', () => {
     });
   });
 });
-
 
 // ============================================================================
 // Tracing Middleware Tests
@@ -496,7 +512,9 @@ describe('createTracingMiddleware', () => {
     const res = { statusCode: 200, headers: {} as Record<string, string> };
     let nextCalled = false;
 
-    middleware(req, res, () => { nextCalled = true; });
+    middleware(req, res, () => {
+      nextCalled = true;
+    });
 
     expect(spans).toHaveLength(0);
     expect(nextCalled).toBe(true);

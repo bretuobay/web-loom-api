@@ -1,6 +1,6 @@
 /**
  * CLI Version
- * 
+ *
  * Centralized version number for the CLI tool.
  */
 

@@ -19,7 +19,11 @@ describe('LuciaAuthAdapter', () => {
 
   describe('createUser', () => {
     it('creates a user with email and password', async () => {
-      const user = await adapter.createUser({ email: 'Alice@Example.com', password: 'secret123', name: 'Alice' });
+      const user = await adapter.createUser({
+        email: 'Alice@Example.com',
+        password: 'secret123',
+        name: 'Alice',
+      });
       expect(user.id).toBeDefined();
       expect(user.email).toBe('alice@example.com');
       expect(user.name).toBe('Alice');
@@ -63,7 +67,9 @@ describe('LuciaAuthAdapter', () => {
     it('updates email with dedup check', async () => {
       const u1 = await adapter.createUser({ email: 'a@test.com' });
       await adapter.createUser({ email: 'b@test.com' });
-      await expect(adapter.updateUser(u1.id, { email: 'b@test.com' })).rejects.toThrow('already exists');
+      await expect(adapter.updateUser(u1.id, { email: 'b@test.com' })).rejects.toThrow(
+        'already exists'
+      );
     });
 
     it('throws NotFoundError for unknown user', async () => {
@@ -201,8 +207,15 @@ describe('LuciaAuthAdapter', () => {
       // Mock fetch
       const fetchSpy = vi.spyOn(globalThis, 'fetch');
       fetchSpy
-        .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: 'tok123' }), { status: 200 }))
-        .mockResolvedValueOnce(new Response(JSON.stringify({ email: 'OAuth@GH.com', name: 'GH User', login: 'ghuser' }), { status: 200 }));
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ access_token: 'tok123' }), { status: 200 })
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({ email: 'OAuth@GH.com', name: 'GH User', login: 'ghuser' }),
+            { status: 200 }
+          )
+        );
 
       const user = await adapter.handleOAuthCallback('github', 'code123');
       expect(user.email).toBe('oauth@gh.com');
@@ -223,7 +236,9 @@ describe('LuciaAuthAdapter', () => {
       const fetchSpy = vi.spyOn(globalThis, 'fetch');
       fetchSpy.mockResolvedValueOnce(new Response('error', { status: 400 }));
 
-      await expect(adapter.handleOAuthCallback('bad', 'code')).rejects.toThrow('token exchange failed');
+      await expect(adapter.handleOAuthCallback('bad', 'code')).rejects.toThrow(
+        'token exchange failed'
+      );
       fetchSpy.mockRestore();
     });
   });

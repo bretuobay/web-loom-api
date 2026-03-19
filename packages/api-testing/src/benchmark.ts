@@ -166,7 +166,12 @@ export async function benchmarkLatency(
     const result = await benchmark(
       `${req.method} ${req.path}`,
       async () => {
-        const reqObj: { method: string; url: string; headers: Record<string, string>; body?: string } = {
+        const reqObj: {
+          method: string;
+          url: string;
+          headers: Record<string, string>;
+          body?: string;
+        } = {
           method: req.method,
           url: req.path,
           headers: req.headers ?? {},
@@ -216,7 +221,12 @@ export async function benchmarkThroughput(
     while (hrtimeMs() < deadline) {
       const start = hrtimeMs();
       try {
-        const stressReq: { method: string; url: string; headers: Record<string, string>; body?: string } = {
+        const stressReq: {
+          method: string;
+          url: string;
+          headers: Record<string, string>;
+          body?: string;
+        } = {
           method: request.method,
           url: request.path,
           headers: request.headers ?? {},

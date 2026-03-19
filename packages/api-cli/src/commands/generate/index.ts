@@ -1,6 +1,6 @@
 /**
  * Generate Commands
- * 
+ *
  * Code generation commands for models, routes, and CRUD endpoints.
  */
 

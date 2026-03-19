@@ -106,7 +106,10 @@ describe('CRUD Generator — posts', () => {
   // ── Create ──────────────────────────────────────────────────────────────────
 
   it('POST / creates a record and returns 201', async () => {
-    const res = await app.request('/posts', jsonBody({ title: 'Hello World', status: 'published' }));
+    const res = await app.request(
+      '/posts',
+      jsonBody({ title: 'Hello World', status: 'published' })
+    );
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.id).toBeDefined();

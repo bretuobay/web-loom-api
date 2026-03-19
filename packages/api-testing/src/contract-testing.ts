@@ -47,7 +47,6 @@ export interface ParsedResponse {
   content?: Record<string, { schema?: OpenApiSchema }>;
 }
 
-
 export interface ParsedSpec {
   endpoints: ParsedEndpoint[];
   schemas: Record<string, OpenApiSchema>;
@@ -169,7 +168,6 @@ function validateValue(
     }
   }
 
-
   // Enum validation
   if (resolved.enum) {
     if (!resolved.enum.includes(value)) {
@@ -182,17 +180,23 @@ function validateValue(
   // Pattern validation
   if (resolved.pattern && typeof value === 'string') {
     if (!new RegExp(resolved.pattern).test(value)) {
-      errors.push(`${path || 'value'}: value "${value}" does not match pattern "${resolved.pattern}"`);
+      errors.push(
+        `${path || 'value'}: value "${value}" does not match pattern "${resolved.pattern}"`
+      );
     }
   }
 
   // String length validation
   if (typeof value === 'string') {
     if (resolved.minLength !== undefined && value.length < resolved.minLength) {
-      errors.push(`${path || 'value'}: string length ${value.length} is less than minLength ${resolved.minLength}`);
+      errors.push(
+        `${path || 'value'}: string length ${value.length} is less than minLength ${resolved.minLength}`
+      );
     }
     if (resolved.maxLength !== undefined && value.length > resolved.maxLength) {
-      errors.push(`${path || 'value'}: string length ${value.length} exceeds maxLength ${resolved.maxLength}`);
+      errors.push(
+        `${path || 'value'}: string length ${value.length} exceeds maxLength ${resolved.maxLength}`
+      );
     }
   }
 
@@ -248,12 +252,9 @@ export function validateResponseHeaders(
   requiredHeaders: string[]
 ): { valid: boolean; missing: string[] } {
   const normalizedHeaders = Object.keys(headers).map((h) => h.toLowerCase());
-  const missing = requiredHeaders.filter(
-    (h) => !normalizedHeaders.includes(h.toLowerCase())
-  );
+  const missing = requiredHeaders.filter((h) => !normalizedHeaders.includes(h.toLowerCase()));
   return { valid: missing.length === 0, missing };
 }
-
 
 // ---- OpenAPI Spec Parsing ----
 
@@ -299,7 +300,8 @@ export function parseOpenApiSpec(spec: OpenApiSpec): ParsedSpec {
       };
 
       if (op.requestBody && typeof op.requestBody === 'object') {
-        if (op.requestBody) endpoint.requestBody = op.requestBody as NonNullable<ParsedEndpoint['requestBody']>;
+        if (op.requestBody)
+          endpoint.requestBody = op.requestBody as NonNullable<ParsedEndpoint['requestBody']>;
       }
 
       endpoints.push(endpoint);
@@ -382,11 +384,9 @@ export async function testContract(
       }
     }
 
-
     // Find the matching response spec for the actual status code
     const statusStr = String(response.status);
-    const responseSpec =
-      endpoint.responses[statusStr] ?? endpoint.responses['default'];
+    const responseSpec = endpoint.responses[statusStr] ?? endpoint.responses['default'];
 
     if (responseSpec) {
       // Validate content-type header
@@ -445,10 +445,7 @@ export async function testContract(
           .map(([name]) => name);
 
         if (requiredHeaders.length > 0) {
-          const headerResult = validateResponseHeaders(
-            response.headers,
-            requiredHeaders
-          );
+          const headerResult = validateResponseHeaders(response.headers, requiredHeaders);
           checks.push({
             type: 'header',
             passed: headerResult.valid,
@@ -466,10 +463,7 @@ export async function testContract(
   }
 
   const totalChecks = results.reduce((sum, r) => sum + r.checks.length, 0);
-  const passedChecks = results.reduce(
-    (sum, r) => sum + r.checks.filter((c) => c.passed).length,
-    0
-  );
+  const passedChecks = results.reduce((sum, r) => sum + r.checks.filter((c) => c.passed).length, 0);
 
   return {
     passed: totalChecks > 0 && passedChecks === totalChecks,

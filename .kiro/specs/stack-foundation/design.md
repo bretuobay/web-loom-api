@@ -101,15 +101,15 @@ export interface WebLoomConfig {
   database: {
     url: string;
     driver: 'neon-serverless' | 'libsql' | 'pg';
-    poolSize?: number;            // default: 10
-    connectionTimeout?: number;   // ms, default: 10000
+    poolSize?: number; // default: 10
+    connectionTimeout?: number; // ms, default: 10000
   };
   routes?: {
-    dir?: string;                 // default: './src/routes'
+    dir?: string; // default: './src/routes'
   };
   email?: EmailAdapter;
   openapi?: {
-    enabled?: boolean;            // default: true in dev, false in prod
+    enabled?: boolean; // default: true in dev, false in prod
     ui?: 'swagger' | 'scalar' | false;
     info?: { title: string; version: string; description?: string };
     servers?: { url: string; description?: string }[];
@@ -118,7 +118,7 @@ export interface WebLoomConfig {
     logging?: { enabled?: boolean; level?: 'debug' | 'info' | 'warn' | 'error' };
   };
   performance?: {
-    compression?: boolean;        // default: true
+    compression?: boolean; // default: true
   };
 }
 ```
@@ -207,12 +207,12 @@ All errors produced by the framework (validation, not found, conflict, internal)
 ```typescript
 interface ErrorResponse {
   error: {
-    code: string;         // e.g. 'VALIDATION_ERROR', 'NOT_FOUND'
+    code: string; // e.g. 'VALIDATION_ERROR', 'NOT_FOUND'
     message: string;
-    details?: unknown;    // field-level errors for validation
-    requestId: string;    // UUIDv4, also in X-Request-Id header
-    timestamp: string;    // ISO 8601
-    path?: string;        // request path
+    details?: unknown; // field-level errors for validation
+    requestId: string; // UUIDv4, also in X-Request-Id header
+    timestamp: string; // ISO 8601
+    path?: string; // request path
   };
 }
 ```

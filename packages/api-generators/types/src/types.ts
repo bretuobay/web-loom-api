@@ -8,19 +8,19 @@
 export interface TypeGeneratorOptions {
   /** Include JSDoc comments */
   includeJSDoc?: boolean;
-  
+
   /** Generate enum types */
   generateEnums?: boolean;
-  
+
   /** Generate request/response types */
   generateRequestResponseTypes?: boolean;
-  
+
   /** Export format */
   exportFormat?: 'esm' | 'cjs' | 'both';
-  
+
   /** Add readonly modifiers */
   readonly?: boolean;
-  
+
   /** Generate utility types */
   generateUtilityTypes?: boolean;
 }
@@ -31,13 +31,13 @@ export interface TypeGeneratorOptions {
 export interface GeneratedTypes {
   /** Model types */
   models: string;
-  
+
   /** Enum types */
   enums?: string;
-  
+
   /** Request/response types */
   requestResponse?: string;
-  
+
   /** Utility types */
   utils?: string;
 }
@@ -45,7 +45,7 @@ export interface GeneratedTypes {
 /**
  * Field type
  */
-export type FieldType = 
+export type FieldType =
   | 'string'
   | 'number'
   | 'boolean'

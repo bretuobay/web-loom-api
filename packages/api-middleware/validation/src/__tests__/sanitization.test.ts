@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  sanitize,
-  sanitizeObject,
-  isPathTraversal,
-  requestSizeLimit,
-} from '../sanitization';
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import { sanitize, sanitizeObject, isPathTraversal, requestSizeLimit } from '../sanitization';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 
 // ---------------------------------------------------------------------------
 // sanitize
@@ -14,7 +9,7 @@ import type { RequestContext, NextFunction } from '@web-loom/api-core';
 describe('sanitize', () => {
   it('escapes HTML special characters', () => {
     expect(sanitize('<script>alert("xss")</script>')).toBe(
-      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;',
+      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
     );
   });
 
@@ -113,8 +108,7 @@ function makeCtx(contentLength?: string): RequestContext {
   };
 }
 
-const passNext: NextFunction = async () =>
-  new Response('ok', { status: 200 });
+const passNext: NextFunction = async () => new Response('ok', { status: 200 });
 
 describe('requestSizeLimit', () => {
   it('allows requests within the limit', async () => {

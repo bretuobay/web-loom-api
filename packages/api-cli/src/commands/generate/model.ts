@@ -1,6 +1,6 @@
 /**
  * Generate Model Command
- * 
+ *
  * Generates a model definition file with fields, relationships, and options.
  */
 
@@ -28,12 +28,7 @@ const FIELD_TYPES = [
 /**
  * Relationship type options
  */
-const RELATIONSHIP_TYPES = [
-  'hasOne',
-  'hasMany',
-  'belongsTo',
-  'manyToMany',
-] as const;
+const RELATIONSHIP_TYPES = ['hasOne', 'hasMany', 'belongsTo', 'manyToMany'] as const;
 
 /**
  * Field definition from CLI
@@ -78,7 +73,7 @@ interface GenerateModelOptions {
  */
 function parseFieldSpec(fieldStr: string): FieldSpec {
   const parts = fieldStr.split(':');
-  
+
   if (parts.length < 2) {
     throw new CLIError(
       `Invalid field specification: "${fieldStr}". Expected format: name:type[:required][:unique][:default=value]`
@@ -90,15 +85,11 @@ function parseFieldSpec(fieldStr: string): FieldSpec {
   const modifiers = parts.slice(2);
 
   if (!name || !type) {
-    throw new CLIError(
-      `Invalid field specification: "${fieldStr}". Name and type are required.`
-    );
+    throw new CLIError(`Invalid field specification: "${fieldStr}". Name and type are required.`);
   }
 
-  if (!FIELD_TYPES.includes(type as typeof FIELD_TYPES[number])) {
-    throw new CLIError(
-      `Invalid field type: "${type}". Valid types: ${FIELD_TYPES.join(', ')}`
-    );
+  if (!FIELD_TYPES.includes(type as (typeof FIELD_TYPES)[number])) {
+    throw new CLIError(`Invalid field type: "${type}". Valid types: ${FIELD_TYPES.join(', ')}`);
   }
 
   const field: FieldSpec = { name, type };
@@ -130,7 +121,7 @@ function parseFieldSpec(fieldStr: string): FieldSpec {
  */
 function parseRelationshipSpec(relStr: string): RelationshipSpec {
   const parts = relStr.split(':');
-  
+
   if (parts.length < 2) {
     throw new CLIError(
       `Invalid relationship specification: "${relStr}". Expected format: type:model[:foreignKey]`
@@ -147,7 +138,7 @@ function parseRelationshipSpec(relStr: string): RelationshipSpec {
     );
   }
 
-  if (!RELATIONSHIP_TYPES.includes(type as typeof RELATIONSHIP_TYPES[number])) {
+  if (!RELATIONSHIP_TYPES.includes(type as (typeof RELATIONSHIP_TYPES)[number])) {
     throw new CLIError(
       `Invalid relationship type: "${type}". Valid types: ${RELATIONSHIP_TYPES.join(', ')}`
     );
@@ -165,11 +156,11 @@ function parseRelationshipSpec(relStr: string): RelationshipSpec {
  */
 function generateFieldCode(field: FieldSpec): string {
   const lines: string[] = [];
-  
+
   lines.push(`  {`);
   lines.push(`    name: '${field.name}',`);
   lines.push(`    type: '${field.type}',`);
-  
+
   if (field.required || field.unique || field.default !== undefined) {
     lines.push(`    validation: {`);
     if (field.required) {
@@ -177,7 +168,7 @@ function generateFieldCode(field: FieldSpec): string {
     }
     lines.push(`    },`);
   }
-  
+
   if (field.unique || field.default !== undefined) {
     lines.push(`    database: {`);
     if (field.unique) {
@@ -197,9 +188,9 @@ function generateFieldCode(field: FieldSpec): string {
     }
     lines.push(`    },`);
   }
-  
+
   lines.push(`  },`);
-  
+
   return lines.join('\n');
 }
 
@@ -208,36 +199,33 @@ function generateFieldCode(field: FieldSpec): string {
  */
 function generateRelationshipCode(rel: RelationshipSpec): string {
   const lines: string[] = [];
-  
+
   lines.push(`  {`);
   lines.push(`    type: '${rel.type}',`);
   lines.push(`    model: '${rel.model}',`);
-  
+
   if (rel.foreignKey) {
     lines.push(`    foreignKey: '${rel.foreignKey}',`);
   }
-  
+
   lines.push(`  },`);
-  
+
   return lines.join('\n');
 }
 
 /**
  * Generate model file content
  */
-function generateModelContent(
-  modelName: string,
-  options: GenerateModelOptions
-): string {
+function generateModelContent(modelName: string, options: GenerateModelOptions): string {
   const fields = options.fields?.map(parseFieldSpec) || [];
   const relationships = options.relationships?.map(parseRelationshipSpec) || [];
-  
+
   const lines: string[] = [];
-  
+
   // Imports
   lines.push(`import { defineModel } from '@web-loom/api-core';`);
   lines.push(``);
-  
+
   // Model definition
   lines.push(`/**`);
   lines.push(` * ${modelName} Model`);
@@ -246,14 +234,14 @@ function generateModelContent(
   lines.push(` */`);
   lines.push(`export const ${modelName} = defineModel({`);
   lines.push(`  name: '${modelName}',`);
-  
+
   if (options.tableName) {
     lines.push(`  tableName: '${options.tableName}',`);
   }
-  
+
   // Fields
   lines.push(`  fields: [`);
-  
+
   // Add ID field by default
   lines.push(`    {`);
   lines.push(`      name: 'id',`);
@@ -262,12 +250,12 @@ function generateModelContent(
   lines.push(`        primaryKey: true,`);
   lines.push(`      },`);
   lines.push(`    },`);
-  
+
   // Add custom fields
   for (const field of fields) {
     lines.push(generateFieldCode(field));
   }
-  
+
   // Add timestamp fields if enabled
   if (options.timestamps !== false) {
     lines.push(`    {`);
@@ -285,7 +273,7 @@ function generateModelContent(
     lines.push(`      },`);
     lines.push(`    },`);
   }
-  
+
   // Add deletedAt field if soft delete is enabled
   if (options.softDelete) {
     lines.push(`    {`);
@@ -296,9 +284,9 @@ function generateModelContent(
     lines.push(`      },`);
     lines.push(`    },`);
   }
-  
+
   lines.push(`  ],`);
-  
+
   // Relationships
   if (relationships.length > 0) {
     lines.push(`  relationships: [`);
@@ -307,30 +295,30 @@ function generateModelContent(
     }
     lines.push(`  ],`);
   }
-  
+
   // Options
   const hasOptions = options.timestamps !== false || options.softDelete || options.crud;
   if (hasOptions) {
     lines.push(`  options: {`);
-    
+
     if (options.timestamps !== false) {
       lines.push(`    timestamps: true,`);
     }
-    
+
     if (options.softDelete) {
       lines.push(`    softDelete: true,`);
     }
-    
+
     if (options.crud) {
       lines.push(`    crud: true,`);
     }
-    
+
     lines.push(`  },`);
   }
-  
+
   lines.push(`});`);
   lines.push(``);
-  
+
   return lines.join('\n');
 }
 
@@ -339,11 +327,11 @@ function generateModelContent(
  */
 function getModelFilePath(modelName: string, outputDir?: string): string {
   const fileName = `${modelName.toLowerCase()}.ts`;
-  
+
   if (outputDir) {
     return path.join(outputDir, fileName);
   }
-  
+
   // Default to src/models directory
   return path.join(process.cwd(), 'src', 'models', fileName);
 }
@@ -392,7 +380,7 @@ async function generateModelCommand(
 
     success(`\nModel generated successfully!`);
     info(`  File: ${filePath}`);
-    
+
     if (options.crud) {
       info(`\nNext steps:`);
       info(`  1. Review and customize the model definition`);

@@ -1,6 +1,6 @@
 /**
  * @web-loom/api-generator-client
- * 
+ *
  * TypeScript client generator for Web Loom API Framework
  */
 

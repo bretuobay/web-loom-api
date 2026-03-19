@@ -49,7 +49,6 @@ function createTestResponse(data: TestResponseData): TestResponse {
     },
 
     expectJsonMatch(partial: Record<string, unknown>): TestResponse {
-
       const json = response.json<Record<string, unknown>>();
       for (const [key, value] of Object.entries(partial)) {
         if (JSON.stringify(json[key]) !== JSON.stringify(value)) {
@@ -65,7 +64,9 @@ function createTestResponse(data: TestResponseData): TestResponse {
       const json = response.json();
       const result = schema.validate(json);
       if (!result.success) {
-        throw new Error(`Schema validation failed: ${result.errors?.join(', ') ?? 'unknown error'}`);
+        throw new Error(
+          `Schema validation failed: ${result.errors?.join(', ') ?? 'unknown error'}`
+        );
       }
       return response;
     },
@@ -175,7 +176,12 @@ export class TestClient {
 
     const rawBody = body !== undefined ? JSON.stringify(body) : undefined;
 
-    const reqObj: { method: HttpMethod; url: string; headers: Record<string, string>; body?: string } = {
+    const reqObj: {
+      method: HttpMethod;
+      url: string;
+      headers: Record<string, string>;
+      body?: string;
+    } = {
       method,
       url,
       headers,

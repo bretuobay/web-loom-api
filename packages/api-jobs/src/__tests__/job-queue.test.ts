@@ -55,7 +55,6 @@ describe('JobQueue', () => {
     expect(third!.name).toBe('low');
   });
 
-
   it('processes a job successfully', async () => {
     const handler = vi.fn().mockResolvedValue(undefined);
     queue.registerHandler('work', handler);

@@ -28,23 +28,23 @@ describe('CLI Program', () => {
   describe('Global Options', () => {
     it('should support --debug option', () => {
       const _options = program.opts();
-      expect(program.options.some(opt => opt.long === '--debug')).toBe(true);
+      expect(program.options.some((opt) => opt.long === '--debug')).toBe(true);
     });
 
     it('should support --config option with default value', () => {
-      const configOption = program.options.find(opt => opt.long === '--config');
+      const configOption = program.options.find((opt) => opt.long === '--config');
       expect(configOption).toBeDefined();
       expect(configOption?.defaultValue).toBe('webloom.config.ts');
     });
 
     it('should support --no-color option', () => {
-      expect(program.options.some(opt => opt.long === '--no-color')).toBe(true);
+      expect(program.options.some((opt) => opt.long === '--no-color')).toBe(true);
     });
   });
 
   describe('Help Options', () => {
     it('should support -v, --version flag', () => {
-      const versionOption = program.options.find(opt => opt.short === '-v');
+      const versionOption = program.options.find((opt) => opt.short === '-v');
       expect(versionOption).toBeDefined();
       expect(versionOption?.long).toBe('--version');
     });

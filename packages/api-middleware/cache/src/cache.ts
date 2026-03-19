@@ -25,12 +25,8 @@
  * ```
  */
 
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
-import type {
-  CacheOptions,
-  ResolvedCacheOptions,
-  CachedResponse,
-} from './types';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
+import type { CacheOptions, ResolvedCacheOptions, CachedResponse } from './types';
 import { MemoryCacheStore } from './stores/memory-store';
 
 // --------------------------------------------------------------------------
@@ -71,19 +67,14 @@ function resolveOptions(opts: CacheOptions = {}): ResolvedCacheOptions {
 // Cache key generation with vary headers
 // --------------------------------------------------------------------------
 
-function buildCacheKey(
-  request: Request,
-  config: ResolvedCacheOptions,
-): string {
+function buildCacheKey(request: Request, config: ResolvedCacheOptions): string {
   const baseKey = config.keyGenerator(request);
 
   if (config.varyHeaders.length === 0) {
     return config.keyPrefix + baseKey;
   }
 
-  const varyParts = config.varyHeaders
-    .map((h) => `${h}=${request.headers.get(h) ?? ''}`)
-    .join('&');
+  const varyParts = config.varyHeaders.map((h) => `${h}=${request.headers.get(h) ?? ''}`).join('&');
 
   return config.keyPrefix + baseKey + '|' + varyParts;
 }
@@ -107,7 +98,10 @@ function parseCacheControl(header: string | null): CacheControlDirectives {
 
   if (!header) return result;
 
-  const directives = header.toLowerCase().split(',').map((d) => d.trim());
+  const directives = header
+    .toLowerCase()
+    .split(',')
+    .map((d) => d.trim());
 
   for (const directive of directives) {
     if (directive === 'no-cache') {
@@ -132,7 +126,7 @@ function parseCacheControl(header: string | null): CacheControlDirectives {
 async function serializeResponse(
   response: Response,
   now: number,
-  ttlMs: number,
+  ttlMs: number
 ): Promise<CachedResponse> {
   const body = await response.text();
   const headers: [string, string][] = [];
@@ -150,10 +144,7 @@ async function serializeResponse(
   };
 }
 
-function deserializeResponse(
-  cached: CachedResponse,
-  cacheStatus: 'HIT' | 'STALE',
-): Response {
+function deserializeResponse(cached: CachedResponse, cacheStatus: 'HIT' | 'STALE'): Response {
   const headers = new Headers(cached.headers);
   headers.set('X-Cache', cacheStatus);
 
@@ -204,7 +195,7 @@ function withCacheHeader(response: Response, value: string): Response {
  * @returns Middleware function
  */
 export function cache(
-  options: CacheOptions = {},
+  options: CacheOptions = {}
 ): (ctx: RequestContext, next: NextFunction) => Promise<Response> {
   const config = resolveOptions(options);
   const cacheableMethods = new Set(config.methods.map((m) => m.toUpperCase()));
@@ -270,10 +261,7 @@ export function cache(
       }
 
       // Entry is expired but still in store (within SWR window)
-      if (
-        config.staleWhileRevalidate > 0 &&
-        now < cached.expiresAt + config.staleWhileRevalidate
-      ) {
+      if (config.staleWhileRevalidate > 0 && now < cached.expiresAt + config.staleWhileRevalidate) {
         // Serve stale response, revalidate in background
         revalidateInBackground(next, key, config, storeTtl);
         return deserializeResponse(cached, 'STALE');
@@ -310,7 +298,7 @@ function revalidateInBackground(
   next: NextFunction,
   key: string,
   config: ResolvedCacheOptions,
-  storeTtl: (ttl: number) => number,
+  storeTtl: (ttl: number) => number
 ): void {
   void (async () => {
     try {

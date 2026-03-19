@@ -22,13 +22,7 @@ export type OriginFunction = (origin: string) => boolean | Promise<boolean>;
  * - `RegExp[]` — list of regex patterns
  * - `OriginFunction` — custom async/sync function
  */
-export type CorsOrigin =
-  | '*'
-  | string
-  | RegExp
-  | string[]
-  | RegExp[]
-  | OriginFunction;
+export type CorsOrigin = '*' | string | RegExp | string[] | RegExp[] | OriginFunction;
 
 /**
  * Configuration options for the CORS middleware.
@@ -45,7 +39,6 @@ export interface CorsOptions {
    * @default ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE']
    */
   methods?: string[] | undefined;
-
 
   /**
    * Configures the Access-Control-Allow-Headers header.

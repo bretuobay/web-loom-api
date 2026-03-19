@@ -12,14 +12,14 @@ Deploy your Web Loom API to AWS Lambda with API Gateway v2.
 
 ```typescript
 // src/shared/app.ts
-import { createApp, defineConfig } from "@web-loom/api-core";
-import "./schema"; // register models
+import { createApp, defineConfig } from '@web-loom/api-core';
+import './schema'; // register models
 
 const config = defineConfig({
-  database: { url: process.env.DATABASE_URL!, driver: "pg", poolSize: 1 },
+  database: { url: process.env.DATABASE_URL!, driver: 'pg', poolSize: 1 },
   features: { crud: true },
   openapi: { enabled: true },
-  observability: { logging: { level: "warn", format: "json" } },
+  observability: { logging: { level: 'warn', format: 'json' } },
 });
 
 let appPromise: ReturnType<typeof createApp> | null = null;
@@ -33,8 +33,8 @@ export function getApp() {
 
 ```typescript
 // src/lambda.ts
-import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context } from "aws-lambda";
-import { getApp } from "./shared/app";
+import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context } from 'aws-lambda';
+import { getApp } from './shared/app';
 
 const appPromise = getApp();
 
@@ -46,7 +46,7 @@ export async function handler(
 
   const app = await appPromise;
   const url = `https://${event.requestContext.domainName}${event.rawPath}${
-    event.rawQueryString ? `?${event.rawQueryString}` : ""
+    event.rawQueryString ? `?${event.rawQueryString}` : ''
   }`;
 
   const request = new Request(url, {
@@ -58,7 +58,9 @@ export async function handler(
   const response = await app.handleRequest(request);
   const body = await response.text();
   const headers: Record<string, string> = {};
-  response.headers.forEach((v, k) => { headers[k] = v; });
+  response.headers.forEach((v, k) => {
+    headers[k] = v;
+  });
 
   return { statusCode: response.status, headers, body, isBase64Encoded: false };
 }
@@ -69,7 +71,7 @@ export async function handler(
 Create `template.yaml`:
 
 ```yaml
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
 Globals:
@@ -106,7 +108,7 @@ Resources:
 
 Outputs:
   ApiUrl:
-    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
 ```
 
 ## Step 4: Build and Deploy
@@ -136,10 +138,10 @@ Resources:
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `RESEND_API_KEY` | If email enabled | Resend API key |
+| Variable         | Required         | Description                  |
+| ---------------- | ---------------- | ---------------------------- |
+| `DATABASE_URL`   | Yes              | PostgreSQL connection string |
+| `RESEND_API_KEY` | If email enabled | Resend API key               |
 
 Set via SAM parameters, AWS Console, or CLI:
 

@@ -1,6 +1,6 @@
 /**
  * CLI Commands
- * 
+ *
  * Exports all available commands.
  */
 

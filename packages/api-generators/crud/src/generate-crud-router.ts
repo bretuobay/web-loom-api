@@ -11,7 +11,7 @@ import { buildDeleteHandler } from './handlers/delete';
 import { resolveAuthMiddleware } from './auth-resolver';
 
 export function generateCrudRouter<TTable extends Table>(
-  model: Model<TTable>,
+  model: Model<TTable>
 ): Hono<{ Variables: WebLoomVariables }> {
   const router = new Hono<{ Variables: WebLoomVariables }>();
   const opts = typeof model.meta.crud === 'object' ? model.meta.crud : {};
@@ -24,20 +24,20 @@ export function generateCrudRouter<TTable extends Table>(
     '/',
     ...resolveAuthMiddleware(opts.create),
     validate('json', model.insertSchema),
-    buildCreateHandler(model),
+    buildCreateHandler(model)
   );
   r.get('/:id', ...resolveAuthMiddleware(opts.read), buildReadHandler(model));
   r.put(
     '/:id',
     ...resolveAuthMiddleware(opts.update),
     validate('json', model.insertSchema),
-    buildReplaceHandler(model),
+    buildReplaceHandler(model)
   );
   r.patch(
     '/:id',
     ...resolveAuthMiddleware(opts.update),
     validate('json', model.updateSchema),
-    buildPatchHandler(model),
+    buildPatchHandler(model)
   );
   r.delete('/:id', ...resolveAuthMiddleware(opts.delete), buildDeleteHandler(model));
 

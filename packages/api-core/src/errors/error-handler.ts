@@ -1,6 +1,6 @@
 /**
  * Error Handler
- * 
+ *
  * Provides centralized error handling with consistent error response formatting,
  * request ID generation, and environment-aware error details.
  */
@@ -82,7 +82,7 @@ export function formatErrorResponse(
   config: ErrorHandlerConfig = {}
 ): ErrorResponse {
   const environment = config.environment || 'production';
-  const includeStackTrace = config.includeStackTrace ?? (environment === 'development');
+  const includeStackTrace = config.includeStackTrace ?? environment === 'development';
 
   // Handle WebLoomError instances
   if (error instanceof WebLoomError) {
@@ -103,9 +103,7 @@ export function formatErrorResponse(
   return {
     error: {
       code: ErrorCode.INTERNAL_ERROR,
-      message: environment === 'production' 
-        ? 'An unexpected error occurred' 
-        : error.message,
+      message: environment === 'production' ? 'An unexpected error occurred' : error.message,
       timestamp: new Date().toISOString(),
       requestId: context.requestId,
       path: context.path,

@@ -6,20 +6,20 @@ Web Loom API is configured through a TypeScript file using `defineConfig()`. Thi
 
 ```typescript
 // webloom.config.ts
-import { defineConfig } from "@web-loom/api-core";
+import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: "neon-serverless",
+    driver: 'neon-serverless',
   },
   routes: {
-    dir: "./src/routes",
+    dir: './src/routes',
   },
   openapi: {
     enabled: true,
-    title: "My API",
-    version: "1.0.0",
+    title: 'My API',
+    version: '1.0.0',
   },
 });
 ```
@@ -216,21 +216,21 @@ JWT_SECRET=supersecretvalue
 
 ```typescript
 // webloom.config.ts
-import { defineConfig } from "@web-loom/api-core";
+import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: "neon-serverless",
+    driver: 'neon-serverless',
   },
 
-  routes: { dir: "./src/routes" },
+  routes: { dir: './src/routes' },
 
   openapi: {
-    enabled: process.env.NODE_ENV !== "production",
-    title: "My API",
-    version: "2.0.0",
-    ui: "scalar",
+    enabled: process.env.NODE_ENV !== 'production',
+    title: 'My API',
+    version: '2.0.0',
+    ui: 'scalar',
   },
 
   security: {
@@ -238,15 +238,15 @@ export default defineConfig({
       origins: [process.env.FRONTEND_URL!],
       credentials: true,
     },
-    rateLimit: { window: "1m", limit: 100 },
+    rateLimit: { window: '1m', limit: 100 },
   },
 
   features: { crud: true },
 
   observability: {
     logging: {
-      level: process.env.NODE_ENV === "production" ? "info" : "debug",
-      format: process.env.NODE_ENV === "production" ? "json" : "pretty",
+      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+      format: process.env.NODE_ENV === 'production' ? 'json' : 'pretty',
     },
   },
 });
@@ -254,11 +254,11 @@ export default defineConfig({
 
 ## Driver Reference
 
-| Driver | Use case | Required package |
-|--------|----------|-----------------|
-| `neon-serverless` | Neon Postgres; edge-safe HTTP transport | `@neondatabase/serverless` |
-| `libsql` | Turso (distributed SQLite) or local SQLite | `@libsql/client` |
-| `pg` | Standard PostgreSQL (Docker, VMs, RDS) | `pg` |
+| Driver            | Use case                                   | Required package           |
+| ----------------- | ------------------------------------------ | -------------------------- |
+| `neon-serverless` | Neon Postgres; edge-safe HTTP transport    | `@neondatabase/serverless` |
+| `libsql`          | Turso (distributed SQLite) or local SQLite | `@libsql/client`           |
+| `pg`              | Standard PostgreSQL (Docker, VMs, RDS)     | `pg`                       |
 
 For SQLite with `libsql`, use a file URL in development:
 

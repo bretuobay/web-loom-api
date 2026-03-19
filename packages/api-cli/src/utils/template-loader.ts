@@ -1,6 +1,6 @@
 /**
  * Template Loader
- * 
+ *
  * Utilities for loading and processing project templates.
  */
 
@@ -53,12 +53,12 @@ function getSharedTemplateDir(): string {
  */
 function replaceVariables(content: string, variables: TemplateVariables): string {
   let result = content;
-  
+
   for (const [key, value] of Object.entries(variables)) {
     const regex = new RegExp(`{{${key}}}`, 'g');
     result = result.replace(regex, value);
   }
-  
+
   return result;
 }
 
@@ -83,7 +83,7 @@ export async function getTemplateFiles(template: TemplateType): Promise<Template
       } else if (entry.isFile()) {
         // Remove .template extension from target path
         const targetPath = relativePath.replace(/\.template$/, '');
-        
+
         files.push({
           sourcePath: fullPath,
           targetPath,
@@ -121,11 +121,11 @@ export async function loadTemplateFile(
   processContent: boolean
 ): Promise<string> {
   const content = await fs.readFile(filePath, 'utf-8');
-  
+
   if (processContent) {
     return replaceVariables(content, variables);
   }
-  
+
   return content;
 }
 
@@ -147,11 +147,7 @@ export async function copyTemplate(
     await fs.mkdir(targetDirPath, { recursive: true });
 
     // Load and process file content
-    const content = await loadTemplateFile(
-      file.sourcePath,
-      variables,
-      file.processContent
-    );
+    const content = await loadTemplateFile(file.sourcePath, variables, file.processContent);
 
     // Write file
     await fs.writeFile(targetPath, content);

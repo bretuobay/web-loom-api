@@ -1,6 +1,6 @@
 /**
  * Example demonstrating ModelRegistry usage
- * 
+ *
  * This example shows how to:
  * - Register models with validation
  * - Define relationships between models
@@ -174,12 +174,15 @@ console.log('- Post:', registry.has('Post'));
 console.log('- Comment:', registry.has('Comment'));
 
 // Get all registered models
-console.log('\nAll models:', registry.getAll().map(m => m.name));
+console.log(
+  '\nAll models:',
+  registry.getAll().map((m) => m.name)
+);
 
 // Get relationships for a model
 console.log('\nPost relationships:');
 const postRelationships = registry.getRelationships('Post');
-postRelationships.forEach(rel => {
+postRelationships.forEach((rel) => {
   console.log(`- ${rel.type} ${rel.model} (as: ${rel.as || 'default'})`);
 });
 

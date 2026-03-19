@@ -19,13 +19,8 @@ export class CloudflareD1Adapter {
   /**
    * Execute a read query and return all matching rows.
    */
-  async query<T = Record<string, unknown>>(
-    sql: string,
-    params?: unknown[],
-  ): Promise<T[]> {
-    const stmt = params
-      ? this.db.prepare(sql).bind(...params)
-      : this.db.prepare(sql);
+  async query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> {
+    const stmt = params ? this.db.prepare(sql).bind(...params) : this.db.prepare(sql);
     const result = await stmt.all<T>();
     return result.results;
   }
@@ -33,13 +28,8 @@ export class CloudflareD1Adapter {
   /**
    * Execute a write statement and return the number of affected rows.
    */
-  async execute(
-    sql: string,
-    params?: unknown[],
-  ): Promise<{ changes: number; lastRowId: number }> {
-    const stmt = params
-      ? this.db.prepare(sql).bind(...params)
-      : this.db.prepare(sql);
+  async execute(sql: string, params?: unknown[]): Promise<{ changes: number; lastRowId: number }> {
+    const stmt = params ? this.db.prepare(sql).bind(...params) : this.db.prepare(sql);
     const result = await stmt.run();
     return {
       changes: result.meta.changes,
@@ -47,14 +37,11 @@ export class CloudflareD1Adapter {
     };
   }
 
-
   /**
    * Run multiple statements inside a batch (D1's transaction equivalent).
    * All statements succeed or fail together.
    */
-  async transaction<T>(
-    fn: (tx: CloudflareD1Adapter) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(fn: (tx: CloudflareD1Adapter) => Promise<T>): Promise<T> {
     // D1 doesn't have true transactions, but batch() is atomic.
     // We collect statements via a proxy adapter, then execute as a batch.
     return fn(this);
@@ -63,13 +50,9 @@ export class CloudflareD1Adapter {
   /**
    * Execute multiple statements atomically using D1 batch API.
    */
-  async batch(
-    statements: Array<{ sql: string; params?: unknown[] }>,
-  ): Promise<D1Result[]> {
+  async batch(statements: Array<{ sql: string; params?: unknown[] }>): Promise<D1Result[]> {
     const prepared = statements.map((s) =>
-      s.params
-        ? this.db.prepare(s.sql).bind(...s.params)
-        : this.db.prepare(s.sql),
+      s.params ? this.db.prepare(s.sql).bind(...s.params) : this.db.prepare(s.sql)
     );
     return this.db.batch(prepared);
   }
@@ -87,11 +70,9 @@ export class CloudflareD1Adapter {
    */
   async queryFirst<T = Record<string, unknown>>(
     sql: string,
-    params?: unknown[],
+    params?: unknown[]
   ): Promise<T | null> {
-    const stmt = params
-      ? this.db.prepare(sql).bind(...params)
-      : this.db.prepare(sql);
+    const stmt = params ? this.db.prepare(sql).bind(...params) : this.db.prepare(sql);
     return stmt.first<T>();
   }
 }

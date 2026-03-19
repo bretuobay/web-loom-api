@@ -22,7 +22,7 @@ const FIELD_RANGES: [min: number, max: number][] = [
   [0, 23], // hour
   [1, 31], // day of month
   [1, 12], // month
-  [0, 6],  // day of week (0 = Sunday)
+  [0, 6], // day of week (0 = Sunday)
 ];
 
 function parseField(expr: string, min: number, max: number): CronField {
@@ -91,7 +91,7 @@ export function parseCron(expression: string): ParsedCron {
   const parts = expression.trim().split(/\s+/);
   if (parts.length !== 5) {
     throw new Error(
-      `Invalid cron expression: expected 5 fields, got ${parts.length} ("${expression}")`,
+      `Invalid cron expression: expected 5 fields, got ${parts.length} ("${expression}")`
     );
   }
 

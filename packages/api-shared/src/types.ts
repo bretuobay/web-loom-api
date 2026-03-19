@@ -1,6 +1,35 @@
 // Shared TypeScript types and interfaces
 
 // ============================================================================
+// Middleware Types
+// ============================================================================
+
+/**
+ * Framework-agnostic request context passed through middleware.
+ * Compatible with the Web Loom middleware pipeline.
+ */
+export interface RequestContext {
+  /** The raw Web Fetch API Request */
+  request: Request;
+  /** Path parameters extracted from the URL pattern */
+  params?: Record<string, string>;
+  /** Parsed query string parameters */
+  query?: Record<string, string>;
+  /** Parsed request body */
+  body?: unknown;
+  /** Authenticated user, if available */
+  user?: unknown;
+  /** Per-request metadata store for middleware communication */
+  metadata: Map<string, unknown>;
+}
+
+/**
+ * Next function in the middleware chain.
+ * Returns the downstream Response.
+ */
+export type NextFunction = () => Promise<Response>;
+
+// ============================================================================
 // HTTP Types
 // ============================================================================
 
@@ -141,32 +170,32 @@ export enum ErrorCode {
   INVALID_INPUT = 'INVALID_INPUT',
   MISSING_FIELD = 'MISSING_FIELD',
   INVALID_FORMAT = 'INVALID_FORMAT',
-  
+
   // Authentication Errors (401)
   UNAUTHORIZED = 'UNAUTHORIZED',
   INVALID_TOKEN = 'INVALID_TOKEN',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
-  
+
   // Authorization Errors (403)
   FORBIDDEN = 'FORBIDDEN',
   INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
-  
+
   // Resource Errors (404, 409)
   NOT_FOUND = 'NOT_FOUND',
   RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
   CONFLICT = 'CONFLICT',
   DUPLICATE_RESOURCE = 'DUPLICATE_RESOURCE',
-  
+
   // Rate Limiting (429)
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
-  
+
   // Server Errors (5xx)
   INTERNAL_ERROR = 'INTERNAL_ERROR',
   DATABASE_ERROR = 'DATABASE_ERROR',
   EXTERNAL_SERVICE_ERROR = 'EXTERNAL_SERVICE_ERROR',
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
-  
+
   // Configuration Errors
   CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
   ADAPTER_ERROR = 'ADAPTER_ERROR',
@@ -238,7 +267,10 @@ export class WebLoomError extends Error {
  * Validation error class
  */
 export class ValidationError extends WebLoomError {
-  constructor(message: string, public readonly fields: ValidationErrorField[]) {
+  constructor(
+    message: string,
+    public readonly fields: ValidationErrorField[]
+  ) {
     super(message, ErrorCode.VALIDATION_ERROR, HTTPStatus.BAD_REQUEST, { fields });
     this.name = 'ValidationError';
   }
@@ -268,7 +300,10 @@ export class AuthorizationError extends WebLoomError {
  * Not found error class
  */
 export class NotFoundError extends WebLoomError {
-  constructor(message: string, public readonly resource?: string) {
+  constructor(
+    message: string,
+    public readonly resource?: string
+  ) {
     super(message, ErrorCode.NOT_FOUND, HTTPStatus.NOT_FOUND, { resource });
     this.name = 'NotFoundError';
   }
@@ -311,7 +346,10 @@ export class InternalError extends WebLoomError {
  * Database error class
  */
 export class DatabaseError extends WebLoomError {
-  constructor(message: string, public readonly originalError?: Error) {
+  constructor(
+    message: string,
+    public readonly originalError?: Error
+  ) {
     super(message, ErrorCode.DATABASE_ERROR, HTTPStatus.INTERNAL_SERVER_ERROR, {
       originalError: originalError?.message,
     });

@@ -45,7 +45,6 @@ export function createMockDatabase(): MockDatabase {
   }
 
   const db: MockDatabase = {
-
     query<T = unknown>(sql: string, params?: unknown[]): T {
       queries.push({ sql, params: params ?? [], timestamp: Date.now() });
       const handler = findHandler(sql);

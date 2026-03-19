@@ -35,11 +35,15 @@ export class WebhookManager {
 
   constructor(opts?: WebhookManagerOptions) {
     this.registry = new WebhookRegistry(opts?.webhookStore);
-    this.delivery = new WebhookDelivery(opts ? {
-      ...(opts.logStore !== undefined && { logStore: opts.logStore }),
-      ...(opts.transport !== undefined && { transport: opts.transport }),
-      ...(opts.deliveryOptions !== undefined && { deliveryOptions: opts.deliveryOptions }),
-    } : undefined);
+    this.delivery = new WebhookDelivery(
+      opts
+        ? {
+            ...(opts.logStore !== undefined && { logStore: opts.logStore }),
+            ...(opts.transport !== undefined && { transport: opts.transport }),
+            ...(opts.deliveryOptions !== undefined && { deliveryOptions: opts.deliveryOptions }),
+          }
+        : undefined
+    );
   }
 
   // -------------------------------------------------------------------
@@ -62,7 +66,10 @@ export class WebhookManager {
   }
 
   /** Update a webhook. */
-  async update(id: string, updates: Partial<Pick<Webhook, 'url' | 'events' | 'active'>>): Promise<Webhook | undefined> {
+  async update(
+    id: string,
+    updates: Partial<Pick<Webhook, 'url' | 'events' | 'active'>>
+  ): Promise<Webhook | undefined> {
     return this.registry.update(id, updates);
   }
 
@@ -82,7 +89,7 @@ export class WebhookManager {
   async dispatch(event: string, payload: unknown): Promise<DeliveryResult[]> {
     const webhooks = await this.registry.getByEvent(event);
     const results = await Promise.all(
-      webhooks.map((wh) => this.delivery.deliver(wh, event, payload)),
+      webhooks.map((wh) => this.delivery.deliver(wh, event, payload))
     );
     return results;
   }

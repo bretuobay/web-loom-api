@@ -12,9 +12,7 @@ export class MemoryDeliveryLogStore implements DeliveryLogStore {
   }
 
   async getByWebhookId(webhookId: string): Promise<DeliveryLogEntry[]> {
-    return this.logs
-      .filter((e) => e.webhookId === webhookId)
-      .map((e) => ({ ...e }));
+    return this.logs.filter((e) => e.webhookId === webhookId).map((e) => ({ ...e }));
   }
 
   async getAll(): Promise<DeliveryLogEntry[]> {

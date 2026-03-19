@@ -11,7 +11,10 @@ describe('generateOpenAPISpec', () => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'webloom-spec-'));
     fs.mkdirSync(path.join(tempDir, 'src', 'routes', 'users'), { recursive: true });
     fs.writeFileSync(path.join(tempDir, 'src', 'routes', 'index.ts'), 'export const GET = true;');
-    fs.writeFileSync(path.join(tempDir, 'src', 'routes', 'users', '[id].ts'), 'export const GET = true;');
+    fs.writeFileSync(
+      path.join(tempDir, 'src', 'routes', 'users', '[id].ts'),
+      'export const GET = true;'
+    );
   });
 
   afterEach(() => {
