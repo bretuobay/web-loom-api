@@ -10,7 +10,7 @@ import type { WebLoomApp, VercelKVClient } from '../types';
 
 function createMockApp(response?: Response): WebLoomApp {
   return {
-    handle: vi.fn().mockResolvedValue(
+    handleRequest: vi.fn().mockResolvedValue(
       response ?? new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -47,14 +47,14 @@ describe('createVercelHandler', () => {
     expect(typeof handler).toBe('function');
   });
 
-  it('delegates to app.handle and returns the response', async () => {
+  it('delegates to app.handleRequest and returns the response', async () => {
     const app = createMockApp();
     const handler = createVercelHandler(app);
     const req = new Request('https://example.com/api/test');
 
     const res = await handler(req);
 
-    expect(app.handle).toHaveBeenCalledOnce();
+    expect(app.handleRequest).toHaveBeenCalledOnce();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ ok: true });
@@ -67,14 +67,14 @@ describe('createVercelHandler', () => {
 
     await handler(req);
 
-    const passedReq = (app.handle as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Request;
+    const passedReq = (app.handleRequest as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Request;
     expect(passedReq.headers.get('x-vercel-env')).toBeTruthy();
     expect(passedReq.headers.get('x-vercel-region')).toBeTruthy();
   });
 
-  it('returns 500 JSON response when app.handle throws', async () => {
+  it('returns 500 JSON response when app.handleRequest throws', async () => {
     const app: WebLoomApp = {
-      handle: vi.fn().mockRejectedValue(new Error('boom')),
+      handleRequest: vi.fn().mockRejectedValue(new Error('boom')),
     };
     const handler = createVercelHandler(app);
     const req = new Request('https://example.com/api/test');
@@ -89,7 +89,7 @@ describe('createVercelHandler', () => {
 
   it('returns generic message for non-Error throws', async () => {
     const app: WebLoomApp = {
-      handle: vi.fn().mockRejectedValue('string error'),
+      handleRequest: vi.fn().mockRejectedValue('string error'),
     };
     const handler = createVercelHandler(app);
     const req = new Request('https://example.com/api/test');

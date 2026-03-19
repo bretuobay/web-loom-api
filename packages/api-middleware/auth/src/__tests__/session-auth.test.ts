@@ -2,9 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
 import { sessionAuth } from '../session-auth';
 import type { LuciaLike } from '../session-auth';
-import type { AuthUser } from '../types';
 
-const VALID_USER: AuthUser = { id: 'u1', email: 'test@example.com', role: 'user' };
 const MOCK_SESSION = { id: 's1' };
 
 function makeLucia(overrides: Partial<LuciaLike> = {}): LuciaLike {

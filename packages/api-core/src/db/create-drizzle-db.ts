@@ -37,8 +37,8 @@ export async function createDrizzleDb(config: DrizzleDbConfig): Promise<AnyDrizz
   switch (driver) {
     case 'neon-serverless': {
       const { neon } = await import('@neondatabase/serverless');
-      const { drizzle } = await import('drizzle-orm/neon-serverless');
-      return drizzle({ client: neon(url) });
+      const { drizzle } = await import('drizzle-orm/neon-http');
+      return drizzle(neon(url));
     }
 
     case 'libsql': {
@@ -48,14 +48,14 @@ export async function createDrizzleDb(config: DrizzleDbConfig): Promise<AnyDrizz
     }
 
     case 'pg': {
-      const { Pool } = await import('pg');
       const { drizzle } = await import('drizzle-orm/node-postgres');
-      const pool = new Pool({
-        connectionString: url,
-        ssl: config.ssl ? { rejectUnauthorized: false } : undefined,
-        max: config.poolSize,
+      return drizzle({
+        connection: {
+          connectionString: url,
+          ssl: config.ssl ? { rejectUnauthorized: false } : undefined,
+          max: config.poolSize,
+        },
       });
-      return drizzle({ client: pool });
     }
 
     default: {
