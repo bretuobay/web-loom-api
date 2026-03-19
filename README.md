@@ -84,34 +84,83 @@ await app.start(3000);
 
 ## Packages
 
-### Core
+All `@web-loom/*` packages are published to npm. `@repo/*` packages are internal monorepo tooling and are not published.
 
-| Package                | Description                                                  |
-| ---------------------- | ------------------------------------------------------------ |
-| `@web-loom/api-core`   | Core runtime, model registry, route discovery, configuration |
-| `@web-loom/api-shared` | Shared types and utilities                                   |
-| `@web-loom/api-cli`    | CLI for code generation and scaffolding (`webloom` command)  |
+### Published to npm — install directly
 
-### Generators
+#### Core
 
-| Package                           | Description                                            |
-| --------------------------------- | ------------------------------------------------------ |
-| `@web-loom/api-generator-crud`    | Automatic CRUD route generation from model definitions |
-| `@web-loom/api-generator-openapi` | OpenAPI 3.1 document generation + Swagger/Scalar UI    |
+| Package                                               | npm                                                                                                         | Description                                                                          |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [`@web-loom/api-core`](./packages/api-core/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-core)](https://www.npmjs.com/package/@web-loom/api-core) | Core runtime: `createApp`, `defineConfig`, `defineModel`, `defineRoutes`, `validate` |
+| [`@web-loom/api-cli`](./packages/api-cli/README.md)   | [![npm](https://img.shields.io/npm/v/@web-loom/api-cli)](https://www.npmjs.com/package/@web-loom/api-cli)   | CLI tool: `webloom init`, `generate`, `migrate`, `dev`                               |
 
-### Middleware
+#### Middleware
 
-| Package                         | Description                                                  |
-| ------------------------------- | ------------------------------------------------------------ |
-| `@web-loom/api-middleware-auth` | JWT, session, and API key auth; RBAC guards; CSRF protection |
+| Package                                                                                 | npm                                                                                                                                           | Description                                                           |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`@web-loom/api-middleware-auth`](./packages/api-middleware/auth/README.md)             | [![npm](https://img.shields.io/npm/v/@web-loom/api-middleware-auth)](https://www.npmjs.com/package/@web-loom/api-middleware-auth)             | JWT, session, API key auth; RBAC guards; CSRF protection              |
+| [`@web-loom/api-middleware-cache`](./packages/api-middleware/cache/README.md)           | [![npm](https://img.shields.io/npm/v/@web-loom/api-middleware-cache)](https://www.npmjs.com/package/@web-loom/api-middleware-cache)           | Response caching with TTL, tag invalidation, in-memory/Redis backends |
+| [`@web-loom/api-middleware-cors`](./packages/api-middleware/cors/README.md)             | [![npm](https://img.shields.io/npm/v/@web-loom/api-middleware-cors)](https://www.npmjs.com/package/@web-loom/api-middleware-cors)             | CORS preflight and response header middleware                         |
+| [`@web-loom/api-middleware-rate-limit`](./packages/api-middleware/rate-limit/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-middleware-rate-limit)](https://www.npmjs.com/package/@web-loom/api-middleware-rate-limit) | Token-bucket rate limiting; per-IP, per-user, custom key strategies   |
 
-### Deployment
+#### Features
 
-| Package                               | Description                    |
-| ------------------------------------- | ------------------------------ |
-| `@web-loom/api-deployment-vercel`     | Vercel Edge/Serverless handler |
-| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers handler     |
-| `@web-loom/api-deployment-aws`        | AWS Lambda handler             |
+| Package                                                       | npm                                                                                                                 | Description                                                           |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`@web-loom/api-jobs`](./packages/api-jobs/README.md)         | [![npm](https://img.shields.io/npm/v/@web-loom/api-jobs)](https://www.npmjs.com/package/@web-loom/api-jobs)         | Background job queues: priority, cron scheduling, exponential backoff |
+| [`@web-loom/api-webhooks`](./packages/api-webhooks/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-webhooks)](https://www.npmjs.com/package/@web-loom/api-webhooks) | Webhook system with HMAC-SHA256 signed delivery and retry logic       |
+| [`@web-loom/api-uploads`](./packages/api-uploads/README.md)   | [![npm](https://img.shields.io/npm/v/@web-loom/api-uploads)](https://www.npmjs.com/package/@web-loom/api-uploads)   | File upload handling; local, AWS S3, and Cloudflare R2 backends       |
+| [`@web-loom/api-health`](./packages/api-health/README.md)     | [![npm](https://img.shields.io/npm/v/@web-loom/api-health)](https://www.npmjs.com/package/@web-loom/api-health)     | Liveness and readiness health check endpoints                         |
+| [`@web-loom/api-plugins`](./packages/api-plugins/README.md)   | [![npm](https://img.shields.io/npm/v/@web-loom/api-plugins)](https://www.npmjs.com/package/@web-loom/api-plugins)   | Plugin system: register, discover, lifecycle-manage extensions        |
+
+#### Observability
+
+| Package                                                     | npm                                                                                                               | Description                                                           |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`@web-loom/api-logging`](./packages/api-logging/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-logging)](https://www.npmjs.com/package/@web-loom/api-logging) | Structured logging with PII/secret redaction; JSON and pretty formats |
+| [`@web-loom/api-metrics`](./packages/api-metrics/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-metrics)](https://www.npmjs.com/package/@web-loom/api-metrics) | Prometheus-compatible metrics: counters, gauges, histograms           |
+| [`@web-loom/api-tracing`](./packages/api-tracing/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-tracing)](https://www.npmjs.com/package/@web-loom/api-tracing) | Distributed tracing: W3C Trace Context, spans, configurable sampling  |
+
+#### Deployment
+
+| Package                                                                                 | npm                                                                                                                                           | Description                                                             |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`@web-loom/api-deployment-vercel`](./packages/api-deployment/vercel/README.md)         | [![npm](https://img.shields.io/npm/v/@web-loom/api-deployment-vercel)](https://www.npmjs.com/package/@web-loom/api-deployment-vercel)         | Vercel Edge / Serverless handler                                        |
+| [`@web-loom/api-deployment-cloudflare`](./packages/api-deployment/cloudflare/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-deployment-cloudflare)](https://www.npmjs.com/package/@web-loom/api-deployment-cloudflare) | Cloudflare Workers handler; KV, D1, Durable Objects, Workers AI         |
+| [`@web-loom/api-deployment-aws`](./packages/api-deployment/aws/README.md)               | [![npm](https://img.shields.io/npm/v/@web-loom/api-deployment-aws)](https://www.npmjs.com/package/@web-loom/api-deployment-aws)               | AWS Lambda handler; API Gateway V1/V2, Function URLs, RDS Proxy         |
+| [`@web-loom/api-deployment-docker`](./packages/api-deployment/docker/README.md)         | [![npm](https://img.shields.io/npm/v/@web-loom/api-deployment-docker)](https://www.npmjs.com/package/@web-loom/api-deployment-docker)         | Docker deployment: Dockerfile, docker-compose, .dockerignore generators |
+
+#### Testing
+
+| Package                                                     | npm                                                                                                               | Description                                                                |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`@web-loom/api-testing`](./packages/api-testing/README.md) | [![npm](https://img.shields.io/npm/v/@web-loom/api-testing)](https://www.npmjs.com/package/@web-loom/api-testing) | Test client, data factories, mock adapters, contract testing, benchmarking |
+
+---
+
+### Published to npm — framework internals (rarely installed directly)
+
+These packages are published for extensibility and consumed internally by `api-core` and `api-cli`. You typically won't install them yourself unless building framework extensions.
+
+| Package                                                                          | Description                                                 |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [`@web-loom/api-shared`](./packages/api-shared/README.md)                        | Shared TypeScript types, error classes, and utility types   |
+| [`@web-loom/api-generator-crud`](./packages/api-generators/crud/README.md)       | CRUD route generation from `defineModel` registrations      |
+| [`@web-loom/api-generator-openapi`](./packages/api-generators/openapi/README.md) | OpenAPI 3.1 spec generation from routes and Zod schemas     |
+| [`@web-loom/api-generator-client`](./packages/api-generators/client/README.md)   | TypeScript client generation from route definitions         |
+| [`@web-loom/api-generator-types`](./packages/api-generators/types/README.md)     | TypeScript type generation utilities                        |
+| `@web-loom/api-middleware-validation`                                            | **Deprecated** — use `validate()` from `@web-loom/api-core` |
+
+---
+
+### Not published — internal monorepo tooling
+
+| Package                   | Description                                                |
+| ------------------------- | ---------------------------------------------------------- |
+| `@repo/eslint-config`     | Shared ESLint configuration (base, Next.js, React)         |
+| `@repo/typescript-config` | Shared TypeScript `tsconfig` bases                         |
+| `@repo/ui`                | Internal React component stubs used in the admin dashboard |
 
 ## Deploy Anywhere
 
@@ -188,22 +237,41 @@ npx webloom generate client --input ./openapi.json --output ./src/client
 
 ```
 packages/
-  api-core/              # Core runtime and registries
-  api-shared/            # Shared types
-  api-cli/               # CLI tools
+  api-core/              # Core runtime: createApp, defineModel, defineRoutes, validate
+  api-shared/            # Shared types, error classes, utility types
+  api-cli/               # CLI: webloom init / generate / migrate / dev
   api-middleware/
-    auth/                # JWT, session, API key auth; RBAC; CSRF
+    auth/                # JWT, session, API key auth; RBAC guards; CSRF
+    cache/               # Response caching with TTL and tag invalidation
+    cors/                # CORS preflight and header middleware
+    rate-limit/          # Token-bucket rate limiting
+    validation/          # Deprecated — use validate() from api-core
   api-generators/
-    crud/                # CRUD route generation
-    openapi/             # OpenAPI document generation
+    crud/                # Auto-generates CRUD routes from defineModel
+    openapi/             # OpenAPI 3.1 spec generation
+    client/              # TypeScript client generation
+    types/               # Type generation utilities
   api-deployment/
-    vercel/              # Vercel deployment adapter
-    cloudflare/          # Cloudflare Workers deployment adapter
-    aws/                 # AWS Lambda deployment adapter
+    vercel/              # Vercel Edge/Serverless adapter
+    cloudflare/          # Cloudflare Workers adapter (KV, D1, AI)
+    aws/                 # AWS Lambda adapter (API GW V1/V2, RDS Proxy)
+    docker/              # Dockerfile / docker-compose generators
+  api-jobs/              # Background jobs: priority queue, cron, retries
+  api-webhooks/          # Webhook delivery with HMAC signing
+  api-uploads/           # File uploads: local, S3, R2 backends
+  api-health/            # Liveness and readiness health checks
+  api-logging/           # Structured logging with secret redaction
+  api-metrics/           # Prometheus-compatible metrics collection
+  api-tracing/           # Distributed tracing (W3C Trace Context)
+  api-plugins/           # Plugin system for framework extensions
+  api-testing/           # Test client, factories, mocks, benchmarking
+  eslint-config/         # (internal) Shared ESLint config
+  typescript-config/     # (internal) Shared tsconfig bases
+  ui/                    # (internal) Shared React components
 examples/
-  minimal/               # Simple CRUD API
-  full-stack/            # Full-featured app
-  serverless/            # Multi-platform deployment
+  minimal/               # Simple CRUD API with JWT auth
+  full-stack/            # Full-featured app: jobs, webhooks, uploads
+  serverless/            # Multi-platform: Vercel, Cloudflare, Lambda
 docs/                    # Documentation
 ```
 
