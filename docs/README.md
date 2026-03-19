@@ -34,6 +34,10 @@ Web Loom API is a TypeScript meta-framework for building REST APIs on top of [Ho
 - [Security Best Practices](./advanced/security.md) — CORS, rate limiting, auth, input sanitization
 - [Testing Strategies](./advanced/testing.md) — Unit tests, integration tests with libsql in-memory
 
+### Examples
+
+- [Task Management API](./examples/task-management.md) — Full-featured API with auth, projects, tasks, comments, attachments, and todos; covers Drizzle joins, user-scoped queries, ownership auth, file uploads, and dynamic filters
+
 ## Example Projects
 
 | Example                                         | Description                                             |
