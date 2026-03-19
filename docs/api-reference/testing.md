@@ -168,59 +168,57 @@ await seed(Post, 200, postFactory);
 
 ---
 
-## Mock Adapters
+## In-Memory Database for Integration Tests
 
-Isolated testing without real databases or services.
-
-### `createMockDatabase()`
+The recommended approach for integration testing is to use the `libsql` driver with an in-memory SQLite database. This requires no external services and is fast enough to run in CI:
 
 ```typescript
-function createMockDatabase(): MockDatabaseAdapter;
+import { createApp } from '@web-loom/api-core';
+import { defineConfig } from '@web-loom/api-core';
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client';
+import { migrate } from 'drizzle-orm/libsql/migrator';
 
-interface MockDatabaseAdapter extends DatabaseAdapter {
-  mockQuery(sql: string, result: unknown[]): void;
-  mockInsert(model: string, result: unknown): void;
-  getQueries(): string[];
-  reset(): void;
+async function createTestApp() {
+  const testConfig = defineConfig({
+    database: {
+      url: ':memory:', // in-memory SQLite — no external service
+      driver: 'libsql',
+    },
+  });
+
+  const app = await createApp(testConfig);
+
+  // Run migrations to set up the schema
+  const client = createClient({ url: ':memory:' });
+  const db = drizzle(client);
+  await migrate(db, { migrationsFolder: './migrations' });
+
+  return app;
 }
 ```
 
-**Usage:**
+Each test suite gets a fresh in-memory database:
 
 ```typescript
-import { createMockDatabase } from '@web-loom/api-testing';
+describe('Users API', () => {
+  let app: Application;
 
-const mockDb = createMockDatabase();
-mockDb.mockQuery('SELECT * FROM users WHERE id = ?', [
-  { id: '1', name: 'Test User', email: 'test@example.com' },
-]);
+  beforeAll(async () => {
+    app = await createTestApp();
+  });
 
-// Use in tests
-const app = await createApp({
-  ...config,
-  adapters: { ...config.adapters, database: mockDb },
+  it('creates a user', async () => {
+    const res = await app.handleRequest(
+      new Request('http://localhost/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Alice', email: 'alice@example.com' }),
+      })
+    );
+    expect(res.status).toBe(201);
+  });
 });
-```
-
-### `createMockAuth()`
-
-```typescript
-function createMockAuth(): MockAuthAdapter;
-
-interface MockAuthAdapter extends AuthAdapter {
-  mockUser(user: Partial<User>): void;
-  mockSession(session: Partial<Session>): void;
-  reset(): void;
-}
-```
-
-**Usage:**
-
-```typescript
-import { createMockAuth } from '@web-loom/api-testing';
-
-const mockAuth = createMockAuth();
-mockAuth.mockUser({ id: '1', role: 'admin' });
 ```
 
 ### `createMockEmail()`
