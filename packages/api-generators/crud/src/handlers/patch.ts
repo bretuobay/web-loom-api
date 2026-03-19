@@ -25,7 +25,7 @@ export function buildPatchHandler<TTable extends Table>(model: Model<TTable>): M
       return c.json({ error: { code: 'VALIDATION_ERROR', message: error } }, 400);
     }
 
-    const body = c.req.valid('json') as Record<string, unknown>;
+    const body = (await c.req.json()) as Record<string, unknown>;
     const fields = Object.entries(body).filter(([, v]) => v !== undefined);
 
     if (fields.length === 0) {

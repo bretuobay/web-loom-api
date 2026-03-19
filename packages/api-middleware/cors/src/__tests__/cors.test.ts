@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { cors } from '../cors';
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 
 // ---------------------------------------------------------------------------
 // Helpers

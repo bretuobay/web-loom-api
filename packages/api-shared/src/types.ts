@@ -1,6 +1,35 @@
 // Shared TypeScript types and interfaces
 
 // ============================================================================
+// Middleware Types
+// ============================================================================
+
+/**
+ * Framework-agnostic request context passed through middleware.
+ * Compatible with the Web Loom middleware pipeline.
+ */
+export interface RequestContext {
+  /** The raw Web Fetch API Request */
+  request: Request;
+  /** Path parameters extracted from the URL pattern */
+  params?: Record<string, string>;
+  /** Parsed query string parameters */
+  query?: Record<string, string>;
+  /** Parsed request body */
+  body?: unknown;
+  /** Authenticated user, if available */
+  user?: unknown;
+  /** Per-request metadata store for middleware communication */
+  metadata: Map<string, unknown>;
+}
+
+/**
+ * Next function in the middleware chain.
+ * Returns the downstream Response.
+ */
+export type NextFunction = () => Promise<Response>;
+
+// ============================================================================
 // HTTP Types
 // ============================================================================
 

@@ -25,7 +25,7 @@
  * ```
  */
 
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 import type { CacheOptions, ResolvedCacheOptions, CachedResponse } from './types';
 import { MemoryCacheStore } from './stores/memory-store';
 

@@ -18,7 +18,7 @@ function isUniqueConstraintError(err: unknown): boolean {
 export function buildCreateHandler<TTable extends Table>(model: Model<TTable>): MiddlewareHandler {
   return async (c) => {
     const db = c.var.db as any;
-    const data = { ...(c.req.valid('json') as Record<string, unknown>) };
+    const data = { ...((await c.req.json()) as Record<string, unknown>) };
     const opts = typeof model.meta.crud === 'object' ? model.meta.crud : {};
 
     if (opts.timestamps) {

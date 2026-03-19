@@ -19,7 +19,7 @@
  * Requirements: 55.1, 55.2, 54.1, 54.2, 54.7
  */
 
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 
 // ---------------------------------------------------------------------------
 // HTML entity escaping

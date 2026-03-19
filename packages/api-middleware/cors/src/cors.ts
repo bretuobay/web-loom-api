@@ -22,7 +22,7 @@
  * **Requirements:** 11.1, 11.2, 11.3, 11.4, 11.5, 11.6
  */
 
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 import type { CorsOptions, CorsOrigin, OriginFunction } from './types';
 
 const DEFAULT_METHODS = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'];

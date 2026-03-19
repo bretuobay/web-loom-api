@@ -79,11 +79,12 @@ export function generateOpenAPISpec(config: SpecGeneratorConfig = {}): any {
     scan(routesDir);
   }
 
-  const doc = generateOpenApiDocument([], routeMetas, {
-    title: config.title,
-    version: config.version,
-    description: config.description,
-  });
+  const openApiConfig = {
+    ...(config.title !== undefined && { title: config.title }),
+    ...(config.version !== undefined && { version: config.version }),
+    ...(config.description !== undefined && { description: config.description }),
+  };
+  const doc = generateOpenApiDocument([], routeMetas, openApiConfig);
 
   return JSON.stringify(doc);
 }

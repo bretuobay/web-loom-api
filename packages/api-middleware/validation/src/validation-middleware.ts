@@ -52,7 +52,7 @@ export function createQueryValidation<T extends ZodTypeAny>(
   schema: T
 ): (c: Context, next: Next) => Promise<void> {
   return async (c: Context, next: Next): Promise<void> => {
-    const query = c.req.queries();
+    const query = c.req.query();
     const result = schema.safeParse(query);
 
     if (!result.success) {
@@ -137,7 +137,7 @@ export function createValidation<
     }
 
     if (schemas.query) {
-      const result = schemas.query.safeParse(c.req.queries());
+      const result = schemas.query.safeParse(c.req.query());
       if (!result.success) {
         errors.push(
           ...result.error.issues.map((issue) => ({

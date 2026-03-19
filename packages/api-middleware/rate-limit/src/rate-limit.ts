@@ -30,7 +30,7 @@
  * ```
  */
 
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 import type {
   RateLimitOptions,
   ResolvedRateLimitOptions,

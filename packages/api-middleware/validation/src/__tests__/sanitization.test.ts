@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { sanitize, sanitizeObject, isPathTraversal, requestSizeLimit } from '../sanitization';
-import type { RequestContext, NextFunction } from '@web-loom/api-core';
+import type { RequestContext, NextFunction } from '@web-loom/api-shared';
 
 // ---------------------------------------------------------------------------
 // sanitize
