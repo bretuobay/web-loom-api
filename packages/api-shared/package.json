@@ -2,7 +2,6 @@
   "name": "@web-loom/api-shared",
   "version": "0.1.0",
   "description": "Shared types and utilities for Web Loom API Framework",
-  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,6 @@
   "name": "@web-loom/api-generator-types",
   "version": "0.1.0",
   "description": "Type generator for Web Loom API Framework",
-  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
