@@ -4,13 +4,9 @@ import type { WebLoomConfig } from '../types';
 
 describe('Configuration Validation', () => {
   const validConfig: WebLoomConfig = {
-    adapters: {
-      api: { package: '@web-loom/api-adapter-hono' },
-      database: { package: '@web-loom/api-adapter-drizzle' },
-      validation: { package: '@web-loom/api-adapter-zod' },
-    },
     database: {
       url: 'postgresql://localhost:5432/test',
+      driver: 'pg',
     },
     security: {
       cors: {
@@ -36,13 +32,8 @@ describe('Configuration Validation', () => {
       expect(result.errors).toBeUndefined();
     });
 
-    it('should reject configuration with missing required fields', () => {
-      const invalidConfig = {
-        adapters: {
-          api: { package: '@web-loom/api-adapter-hono' },
-          // Missing database and validation adapters
-        },
-      };
+    it('should reject configuration with missing database field', () => {
+      const invalidConfig = {};
 
       const result = validateConfig(invalidConfig);
 
@@ -51,38 +42,59 @@ describe('Configuration Validation', () => {
       expect(result.errors!.length).toBeGreaterThan(0);
     });
 
-    it('should reject configuration with invalid database URL', () => {
+    it('should reject configuration with missing database.driver', () => {
       const invalidConfig = {
-        ...validConfig,
-        database: {
-          url: '', // Empty URL
-        },
+        database: { url: 'postgresql://localhost:5432/test' },
       };
 
       const result = validateConfig(invalidConfig);
 
       expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors!.some(err => err.path.includes('database'))).toBe(true);
+      expect(result.errors!.some((err) => err.path.includes('driver'))).toBe(true);
+    });
+
+    it('should reject configuration with invalid database URL', () => {
+      const invalidConfig = {
+        ...validConfig,
+        database: { url: '', driver: 'pg' as const },
+      };
+
+      const result = validateConfig(invalidConfig);
+
+      expect(result.success).toBe(false);
+      expect(result.errors!.some((err) => err.path.includes('database'))).toBe(true);
+    });
+
+    it('should reject configuration with invalid driver', () => {
+      const invalidConfig = {
+        database: { url: 'postgresql://localhost/test', driver: 'mysql' },
+      };
+
+      const result = validateConfig(invalidConfig);
+
+      expect(result.success).toBe(false);
+      expect(result.errors!.some((err) => err.path.includes('driver'))).toBe(true);
+    });
+
+    it('should accept all valid driver values', () => {
+      for (const driver of ['neon-serverless', 'libsql', 'pg'] as const) {
+        const result = validateConfig({
+          database: { url: 'some://url', driver },
+        });
+        expect(result.success).toBe(true);
+      }
     });
 
     it('should reject configuration with invalid log level', () => {
       const invalidConfig = {
         ...validConfig,
-        observability: {
-          logging: {
-            level: 'verbose', // Invalid level
-          },
-        },
+        observability: { logging: { level: 'verbose' } },
       };
 
       const result = validateConfig(invalidConfig);
 
       expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors!.some(err => 
-        err.path.join('.').includes('logging.level')
-      )).toBe(true);
+      expect(result.errors!.some((err) => err.path.join('.').includes('level'))).toBe(true);
     });
 
     it('should reject configuration with invalid rate limit window', () => {
@@ -90,39 +102,23 @@ describe('Configuration Validation', () => {
         ...validConfig,
         security: {
           ...validConfig.security,
-          rateLimit: {
-            limit: 100,
-            window: '5 minutes', // Invalid format
-          },
+          rateLimit: { limit: 100, window: '5 minutes' },
         },
       };
 
       const result = validateConfig(invalidConfig);
 
       expect(result.success).toBe(false);
-      expect(result.errors).toBeDefined();
-      expect(result.errors!.some(err => 
-        err.path.join('.').includes('rateLimit.window')
-      )).toBe(true);
+      expect(result.errors!.some((err) => err.path.join('.').includes('rateLimit'))).toBe(true);
     });
 
     it('should accept valid rate limit window formats', () => {
-      const windows = ['30s', '1m', '5m', '1h', '24h', '1d', '7d'];
-
-      for (const window of windows) {
+      for (const window of ['30s', '1m', '5m', '1h', '24h', '1d', '7d']) {
         const config = {
           ...validConfig,
-          security: {
-            ...validConfig.security,
-            rateLimit: {
-              limit: 100,
-              window,
-            },
-          },
+          security: { ...validConfig.security, rateLimit: { limit: 100, window } },
         };
-
-        const result = validateConfig(config);
-        expect(result.success).toBe(true);
+        expect(validateConfig(config).success).toBe(true);
       }
     });
   });
@@ -130,34 +126,18 @@ describe('Configuration Validation', () => {
   describe('validateConfigOrThrow', () => {
     it('should return validated config for valid input', () => {
       const result = validateConfigOrThrow(validConfig);
-
-      expect(result).toBeDefined();
-      expect(result.adapters).toBeDefined();
       expect(result.database).toBeDefined();
+      expect(result.database.driver).toBe('pg');
     });
 
     it('should throw ConfigurationValidationError for invalid input', () => {
-      const invalidConfig = {
-        adapters: {
-          api: { package: '@web-loom/api-adapter-hono' },
-        },
-      };
-
-      expect(() => validateConfigOrThrow(invalidConfig)).toThrow(
-        ConfigurationValidationError
-      );
+      expect(() => validateConfigOrThrow({})).toThrow(ConfigurationValidationError);
     });
 
     it('should include detailed error messages', () => {
-      const invalidConfig = {
-        adapters: {
-          api: { package: '@web-loom/api-adapter-hono' },
-        },
-      };
-
       try {
-        validateConfigOrThrow(invalidConfig);
-        expect.fail('Should have thrown an error');
+        validateConfigOrThrow({});
+        expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ConfigurationValidationError);
         expect((error as ConfigurationValidationError).message).toContain(
@@ -169,43 +149,27 @@ describe('Configuration Validation', () => {
   });
 
   describe('Optional fields', () => {
-    it('should accept configuration with optional auth adapter', () => {
-      const configWithAuth = {
-        ...validConfig,
-        adapters: {
-          ...validConfig.adapters,
-          auth: { package: '@web-loom/api-adapter-lucia' },
-        },
-      };
-
-      const result = validateConfig(configWithAuth);
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept configuration with optional email adapter', () => {
-      const configWithEmail = {
-        ...validConfig,
-        adapters: {
-          ...validConfig.adapters,
-          email: { package: '@web-loom/api-adapter-resend' },
-        },
-      };
-
-      const result = validateConfig(configWithEmail);
-      expect(result.success).toBe(true);
-    });
-
     it('should accept configuration with development settings', () => {
-      const configWithDev = {
+      const result = validateConfig({
         ...validConfig,
-        development: {
-          hotReload: true,
-          apiDocs: true,
-          detailedErrors: true,
-        },
-      };
+        development: { hotReload: true, apiDocs: true, detailedErrors: true },
+      });
+      expect(result.success).toBe(true);
+    });
 
-      const result = validateConfig(configWithDev);
+    it('should accept configuration with openapi settings', () => {
+      const result = validateConfig({
+        ...validConfig,
+        openapi: { enabled: true, ui: 'swagger', title: 'My API', version: '1.0.0' },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept configuration with routes settings', () => {
+      const result = validateConfig({
+        ...validConfig,
+        routes: { dir: './src/routes' },
+      });
       expect(result.success).toBe(true);
     });
   });

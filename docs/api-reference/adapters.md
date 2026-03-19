@@ -1,302 +1,180 @@
-# API Reference: Adapter Packages
+# API Reference: Stack Packages
 
-## @web-loom/api-adapter-hono
-
-HTTP framework adapter using [Hono](https://hono.dev).
-
-### `honoAdapter(options?)`
-
-```typescript
-function honoAdapter(options?: HonoAdapterOptions): APIFrameworkAdapter;
-
-interface HonoAdapterOptions {
-  basePath?: string;    // URL prefix (e.g., "/api/v1")
-  strict?: boolean;     // Strict trailing slash matching
-}
-```
-
-**Usage:**
-
-```typescript
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-
-defineConfig({
-  adapters: {
-    api: honoAdapter({ basePath: "/api" }),
-  },
-});
-```
-
-**Implements:** `APIFrameworkAdapter`
-
-```typescript
-interface APIFrameworkAdapter {
-  registerRoute(method: HTTPMethod, path: string, handler: RouteHandler): void;
-  registerMiddleware(middleware: Middleware, options?: MiddlewareOptions): void;
-  handleRequest(request: Request): Promise<Response>;
-  listen(port: number): Promise<void>;
-  close(): Promise<void>;
-}
-```
+The framework is built directly on Hono, Drizzle ORM, and Zod — no adapter abstraction layer. This page documents the integration points between these libraries and Web Loom API.
 
 ---
 
-## @web-loom/api-adapter-drizzle
+## Database — Drizzle ORM
 
-Database adapter using [Drizzle ORM](https://orm.drizzle.team) with [Neon](https://neon.tech) serverless Postgres.
-
-### `drizzleAdapter(options?)`
+`c.var.db` is a raw Drizzle ORM instance injected by the framework. Its type is `AnyDrizzleDB` (typed as `any` to work with all drivers), but you can narrow it in your routes for full inference:
 
 ```typescript
-function drizzleAdapter(options?: DrizzleAdapterOptions): DatabaseAdapter;
+import type { NeonDatabase } from "drizzle-orm/neon-serverless";
+import * as schema from "./schema";
 
-interface DrizzleAdapterOptions {
-  driver?: "neon" | "postgres" | "mysql";
-  schema?: string;
-  logger?: boolean;
-}
-```
-
-**Usage:**
-
-```typescript
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-
-defineConfig({
-  adapters: {
-    database: drizzleAdapter({ logger: true }),
-  },
-  database: {
-    url: process.env.DATABASE_URL!,
-    poolSize: 10,
-    connectionTimeout: 10_000,
-    readReplicas: [process.env.DATABASE_READ_URL!],
-  },
+app.get("/users", async (c) => {
+  const db = c.var.db as NeonDatabase<typeof schema>;
+  const users = await db.select().from(schema.usersTable);
+  return c.json({ users });
 });
 ```
 
-**Implements:** `DatabaseAdapter`
+### Drivers
+
+| Driver | `defineConfig` value | Package |
+|--------|----------------------|---------|
+| Neon Postgres (HTTP) | `"neon-serverless"` | `@neondatabase/serverless` |
+| Turso / SQLite | `"libsql"` | `@libsql/client` |
+| Standard Postgres | `"pg"` | `pg` |
+
+### Direct Drizzle Usage
+
+You can use the full Drizzle API in route handlers:
 
 ```typescript
-interface DatabaseAdapter {
-  // Connection lifecycle
-  connect(config: DatabaseConfig): Promise<void>;
-  disconnect(): Promise<void>;
-  healthCheck(): Promise<boolean>;
+import { eq, and, gt, like, desc } from "drizzle-orm";
+import { usersTable } from "./schema";
 
-  // Raw queries
-  query<T>(sql: string, params: unknown[]): Promise<T[]>;
-  execute(sql: string, params: unknown[]): Promise<void>;
-
-  // Transactions
-  transaction<T>(callback: (tx: Transaction) => Promise<T>): Promise<T>;
-
-  // Query builder
-  select<T>(model: ModelDefinition): QueryBuilder<T>;
-  insert<T>(model: ModelDefinition, data: T): Promise<T>;
-  update<T>(model: ModelDefinition, id: string, data: Partial<T>): Promise<T>;
-  delete(model: ModelDefinition, id: string): Promise<void>;
-
-  // Schema management
-  createTable(model: ModelDefinition): Promise<void>;
-  dropTable(model: ModelDefinition): Promise<void>;
-  migrateSchema(migration: Migration): Promise<void>;
-}
-```
-
-### QueryBuilder
-
-```typescript
-interface QueryBuilder<T> {
-  where(field: string, op: Operator, value: unknown): QueryBuilder<T>;
-  orderBy(field: string, direction?: "asc" | "desc"): QueryBuilder<T>;
-  limit(count: number): QueryBuilder<T>;
-  offset(count: number): QueryBuilder<T>;
-  with(relation: string): QueryBuilder<T>;
-  first(): Promise<T | null>;
-  then(resolve: (rows: T[]) => void): Promise<T[]>;
-}
-
-type Operator = "=" | "!=" | ">" | ">=" | "<" | "<=" | "in" | "like" | "ilike";
-```
-
-**Query examples:**
-
-```typescript
-// Select with conditions
-const users = await ctx.db
-  .select(User)
-  .where("role", "=", "admin")
-  .orderBy("createdAt", "desc")
+// Select with filtering and sorting
+const users = await c.var.db
+  .select()
+  .from(usersTable)
+  .where(and(
+    eq(usersTable.active, true),
+    gt(usersTable.createdAt, new Date("2025-01-01")),
+  ))
+  .orderBy(desc(usersTable.createdAt))
   .limit(20);
 
-// Eager-load relationships
-const post = await ctx.db
-  .select(Post)
-  .where("id", "=", postId)
-  .with("author")
-  .with("comments")
-  .first();
+// Insert with returning
+const [user] = await c.var.db
+  .insert(usersTable)
+  .values({ name: "Alice", email: "alice@example.com" })
+  .returning();
+
+// Update
+await c.var.db
+  .update(usersTable)
+  .set({ name: "Bob" })
+  .where(eq(usersTable.id, userId));
+
+// Delete
+await c.var.db
+  .delete(usersTable)
+  .where(eq(usersTable.id, userId));
 
 // Transaction
-await ctx.db.transaction(async (tx) => {
-  const user = await tx.insert(User, userData);
-  await tx.insert(Post, { ...postData, userId: user.id });
+const result = await c.var.db.transaction(async (tx) => {
+  const [user] = await tx.insert(usersTable).values(userData).returning();
+  const [profile] = await tx.insert(profilesTable).values({ userId: user.id }).returning();
+  return { user, profile };
 });
 ```
 
 ---
 
-## @web-loom/api-adapter-zod
+## Validation — Zod
 
-Validation adapter using [Zod](https://zod.dev).
-
-### `zodAdapter()`
+Use `validate(target, schema)` from `@web-loom/api-core` to attach Zod validation as Hono middleware:
 
 ```typescript
-function zodAdapter(): ValidationAdapter;
+import { validate } from "@web-loom/api-core";
+import { z } from "zod";
+
+app.post(
+  "/",
+  validate("json", z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+    age: z.number().int().positive().optional(),
+  })),
+  async (c) => {
+    const data = c.req.valid("json"); // typed
+    // ...
+  },
+);
 ```
 
-**Implements:** `ValidationAdapter`
+Model schemas are available directly from the model object:
 
 ```typescript
-interface ValidationAdapter {
-  defineSchema<T>(definition: SchemaDefinition): Schema<T>;
-  validate<T>(schema: Schema<T>, data: unknown): ValidationResult<T>;
-  validateAsync<T>(schema: Schema<T>, data: unknown): Promise<ValidationResult<T>>;
-  merge<T, U>(schema1: Schema<T>, schema2: Schema<U>): Schema<T & U>;
-  partial<T>(schema: Schema<T>): Schema<Partial<T>>;
-  pick<T, K extends keyof T>(schema: Schema<T>, keys: K[]): Schema<Pick<T, K>>;
-  infer<T>(schema: Schema<T>): T;
-}
+import { User } from "./schema";
 
-interface ValidationResult<T> {
-  success: boolean;
-  data?: T;
-  errors?: ValidationError[];
-}
+// insertSchema — all required fields
+validate("json", User.insertSchema)
 
-interface ValidationError {
-  path: string[];
-  message: string;
-  code: string;
-}
-```
+// updateSchema — all fields optional (for PATCH)
+validate("json", User.updateSchema)
 
----
-
-## @web-loom/api-adapter-lucia
-
-Authentication adapter using [Lucia](https://lucia-auth.com).
-
-### `luciaAdapter(options?)`
-
-```typescript
-function luciaAdapter(options?: LuciaAdapterOptions): AuthAdapter;
-
-interface LuciaAdapterOptions {
-  sessionExpiry?: string;    // e.g., "30d", "7d", "24h"
-  cookieName?: string;       // Default: "session"
-  secureCookies?: boolean;   // Default: true in production
-}
-```
-
-**Implements:** `AuthAdapter`
-
-```typescript
-interface AuthAdapter {
-  // Sessions
-  createSession(userId: string, attributes?: Record<string, unknown>): Promise<Session>;
-  validateSession(sessionId: string): Promise<SessionValidationResult>;
-  invalidateSession(sessionId: string): Promise<void>;
-
-  // Users
-  createUser(data: UserData): Promise<User>;
-  getUser(userId: string): Promise<User | null>;
-  updateUser(userId: string, data: Partial<UserData>): Promise<User>;
-
-  // Passwords
-  hashPassword(password: string): Promise<string>;
-  verifyPassword(hash: string, password: string): Promise<boolean>;
-
-  // OAuth
-  getOAuthAuthorizationUrl(provider: string, state: string): string;
-  handleOAuthCallback(provider: string, code: string): Promise<User>;
-
-  // API Keys
-  createApiKey(userId: string, scopes: string[]): Promise<ApiKey>;
-  validateApiKey(key: string): Promise<ApiKeyValidationResult>;
-  revokeApiKey(keyId: string): Promise<void>;
-}
-
-interface Session {
-  id: string;
-  userId: string;
-  expiresAt: Date;
-  attributes: Record<string, unknown>;
-}
+// selectSchema — full row shape
+User.selectSchema
 ```
 
 ---
 
-## @web-loom/api-adapter-resend
+## Email — `EmailAdapter` Interface
 
-Email adapter using [Resend](https://resend.com).
-
-### `resendAdapter(options)`
-
-```typescript
-function resendAdapter(options: ResendAdapterOptions): EmailAdapter;
-
-interface ResendAdapterOptions {
-  apiKey: string;
-  from: string;
-}
-```
-
-**Implements:** `EmailAdapter`
+The email adapter interface:
 
 ```typescript
 interface EmailAdapter {
-  send(email: EmailMessage): Promise<EmailResult>;
-  sendBatch(emails: EmailMessage[]): Promise<EmailResult[]>;
-  sendTemplate(
-    templateId: string,
-    to: string,
-    variables: Record<string, unknown>
-  ): Promise<EmailResult>;
-  verifyDomain(domain: string): Promise<DomainVerificationResult>;
+  send(message: EmailMessage): Promise<EmailResult>;
+  sendBatch(messages: EmailMessage[]): Promise<EmailResult[]>;
 }
 
 interface EmailMessage {
-  from?: string;           // Overrides default sender
   to: string | string[];
+  from?: string;  // overrides default from config
   subject: string;
   html?: string;
   text?: string;
-  attachments?: Attachment[];
-  headers?: Record<string, string>;
-}
-
-interface EmailResult {
-  id: string;
-  success: boolean;
-  error?: string;
+  replyTo?: string;
+  attachments?: EmailAttachment[];
 }
 ```
 
-**Usage in route handlers:**
+Pass an implementation to `defineConfig()`:
 
 ```typescript
-router.post("/api/invite", {
-  middleware: [authenticate],
-  handler: async (ctx) => {
-    await ctx.email.send({
-      to: ctx.body.email,
-      subject: "You're invited!",
-      html: `<p>Hello ${ctx.body.name}, you've been invited.</p>`,
-    });
-    return ctx.json({ sent: true });
-  },
+import { ResendAdapter } from "@web-loom/api-shared";
+
+defineConfig({
+  database: { url: "...", driver: "neon-serverless" },
+  email: new ResendAdapter({
+    apiKey: process.env.RESEND_API_KEY!,
+    from: "noreply@example.com",
+  }),
 });
+```
+
+Access in routes:
+
+```typescript
+app.post("/contact", async (c) => {
+  const { message } = c.req.valid("json");
+  await c.var.email!.send({
+    to: "support@example.com",
+    subject: "New contact message",
+    text: message,
+  });
+  return c.body(null, 204);
+});
+```
+
+---
+
+## Hono
+
+Web Loom routes are standard Hono. See [Hono's documentation](https://hono.dev/docs) for the full API.
+
+The application's Hono instance is accessible after `createApp()`:
+
+```typescript
+const app = await createApp(config);
+
+// Register global middleware
+app.hono.use("/*", myMiddleware);
+
+// Add routes not managed by file discovery
+app.hono.get("/custom", (c) => c.text("hello"));
 ```

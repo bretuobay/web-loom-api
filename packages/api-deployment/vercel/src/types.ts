@@ -19,7 +19,7 @@ export interface VercelHandlerOptions {
 
 /** Minimal Web Loom app interface for handler creation */
 export interface WebLoomApp {
-  handle(request: Request): Promise<Response>;
+  handleRequest(request: Request): Promise<Response>;
 }
 
 /** Vercel environment variables */

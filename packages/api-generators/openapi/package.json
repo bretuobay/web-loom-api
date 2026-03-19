@@ -23,10 +23,15 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@hono/swagger-ui": "^0.6.1",
+    "@scalar/hono-api-reference": "^0.10.4",
     "@web-loom/api-core": "*",
-    "@web-loom/api-shared": "*"
+    "@web-loom/api-shared": "*",
+    "openapi-types": "^12.1.3",
+    "zod-to-json-schema": "^3.25.1"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.5",
     "tsup": "^8.3.5",
     "typescript": "5.9.2",

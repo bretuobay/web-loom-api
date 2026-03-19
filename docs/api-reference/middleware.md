@@ -1,269 +1,237 @@
-# API Reference: Middleware Packages
+# API Reference: Middleware
 
 ## @web-loom/api-middleware-auth
 
-Authentication and authorization middleware.
+Authentication and authorization middleware for Hono. Strategies set `c.var.user` (an `AuthUser`) on success. Guards return 401/403 if the check fails.
 
-### `authenticate`
-
-Validates the session token and attaches user context. Returns HTTP 401 if the session is invalid or expired.
-
-```typescript
-import { authenticate } from "@web-loom/api-middleware-auth";
-
-router.get("/api/profile", {
-  middleware: [authenticate],
-  handler: async (ctx) => {
-    // ctx.user and ctx.session are available
-    return ctx.json({ user: ctx.user });
-  },
-});
+```bash
+npm install @web-loom/api-middleware-auth
 ```
 
-### `requireRole(role)`
-
-Checks that the authenticated user has the specified role. Returns HTTP 403 if not. Must be used after `authenticate`.
+### `AuthUser`
 
 ```typescript
-import { authenticate, requireRole } from "@web-loom/api-middleware-auth";
-
-router.get("/api/admin/users", {
-  middleware: [authenticate, requireRole("admin")],
-  handler: async (ctx) => { /* ... */ },
-});
+interface AuthUser {
+  id: string;
+  email?: string;
+  role?: string;
+  permissions?: string[];
+  [key: string]: unknown;
+}
 ```
 
-### `requirePermission(permission)`
+Available as `c.var.user` after any successful auth strategy.
 
-Checks that the authenticated user has a specific permission.
+---
+
+### `jwtAuth(options)`
+
+Validates a Bearer JWT in the `Authorization` header.
 
 ```typescript
-import { authenticate, requirePermission } from "@web-loom/api-middleware-auth";
+import { jwtAuth } from "@web-loom/api-middleware-auth";
 
-router.delete("/api/posts/:id", {
-  middleware: [authenticate, requirePermission("posts:delete")],
-  handler: async (ctx) => { /* ... */ },
-});
+// Protect all routes
+app.use("/*", jwtAuth({ secret: process.env.JWT_SECRET! }));
+
+// Optional auth (sets c.var.user if token present, doesn't reject if absent)
+app.use("/*", jwtAuth({ secret: process.env.JWT_SECRET!, optional: true }));
 ```
 
-### `apiKeyAuth`
+**Options:**
 
-Validates API keys from the `Authorization` header (`Bearer <key>`) or `X-API-Key` header.
+```typescript
+interface JwtAuthOptions {
+  secret: string;
+  /** When true, missing/invalid tokens don't produce a 401 (c.var.user stays undefined) */
+  optional?: boolean;
+  /** Validate the iss claim */
+  iss?: string;
+  /** Validate the aud claim */
+  aud?: string | string[];
+  /** Custom function to populate c.var.user from the decoded payload */
+  getUser?: (payload: Record<string, unknown>) => AuthUser | Promise<AuthUser>;
+}
+```
+
+---
+
+### `sessionAuth(options)`
+
+Cookie-based session authentication via [Lucia](https://lucia-auth.com). Validates the session cookie and refreshes it if needed.
+
+```typescript
+import { sessionAuth } from "@web-loom/api-middleware-auth";
+
+app.use("/*", sessionAuth({
+  lucia: luciaInstance,
+}));
+```
+
+**Options:**
+
+```typescript
+interface SessionAuthOptions {
+  /** A Lucia-compatible auth instance */
+  lucia: LuciaLike;
+  /** Cookie name to read (default: "session") */
+  cookieName?: string;
+  /** When true, missing/invalid sessions don't produce a 401 */
+  optional?: boolean;
+}
+```
+
+---
+
+### `apiKeyAuth(options)`
+
+Validates API keys from `X-API-Key` header or `Authorization: Bearer <key>` fallback.
 
 ```typescript
 import { apiKeyAuth } from "@web-loom/api-middleware-auth";
 
-router.get("/api/data", {
-  middleware: [apiKeyAuth],
-  handler: async (ctx) => {
-    // ctx.apiKey contains key metadata and scopes
-    return ctx.json({ data: "..." });
+app.use("/api/*", apiKeyAuth({
+  validate: async (key) => {
+    const record = await db.select().from(apiKeysTable)
+      .where(eq(apiKeysTable.key, key)).limit(1);
+    if (!record[0]) return null;
+    return { id: record[0].userId, role: "api" };
   },
-});
-```
-
----
-
-## @web-loom/api-middleware-cors
-
-Cross-Origin Resource Sharing middleware.
-
-### `corsMiddleware(options?)`
-
-Handles CORS preflight requests and adds CORS headers to responses.
-
-```typescript
-import { corsMiddleware } from "@web-loom/api-middleware-cors";
-
-// Use global config (from defineConfig)
-app.use(corsMiddleware());
-
-// Or override per-route
-app.use(corsMiddleware({
-  origin: ["https://app.example.com"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  headers: ["Content-Type", "Authorization"],
-  maxAge: 86400,
 }));
 ```
 
 **Options:**
 
 ```typescript
-interface CORSOptions {
-  origin?: string | string[] | ((origin: string) => boolean);
-  credentials?: boolean;
-  methods?: string[];
-  headers?: string[];
-  exposedHeaders?: string[];
-  maxAge?: number;
+interface ApiKeyAuthOptions {
+  /**
+   * Validate a key. Return an AuthUser on success, null/undefined to reject.
+   */
+  validate: (key: string) => AuthUser | null | undefined | Promise<AuthUser | null | undefined>;
+  /** When true, missing/invalid keys don't produce a 401 */
+  optional?: boolean;
 }
 ```
 
 ---
 
-## @web-loom/api-middleware-rate-limit
+### `requireRole(role)`
 
-Request rate limiting middleware.
-
-### `rateLimitMiddleware(options)`
-
-Enforces request rate limits per client. Returns HTTP 429 with `Retry-After` header when exceeded.
+Returns 403 if `c.var.user.role` doesn't match. Must be used after an auth strategy middleware.
 
 ```typescript
-import { rateLimitMiddleware } from "@web-loom/api-middleware-rate-limit";
+import { jwtAuth, requireRole } from "@web-loom/api-middleware-auth";
 
-// Global rate limit
-app.use(rateLimitMiddleware({
-  windowMs: 60_000,   // 1 minute
-  max: 100,           // 100 requests per window
-}));
-
-// Stricter limit for auth endpoints
-router.post("/api/auth/login", {
-  middleware: [rateLimitMiddleware({ windowMs: 60_000, max: 5 })],
-  handler: async (ctx) => { /* ... */ },
+app.delete("/:id", jwtAuth({ secret }), requireRole("admin"), async (c) => {
+  // Only admins reach here
 });
+```
+
+---
+
+### `requirePermission(permission)`
+
+Returns 403 if `c.var.user.permissions` doesn't include the specified permission.
+
+```typescript
+import { jwtAuth, requirePermission } from "@web-loom/api-middleware-auth";
+
+app.delete("/:id",
+  jwtAuth({ secret }),
+  requirePermission("posts:delete"),
+  async (c) => { ... },
+);
+```
+
+---
+
+### `composeAuth(...strategies)`
+
+Tries each strategy in order. Succeeds on the first strategy that sets `c.var.user`. Returns 401 only if all strategies fail.
+
+```typescript
+import { jwtAuth, apiKeyAuth, composeAuth } from "@web-loom/api-middleware-auth";
+
+// Accept either JWT or API key
+app.use("/api/*", composeAuth(
+  jwtAuth({ secret: process.env.JWT_SECRET! }),
+  apiKeyAuth({ validate: lookupApiKey }),
+));
+```
+
+---
+
+### `csrfProtection(options?)`
+
+CSRF protection for session-based flows. Rejects unsafe methods (POST, PUT, PATCH, DELETE) that lack a valid CSRF token.
+
+```typescript
+import { csrfProtection } from "@web-loom/api-middleware-auth";
+
+app.use("/*", csrfProtection());
 ```
 
 **Options:**
 
 ```typescript
-interface RateLimitOptions {
-  windowMs: number;                          // Time window in milliseconds
-  max: number;                               // Max requests per window
-  keyGenerator?: (ctx: RequestContext) => string;  // Custom key (default: IP)
-  message?: string;                          // Custom error message
-  headers?: boolean;                         // Include rate limit headers (default: true)
-  skipSuccessfulRequests?: boolean;          // Only count failed requests
-  skipFailedRequests?: boolean;              // Only count successful requests
-}
-```
-
-**Response headers:**
-
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 42
-X-RateLimit-Reset: 1705312245
-Retry-After: 30          (only when rate limited)
-```
-
----
-
-## @web-loom/api-middleware-validation
-
-Request validation middleware.
-
-### `validationMiddleware(schema)`
-
-Validates request body, query, and params against a schema. Returns HTTP 400 with field-level errors on failure.
-
-```typescript
-import { validationMiddleware } from "@web-loom/api-middleware-validation";
-
-router.post("/api/items", {
-  middleware: [validationMiddleware({
-    body: {
-      name: { type: "string", required: true, minLength: 1 },
-      price: { type: "number", required: true, min: 0 },
-    },
-  })],
-  handler: async (ctx) => {
-    // ctx.body is validated and typed
-  },
-});
-```
-
-Typically you don't use this middleware directly — the `validation` option in route definitions applies it automatically:
-
-```typescript
-router.post("/api/items", {
-  validation: {
-    body: Item.schema.pick("name", "price"),
-  },
-  handler: async (ctx) => { /* ... */ },
-});
-```
-
-**Schema types:**
-
-```typescript
-interface RouteValidation {
-  body?: Schema;
-  query?: Schema;
-  params?: Schema;
-  headers?: Schema;
-}
-```
-
-### Validation Error Format
-
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Request validation failed",
-    "details": {
-      "fields": [
-        {
-          "path": ["name"],
-          "message": "Required",
-          "code": "required"
-        },
-        {
-          "path": ["price"],
-          "message": "Must be greater than or equal to 0",
-          "code": "too_small",
-          "value": -5
-        }
-      ]
-    }
-  }
+interface CsrfProtectionOptions {
+  /** Header name to check (default: "X-CSRF-Token") */
+  headerName?: string;
+  /** Paths to exclude from CSRF checks */
+  exclude?: string[];
 }
 ```
 
 ---
 
-## Writing Custom Middleware
+### Auth in CRUD Routes
 
-All middleware follows the same signature:
+Set `auth` on CRUD operation options to protect generated routes:
 
 ```typescript
-import type { Middleware } from "@web-loom/api-core";
+export const Post = defineModel(postsTable, {
+  name: "Post",
+  crud: {
+    list:   { auth: false },   // public
+    read:   { auth: false },   // public
+    create: { auth: true },    // any authenticated user
+    update: { auth: true },
+    delete: { auth: "admin" }, // only users with role "admin"
+  },
+});
+```
 
-export const timing: Middleware = async (ctx, next) => {
+---
+
+## Writing Custom Hono Middleware
+
+Web Loom routes are standard Hono handlers. Use Hono's `MiddlewareHandler` type:
+
+```typescript
+import type { MiddlewareHandler } from "hono";
+
+export const requestTimer: MiddlewareHandler = async (c, next) => {
   const start = Date.now();
   await next();
-  const duration = Date.now() - start;
-  // Response headers can be set after next()
-  ctx.request.headers.set("X-Response-Time", `${duration}ms`);
+  c.res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
 };
 ```
 
-### Short-Circuit Pattern
-
-Return a response without calling `next()` to stop the middleware chain:
+Short-circuit without calling `next()` to stop the chain:
 
 ```typescript
-export const maintenanceMode: Middleware = async (ctx, next) => {
+export const maintenanceMode: MiddlewareHandler = async (c, next) => {
   if (process.env.MAINTENANCE === "true") {
-    return ctx.json({ error: "Service under maintenance" }, 503);
+    return c.json({ error: { code: "SERVICE_UNAVAILABLE", message: "Down for maintenance" } }, 503);
   }
   await next();
 };
 ```
 
-### Composing Middleware
+Apply to a route:
 
 ```typescript
-import { compose } from "@web-loom/api-core";
-
-const protectedAdmin = compose(authenticate, requireRole("admin"), rateLimitMiddleware({ max: 50 }));
-
-router.get("/api/admin/stats", {
-  middleware: [protectedAdmin],
-  handler: async (ctx) => { /* ... */ },
+app.get("/", requestTimer, maintenanceMode, async (c) => {
+  return c.json({ status: "ok" });
 });
 ```

@@ -1,44 +1,29 @@
 /**
  * @web-loom/api-middleware-auth
  *
- * Authentication and authorization middleware for Web Loom API Framework.
- * Provides session auth, API key auth, RBAC, field-level permissions,
- * security headers, and audit logging.
+ * Authentication and authorization middleware for Web Loom API.
+ * Built on Hono MiddlewareHandler — no adapter layer required.
  */
 
-// Authentication middleware
+// Auth strategies
+export { jwtAuth } from './jwt-auth';
+export type { JwtAuthOptions } from './jwt-auth';
+
 export { sessionAuth } from './session-auth';
+export type { SessionAuthOptions, LuciaLike } from './session-auth';
+
 export { apiKeyAuth } from './api-key-auth';
+export type { ApiKeyAuthOptions } from './api-key-auth';
 
-// Authorization middleware
-export { requireRoles, requirePermissions, resolveRoles } from './rbac';
-export { fieldPermissions } from './field-permissions';
+// Authorization guards
+export { requireRole, requirePermission } from './require-role';
 
-// Security headers middleware
-export { securityHeaders } from './security-headers';
-export type { SecurityHeadersOptions } from './security-headers';
+// Multi-strategy composition
+export { composeAuth } from './compose-auth';
 
-// Audit logging
-export { createAuditLogger, AuditLogger } from './audit-logger';
-export type {
-  AuditEventType,
-  AuditLogEntry,
-  AuditOutputHandler,
-  AuditLoggerOptions,
-  AuthAttemptParams,
-  AuthFailureParams,
-  AccessDeniedParams,
-  DataModificationParams,
-  ApiKeyOperationParams,
-} from './audit-logger';
+// CSRF protection
+export { csrfProtection } from './csrf-protection';
+export type { CsrfProtectionOptions } from './csrf-protection';
 
-// Types
-export type {
-  SessionAuthOptions,
-  ApiKeyAuthOptions,
-  RoleHierarchy,
-  RbacOptions,
-  FieldPermissionRule,
-  FieldPermissionConfig,
-  AuthenticatedUser,
-} from './types';
+// Shared types
+export type { AuthUser } from './types';

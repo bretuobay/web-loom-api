@@ -1,169 +1,58 @@
-# Custom Adapter Development
+# Custom Email Adapter
 
-Build your own adapters to integrate any database, auth provider, or email service with Web Loom API.
+The only swappable adapter interface in Web Loom API is the **email adapter**. The database layer (Drizzle) and HTTP layer (Hono) are used directly — there is no abstraction to implement for those.
 
-## Adapter Interfaces
-
-Every adapter implements a standard interface from `@web-loom/api-core`. The Core Runtime verifies that your adapter implements all required methods at startup.
-
-## Building a Database Adapter
-
-Implement the `DatabaseAdapter` interface:
+## `EmailAdapter` Interface
 
 ```typescript
-import type { DatabaseAdapter, DatabaseConfig, ModelDefinition, QueryBuilder, Transaction } from "@web-loom/api-core";
+interface EmailAdapter {
+  send(message: EmailMessage): Promise<EmailResult>;
+  sendBatch(messages: EmailMessage[]): Promise<EmailResult[]>;
+}
 
-export class MongoAdapter implements DatabaseAdapter {
-  private client: MongoClient | null = null;
-  private db: Db | null = null;
+interface EmailMessage {
+  to: string | string[];
+  from?: string;        // overrides the default from address
+  subject: string;
+  html?: string;
+  text?: string;
+  replyTo?: string;
+  attachments?: EmailAttachment[];
+}
 
-  async connect(config: DatabaseConfig): Promise<void> {
-    this.client = new MongoClient(config.url);
-    await this.client.connect();
-    this.db = this.client.db();
-  }
+interface EmailAttachment {
+  filename: string;
+  content: string | Buffer;
+  contentType?: string;
+}
 
-  async disconnect(): Promise<void> {
-    await this.client?.close();
-  }
-
-  async healthCheck(): Promise<boolean> {
-    try {
-      await this.db?.command({ ping: 1 });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-
-  async query<T>(sql: string, params: unknown[]): Promise<T[]> {
-    // MongoDB doesn't use SQL, but the interface requires it
-    throw new Error("Use the query builder instead of raw SQL with MongoDB");
-  }
-
-  async execute(sql: string, params: unknown[]): Promise<void> {
-    throw new Error("Use the query builder instead of raw SQL with MongoDB");
-  }
-
-  async transaction<T>(callback: (tx: Transaction) => Promise<T>): Promise<T> {
-    const session = this.client!.startSession();
-    try {
-      session.startTransaction();
-      const result = await callback(session as unknown as Transaction);
-      await session.commitTransaction();
-      return result;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
-  }
-
-  select<T>(model: ModelDefinition): QueryBuilder<T> {
-    const collection = this.db!.collection(model.tableName || model.name.toLowerCase());
-    return new MongoQueryBuilder<T>(collection);
-  }
-
-  async insert<T>(model: ModelDefinition, data: T): Promise<T> {
-    const collection = this.db!.collection(model.tableName || model.name.toLowerCase());
-    const result = await collection.insertOne(data as Document);
-    return { ...data, id: result.insertedId.toString() } as T;
-  }
-
-  async update<T>(model: ModelDefinition, id: string, data: Partial<T>): Promise<T> {
-    const collection = this.db!.collection(model.tableName || model.name.toLowerCase());
-    await collection.updateOne({ _id: new ObjectId(id) }, { $set: data });
-    const updated = await collection.findOne({ _id: new ObjectId(id) });
-    return updated as T;
-  }
-
-  async delete(model: ModelDefinition, id: string): Promise<void> {
-    const collection = this.db!.collection(model.tableName || model.name.toLowerCase());
-    await collection.deleteOne({ _id: new ObjectId(id) });
-  }
-
-  async createTable(model: ModelDefinition): Promise<void> {
-    await this.db!.createCollection(model.tableName || model.name.toLowerCase());
-  }
-
-  async dropTable(model: ModelDefinition): Promise<void> {
-    await this.db!.dropCollection(model.tableName || model.name.toLowerCase());
-  }
-
-  async migrateSchema(migration: Migration): Promise<void> {
-    // MongoDB is schemaless — migrations are optional
-  }
+interface EmailResult {
+  id: string;
+  success: boolean;
+  error?: string;
 }
 ```
 
-### Register Your Adapter
+Import from `@web-loom/api-core`:
 
 ```typescript
-import { defineConfig } from "@web-loom/api-core";
-import { MongoAdapter } from "./adapters/mongo";
-
-export default defineConfig({
-  adapters: {
-    database: new MongoAdapter(),
-    // ...
-  },
-});
+import type { EmailAdapter, EmailMessage, EmailResult } from "@web-loom/api-core";
 ```
 
-## Building an Auth Adapter
+## Building a Custom Email Adapter
 
-Implement the `AuthAdapter` interface:
-
-```typescript
-import type { AuthAdapter, Session, User, ApiKey } from "@web-loom/api-core";
-
-export class CustomAuthAdapter implements AuthAdapter {
-  async createSession(userId: string, attributes?: Record<string, unknown>): Promise<Session> {
-    const token = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-    // Store session in your backend
-    await this.store.set(`session:${token}`, { userId, expiresAt, attributes });
-    return { id: token, userId, expiresAt, attributes: attributes || {} };
-  }
-
-  async validateSession(sessionId: string): Promise<SessionValidationResult> {
-    const session = await this.store.get(`session:${sessionId}`);
-    if (!session || new Date(session.expiresAt) < new Date()) {
-      return { valid: false };
-    }
-    const user = await this.getUser(session.userId);
-    return { valid: true, session, user: user || undefined };
-  }
-
-  async invalidateSession(sessionId: string): Promise<void> {
-    await this.store.delete(`session:${sessionId}`);
-  }
-
-  async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
-  }
-
-  async verifyPassword(hash: string, password: string): Promise<boolean> {
-    return bcrypt.compare(password, hash);
-  }
-
-  // Implement remaining methods...
-}
-```
-
-## Building an Email Adapter
-
-Implement the `EmailAdapter` interface:
+Implement both `send` and `sendBatch`. Here is a complete example using SendGrid:
 
 ```typescript
 import type { EmailAdapter, EmailMessage, EmailResult } from "@web-loom/api-core";
 
 export class SendGridAdapter implements EmailAdapter {
-  constructor(private apiKey: string) {}
+  constructor(
+    private readonly apiKey: string,
+    private readonly defaultFrom: string,
+  ) {}
 
-  async send(email: EmailMessage): Promise<EmailResult> {
+  async send(message: EmailMessage): Promise<EmailResult> {
     const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: {
@@ -171,70 +60,124 @@ export class SendGridAdapter implements EmailAdapter {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        personalizations: [{ to: [{ email: email.to }] }],
-        from: { email: email.from },
-        subject: email.subject,
+        personalizations: [
+          { to: Array.isArray(message.to)
+              ? message.to.map((e) => ({ email: e }))
+              : [{ email: message.to }] },
+        ],
+        from: { email: message.from ?? this.defaultFrom },
+        reply_to: message.replyTo ? { email: message.replyTo } : undefined,
+        subject: message.subject,
         content: [
-          { type: "text/plain", value: email.text },
-          { type: "text/html", value: email.html },
+          ...(message.text ? [{ type: "text/plain", value: message.text }] : []),
+          ...(message.html ? [{ type: "text/html",  value: message.html }] : []),
         ],
       }),
     });
 
     return {
-      id: response.headers.get("X-Message-Id") || "",
+      id: response.headers.get("X-Message-Id") ?? crypto.randomUUID(),
       success: response.ok,
       error: response.ok ? undefined : await response.text(),
     };
   }
 
-  async sendBatch(emails: EmailMessage[]): Promise<EmailResult[]> {
-    return Promise.all(emails.map((e) => this.send(e)));
-  }
-
-  async sendTemplate(templateId: string, to: string, variables: Record<string, unknown>): Promise<EmailResult> {
-    // SendGrid template API
+  async sendBatch(messages: EmailMessage[]): Promise<EmailResult[]> {
+    return Promise.all(messages.map((m) => this.send(m)));
   }
 }
 ```
 
-## Testing Custom Adapters
+## Registering the Adapter
 
-Use the mock adapters from `@web-loom/api-testing` as a reference, and write tests against the interface contract:
+Pass the instance to `defineConfig()`:
 
 ```typescript
-import { describe, it, expect } from "vitest";
-import { MongoAdapter } from "./mongo-adapter";
+import { defineConfig } from "@web-loom/api-core";
+import { SendGridAdapter } from "./adapters/sendgrid";
 
-describe("MongoAdapter", () => {
-  const adapter = new MongoAdapter();
+export default defineConfig({
+  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
+  email: new SendGridAdapter(
+    process.env.SENDGRID_API_KEY!,
+    "noreply@example.com",
+  ),
+});
+```
 
-  beforeAll(async () => {
-    await adapter.connect({ url: "mongodb://localhost:27017/test" });
+The adapter is injected as `c.var.email` in every request handler:
+
+```typescript
+app.post("/contact", async (c) => {
+  await c.var.email!.send({
+    to: "support@example.com",
+    subject: "New contact",
+    text: "Hello",
+  });
+  return c.body(null, 204);
+});
+```
+
+Accessing `c.var.email` when no adapter is configured throws a `ConfigurationError`.
+
+## Testing a Custom Adapter
+
+Write unit tests against the interface directly:
+
+```typescript
+import { describe, it, expect, vi } from "vitest";
+import { SendGridAdapter } from "./sendgrid";
+
+describe("SendGridAdapter", () => {
+  it("sends an email and returns success", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(null, { status: 202, headers: { "X-Message-Id": "abc123" } }),
+    );
+
+    const adapter = new SendGridAdapter("test-key", "noreply@example.com");
+    const result = await adapter.send({
+      to: "alice@example.com",
+      subject: "Hello",
+      text: "Hi",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.id).toBe("abc123");
+    expect(fetchSpy).toHaveBeenCalledOnce();
   });
 
-  afterAll(async () => {
-    await adapter.disconnect();
-  });
+  it("returns error on failure", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("Unauthorized", { status: 401 }),
+    );
 
-  it("inserts and retrieves a record", async () => {
-    const model = { name: "User", tableName: "users", fields: [] };
-    const user = await adapter.insert(model, { name: "Alice", email: "alice@test.com" });
-    expect(user.id).toBeDefined();
-  });
+    const adapter = new SendGridAdapter("bad-key", "noreply@example.com");
+    const result = await adapter.send({
+      to: "alice@example.com",
+      subject: "Test",
+      text: "Test",
+    });
 
-  it("reports health correctly", async () => {
-    expect(await adapter.healthCheck()).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Unauthorized");
   });
 });
 ```
 
-## Interface Verification
+## Custom Hono Middleware
 
-The Core Runtime verifies adapter interfaces at startup. If your adapter is missing required methods, you'll see:
+For extending request handling beyond email, write standard Hono middleware and register it globally or per-route:
 
+```typescript
+import type { MiddlewareHandler } from "hono";
+
+// Global middleware (applied after createApp)
+const app = await createApp(config);
+app.hono.use("/*", myMiddleware);
+
+// Per-route middleware (in route files)
+const routes = defineRoutes();
+routes.use("/admin/*", requireAdminMiddleware);
 ```
-Error: Database adapter is missing required methods: transaction, healthCheck
-```
 
-Make sure every method in the interface is implemented, even if some throw "not supported" errors for your backend.
+See the [Auth Middleware reference](../api-reference/middleware.md) for authentication extension points.

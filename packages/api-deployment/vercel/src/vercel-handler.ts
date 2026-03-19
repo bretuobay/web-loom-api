@@ -63,7 +63,7 @@ export function createVercelHandler(
         body: req.body,
       });
 
-      const response = await app.handle(enrichedRequest);
+      const response = await app.handleRequest(enrichedRequest);
 
       if (streaming && response.body) {
         return createStreamingResponse(response);

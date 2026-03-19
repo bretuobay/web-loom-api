@@ -77,7 +77,7 @@ export function createCloudflareHandler(
         body: request.body,
       });
 
-      const response = await app.handle(enrichedRequest);
+      const response = await app.handleRequest(enrichedRequest);
 
       // Use waitUntil for any deferred work (logging, analytics, etc.)
       ctx.waitUntil(Promise.resolve());

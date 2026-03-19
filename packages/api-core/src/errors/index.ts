@@ -30,6 +30,9 @@ export type {
   ErrorResponse,
 } from './error-handler';
 
+export { ConfigurationError } from './configuration-error';
+export { DuplicateModelError } from './duplicate-model-error';
+
 export {
   mapDatabaseError,
   isDatabaseError,

@@ -1,180 +1,182 @@
-# API Reference: Deployment Adapters
+# API Reference: Deployment
+
+All deployment targets use the same `Application.handleRequest(request)` method, which delegates to the underlying Hono instance. There is no platform-specific adapter abstraction — the deployment packages are thin entry-point wrappers.
+
+---
+
+## Common Pattern
+
+```typescript
+// src/app.ts — shared across all platforms
+import { createApp } from "@web-loom/api-core";
+import config from "../webloom.config";
+import "./schema"; // register models
+
+let _app: Awaited<ReturnType<typeof createApp>> | null = null;
+
+export async function getApp() {
+  if (!_app) _app = await createApp(config);
+  return _app;
+}
+```
+
+---
+
+## Node.js / Docker
+
+```typescript
+// src/index.ts
+import { getApp } from "./app";
+
+const app = await getApp();
+await app.start(parseInt(process.env.PORT ?? "3000"));
+```
+
+`app.start()` uses `@hono/node-server` internally.
+
+---
 
 ## @web-loom/api-deployment-vercel
 
-### `createVercelHandler(appFactory)`
-
-Wraps a Web Loom app for Vercel Edge Functions.
+Thin wrapper that calls `app.handleRequest()` on each Vercel Edge invocation.
 
 ```typescript
-function createVercelHandler(
-  appFactory: () => Promise<Application>
-): VercelHandler;
-```
+// api/index.ts (or app/api/[...route]/route.ts)
+import { getApp } from "../src/app";
 
-**Usage:**
+export const config = { runtime: "edge" };
 
-```typescript
-import { createVercelHandler } from "@web-loom/api-deployment-vercel";
-import { getApp } from "../shared/app";
-
-export const config = {
-  runtime: "edge",
-  regions: ["iad1", "sfo1"],
-};
-
-export default createVercelHandler(async () => {
+export default async function handler(request: Request) {
   const app = await getApp();
-  return app;
-});
+  return app.handleRequest(request);
+}
 ```
 
-The handler converts between Vercel's edge runtime format and Web Standards `Request`/`Response` with zero overhead.
+For Vercel Serverless Functions (Node.js runtime), the same pattern works:
+
+```typescript
+export const config = { runtime: "nodejs" };
+
+export default async function handler(req: Request) {
+  const app = await getApp();
+  return app.handleRequest(req);
+}
+```
 
 ---
 
 ## @web-loom/api-deployment-cloudflare
 
-### `createCloudflareHandler(appFactory)`
-
-Wraps a Web Loom app for Cloudflare Workers.
+Cloudflare Workers receive a `Request` and return a `Response` natively — no conversion layer needed.
 
 ```typescript
-function createCloudflareHandler<Env = unknown>(
-  appFactory: (env: Env) => Promise<Application>
-): CloudflareHandler<Env>;
-
-interface CloudflareHandler<Env> {
-  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response>;
-}
-```
-
-**Usage:**
-
-```typescript
-import { createCloudflareHandler } from "@web-loom/api-deployment-cloudflare";
-import { getApp } from "../shared/app";
+// src/worker.ts
+import { createApp } from "@web-loom/api-core";
+import config from "../webloom.config";
+import "./schema";
 
 interface Env {
   DATABASE_URL: string;
-  CACHE: KVNamespace;
 }
 
-const handler = createCloudflareHandler<Env>(async (env) => {
-  process.env.DATABASE_URL = env.DATABASE_URL;
-  return getApp();
-});
+let _app: Awaited<ReturnType<typeof createApp>> | null = null;
 
 export default {
-  fetch: handler.fetch,
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // Inject Cloudflare bindings as env vars before first init
+    if (!_app) {
+      process.env.DATABASE_URL = env.DATABASE_URL;
+      _app = await createApp(config);
+    }
+    return _app.handleRequest(request);
+  },
 };
 ```
-
-Supports Cloudflare-specific features:
-
-- KV Namespace bindings
-- D1 Database bindings
-- Durable Objects
-- Scheduled events (cron triggers)
 
 ---
 
 ## @web-loom/api-deployment-aws
 
-### `createLambdaHandler(app)`
-
-Wraps a Web Loom app for AWS Lambda with API Gateway v2.
+AWS Lambda with API Gateway HTTP API (payload format v2).
 
 ```typescript
-function createLambdaHandler(
-  app: Application | Promise<Application>
-): LambdaHandler;
-
-type LambdaHandler = (
-  event: APIGatewayProxyEventV2,
-  context: Context
-) => Promise<APIGatewayProxyResultV2>;
-```
-
-**Usage:**
-
-```typescript
-import { createLambdaHandler } from "@web-loom/api-deployment-aws";
-import { createApp } from "@web-loom/api-core";
-import config from "./config";
-
-const app = createApp(config);
-export const handler = createLambdaHandler(app);
-```
-
-Handles conversion between API Gateway event format and Web Standards `Request`/`Response`.
-
-### Manual Lambda Handler
-
-For full control over the Lambda lifecycle:
-
-```typescript
-import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context } from "aws-lambda";
+// src/lambda.ts
+import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { getApp } from "./app";
-
-const appPromise = getApp();
 
 export async function handler(
   event: APIGatewayProxyEventV2,
-  context: Context
 ): Promise<APIGatewayProxyResultV2> {
-  context.callbackWaitsForEmptyEventLoop = false;
+  const app = await getApp();
 
-  const app = await appPromise;
-  const url = `https://${event.requestContext.domainName}${event.rawPath}`;
+  const url = `https://${event.requestContext.domainName}${event.rawPath}${
+    event.rawQueryString ? "?" + event.rawQueryString : ""
+  }`;
+
   const request = new Request(url, {
     method: event.requestContext.http.method,
-    headers: new Headers(event.headers as Record<string, string>),
+    headers: event.headers as Record<string, string>,
     body: event.body || undefined,
   });
 
   const response = await app.handleRequest(request);
-  const body = await response.text();
+
   const headers: Record<string, string> = {};
   response.headers.forEach((v, k) => { headers[k] = v; });
 
-  return { statusCode: response.status, headers, body };
+  return {
+    statusCode: response.status,
+    headers,
+    body: await response.text(),
+    isBase64Encoded: false,
+  };
 }
 ```
 
 ---
 
-## Shared App Pattern
-
-All deployment adapters work with the same application code. Define your app once and wrap it for each platform:
+## Application Methods
 
 ```typescript
-// src/shared/app.ts
-import { createApp, defineConfig, defineRoutes } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
+interface Application {
+  /** Start an HTTP server (Node.js / Docker only) */
+  start(port?: number): Promise<void>;
 
-const config = defineConfig({
-  adapters: {
-    api: honoAdapter(),
-    database: drizzleAdapter(),
-    validation: zodAdapter(),
-  },
-  database: { url: process.env.DATABASE_URL!, poolSize: 1 },
-  security: { cors: { origin: ["*"] } },
-  features: { crud: true },
-  observability: { logging: { level: "warn", format: "json" } },
-});
+  /**
+   * Handle a single request — use in serverless/edge environments.
+   * Delegates to hono.fetch().
+   */
+  handleRequest(request: Request): Promise<Response>;
 
-let appPromise: ReturnType<typeof createApp> | null = null;
+  /** Graceful shutdown (closes HTTP server + DB connection) */
+  shutdown(timeout?: number): Promise<void>;
 
-export function getApp() {
-  if (!appPromise) {
-    appPromise = createApp(config);
-  }
-  return appPromise;
+  /** The underlying Hono app instance */
+  hono: Hono<{ Variables: WebLoomVariables }>;
+
+  /** The active Drizzle ORM connection */
+  db: AnyDrizzleDB;
+
+  getModelRegistry(): ModelRegistry;
+  getRouteRegistry(): RouteRegistry;
 }
 ```
 
-Then create platform-specific entry points that import `getApp()`. See the [serverless example](../../examples/serverless) for the complete pattern.
+---
+
+## Serverless Best Practices
+
+**Reuse the app across invocations.** Module-level caching (as shown above) ensures the Drizzle connection and registered routes are not recreated on every request.
+
+**Use `neon-serverless` or `libsql` drivers.** These use HTTP-based transports that don't hold persistent TCP connections, which matters on platforms that freeze execution contexts between requests.
+
+**Set `poolSize: 1` for traditional pg driver on serverless.** Standard connection pooling doesn't mix well with serverless cold start patterns.
+
+```typescript
+// For pg driver on Lambda
+database: {
+  url: process.env.DATABASE_URL!,
+  driver: "pg",
+  poolSize: 1,
+}
+```

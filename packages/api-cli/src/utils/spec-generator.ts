@@ -1,32 +1,40 @@
 /**
  * OpenAPI Spec Generator Utility
  *
- * Discovers routes and models from project and generates OpenAPI spec
+ * Discovers routes from src/routes and generates an OpenAPI spec
+ * using @web-loom/api-generator-openapi.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { RouteDefinition } from '@web-loom/api-core';
-import type { HTTPMethod } from '@web-loom/api-shared';
-// @ts-ignore - module may not be installed
-import { OpenAPIGenerator } from '@web-loom/api-generator-openapi';
-// @ts-ignore - module may not be installed
-import type { ModelDefinition } from '@web-loom/api-generator-openapi';
+import { generateOpenApiDocument } from '@web-loom/api-generator-openapi';
+import type { RouteMetaEntry } from '@web-loom/api-core';
 
-interface DiscoveredRoute {
-  path: string;
-  method: HTTPMethod;
-  handler: string;
-  validation?: RouteDefinition['validation'];
-  auth?: RouteDefinition['auth'];
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+function filePathToUrlPath(relativePath: string): string {
+  let urlPath = relativePath
+    .replace(/\.(ts|js|tsx|jsx)$/, '')
+    .replace(/\\/g, '/')
+    .replace(/\[([^\]]+)\]/g, ':$1')
+    .replace(/\/index$/, '')
+    .replace(/^index$/, '');
+  if (!urlPath.startsWith('/')) urlPath = `/${urlPath}`;
+  if (urlPath !== '/' && urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
+  return urlPath || '/';
 }
 
-const HTTP_METHODS: HTTPMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
-const placeholderHandler: RouteDefinition['handler'] = () =>
-  new Response(JSON.stringify({ error: 'Not implemented' }), {
-    status: 501,
-    headers: { 'Content-Type': 'application/json' },
-  });
+function readExportedMethods(filePath: string): string[] {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const found = HTTP_METHODS.filter((m) =>
+      new RegExp(`export\\s+(const|function|async)\\s+${m}\\b`).test(content)
+    );
+    return found.length > 0 ? found : ['GET'];
+  } catch {
+    return ['GET'];
+  }
+}
 
 export interface SpecGeneratorConfig {
   title?: string;
@@ -35,112 +43,47 @@ export interface SpecGeneratorConfig {
   projectRoot?: string;
 }
 
-/**
- * Generate OpenAPI specification from project
- */
+/** Generate an OpenAPI spec JSON string from file-based routes. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function generateOpenAPISpec(config: SpecGeneratorConfig = {}): any {
   const projectRoot = config.projectRoot || process.cwd();
-
-  const generator = new OpenAPIGenerator({
-    title: config.title || 'Web Loom API',
-    version: config.version || '1.0.0',
-    description: config.description || 'API documentation',
-  });
-
-  const routes = discoverRoutes(projectRoot);
-  const models = discoverModels(projectRoot);
-
-  for (const model of models) {
-    generator.registerModel(model);
-  }
-
-  for (const route of routes) {
-    const routeDefinition: RouteDefinition = {
-      path: route.path,
-      method: route.method,
-      handler: placeholderHandler,
-      metadata: {
-        description: route.handler,
-        tags: [route.path.split('/')[1] || 'default'],
-      },
-    };
-
-    if (route.validation !== undefined) {
-      routeDefinition.validation = route.validation;
-    }
-
-    if (route.auth !== undefined) {
-      routeDefinition.auth = route.auth;
-    }
-
-    generator.registerRoute(routeDefinition);
-  }
-
-  return generator.toJSON();
-}
-
-/**
- * Discover routes from src/routes directory
- */
-function discoverRoutes(projectRoot: string): DiscoveredRoute[] {
-  const routes: DiscoveredRoute[] = [];
   const routesDir = path.join(projectRoot, 'src', 'routes');
+  const routeMetas: RouteMetaEntry[] = [];
 
-  if (!fs.existsSync(routesDir)) {
-    return routes;
-  }
+  if (fs.existsSync(routesDir)) {
+    const scan = (dir: string): void => {
+      const items = fs.readdirSync(dir, { withFileTypes: true });
+      for (const item of items) {
+        const full = path.join(dir, item.name);
+        if (item.isDirectory()) {
+          scan(full);
+        } else if (item.isFile() && /\.(ts|js|tsx|jsx)$/.test(item.name)) {
+          const rel = path.relative(routesDir, full);
+          const urlPath = filePathToUrlPath(rel);
+          const methods = readExportedMethods(full);
+          const tag = urlPath.split('/').filter(Boolean)[0] ?? 'default';
 
-  const scanDirectory = (dir: string): void => {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      const relativePath = path.relative(routesDir, fullPath);
-
-      if (entry.isDirectory()) {
-        scanDirectory(fullPath);
-      } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))) {
-        let urlPath = relativePath
-          .replace(/\.(ts|js)$/, '')
-          .replace(/\\/g, '/')
-          .replace(/\[([^\]]+)\]/g, ':$1')
-          .replace(/index$/, '');
-
-        if (!urlPath.startsWith('/')) {
-          urlPath = `/${urlPath}`;
-        }
-
-        if (urlPath !== '/' && urlPath.endsWith('/')) {
-          urlPath = urlPath.slice(0, -1);
-        }
-
-        for (const method of HTTP_METHODS) {
-          routes.push({
-            path: urlPath,
-            method,
-            handler: relativePath,
-          });
+          for (const method of methods) {
+            routeMetas.push({
+              path: urlPath,
+              method,
+              meta: {
+                summary: rel.replace(/\\/g, '/'), // original relative path as summary
+                tags: [tag],
+              },
+            });
+          }
         }
       }
-    }
-  };
-
-  scanDirectory(routesDir);
-  return routes;
-}
-
-/**
- * Discover models from src/models directory
- */
-function discoverModels(projectRoot: string): ModelDefinition[] {
-  const models: ModelDefinition[] = [];
-  const modelsDir = path.join(projectRoot, 'src', 'models');
-
-  if (!fs.existsSync(modelsDir)) {
-    return models;
+    };
+    scan(routesDir);
   }
 
-  return models;
-}
+  const doc = generateOpenApiDocument([], routeMetas, {
+    title: config.title,
+    version: config.version,
+    description: config.description,
+  });
 
+  return JSON.stringify(doc);
+}

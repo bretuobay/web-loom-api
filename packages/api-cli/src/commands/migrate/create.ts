@@ -67,13 +67,13 @@ function generateMigrationTemplate(name: string): string {
  * Generated at: ${new Date().toISOString()}
  */
 
-import type { DatabaseAdapter } from '@web-loom/api-core';
+import type { MigrationDB } from '../../../utils/migration-tracker';
 
 export class ${className} {
   /**
    * Run the migration (apply changes)
    */
-  async up(db: DatabaseAdapter): Promise<void> {
+  async up(db: MigrationDB): Promise<void> {
     // TODO: Implement migration up logic
     // Example:
     // await db.execute(\`
@@ -85,18 +85,18 @@ export class ${className} {
     //     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     //   )
     // \`);
-    
+
     throw new Error('Migration up() not implemented');
   }
 
   /**
    * Reverse the migration (rollback changes)
    */
-  async down(db: DatabaseAdapter): Promise<void> {
+  async down(db: MigrationDB): Promise<void> {
     // TODO: Implement migration down logic
     // Example:
     // await db.execute('DROP TABLE IF EXISTS users');
-    
+
     throw new Error('Migration down() not implemented');
   }
 }

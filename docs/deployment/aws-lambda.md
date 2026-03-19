@@ -13,19 +13,12 @@ Deploy your Web Loom API to AWS Lambda with API Gateway v2.
 ```typescript
 // src/shared/app.ts
 import { createApp, defineConfig } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
+import "./schema"; // register models
 
 const config = defineConfig({
-  adapters: {
-    api: honoAdapter(),
-    database: drizzleAdapter(),
-    validation: zodAdapter(),
-  },
-  database: { url: process.env.DATABASE_URL!, poolSize: 1 },
-  security: { cors: { origin: ["*"] } },
+  database: { url: process.env.DATABASE_URL!, driver: "pg", poolSize: 1 },
   features: { crud: true },
+  openapi: { enabled: true },
   observability: { logging: { level: "warn", format: "json" } },
 });
 
@@ -37,19 +30,6 @@ export function getApp() {
 ```
 
 ## Step 2: Create the Lambda Handler
-
-### Using the Deployment Adapter
-
-```typescript
-// src/lambda.ts
-import { createLambdaHandler } from "@web-loom/api-deployment-aws";
-import { getApp } from "./shared/app";
-
-export const handler = createLambdaHandler(getApp());
-```
-
-
-### Manual Handler (Full Control)
 
 ```typescript
 // src/lambda.ts

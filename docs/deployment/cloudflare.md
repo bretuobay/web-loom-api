@@ -13,19 +13,12 @@ Deploy your Web Loom API to Cloudflare's global edge network.
 ```typescript
 // src/shared/app.ts
 import { createApp, defineConfig } from "@web-loom/api-core";
-import { honoAdapter } from "@web-loom/api-adapter-hono";
-import { drizzleAdapter } from "@web-loom/api-adapter-drizzle";
-import { zodAdapter } from "@web-loom/api-adapter-zod";
+import "./schema"; // register models
 
 const config = defineConfig({
-  adapters: {
-    api: honoAdapter(),
-    database: drizzleAdapter(),
-    validation: zodAdapter(),
-  },
-  database: { url: process.env.DATABASE_URL!, poolSize: 1 },
-  security: { cors: { origin: ["*"] } },
+  database: { url: process.env.DATABASE_URL!, driver: "neon-serverless" },
   features: { crud: true },
+  openapi: { enabled: true },
   observability: { logging: { level: "warn", format: "json" } },
 });
 
@@ -40,32 +33,30 @@ export function getApp() {
 
 ```typescript
 // src/worker.ts
-import { createCloudflareHandler } from "@web-loom/api-deployment-cloudflare";
 import { getApp } from "./shared/app";
-
 
 interface Env {
   DATABASE_URL: string;
-  CACHE: KVNamespace;
 }
 
-const handler = createCloudflareHandler<Env>(async (env) => {
-  process.env.DATABASE_URL = env.DATABASE_URL;
-  return getApp();
-});
+let initialized = false;
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    return handler.fetch(request, env, ctx);
+  async fetch(request: Request, env: Env): Promise<Response> {
+    if (!initialized) {
+      process.env.DATABASE_URL = env.DATABASE_URL;
+      initialized = true;
+    }
+    const app = await getApp();
+    return app.handleRequest(request);
   },
 
-  // Optional: cron triggers
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  // Optional: cron trigger
+  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
     process.env.DATABASE_URL = env.DATABASE_URL;
     const app = await getApp();
-    await app.db.execute(
-      "DELETE FROM items WHERE created_at < NOW() - INTERVAL '30 days'"
-    );
+    // Run scheduled maintenance via the Drizzle instance
+    await app.db.execute("DELETE FROM sessions WHERE expires_at < NOW()");
   },
 };
 ```
@@ -114,24 +105,7 @@ wrangler deploy
 
 ### KV Storage for Caching
 
-```typescript
-const handler = createCloudflareHandler<Env>(async (env) => {
-  // Use KV for response caching
-  return getApp({ cache: env.CACHE });
-});
-```
-
-### D1 Database
-
-```typescript
-interface Env {
-  DB: D1Database;
-}
-
-const handler = createCloudflareHandler<Env>(async (env) => {
-  return getApp({ database: env.DB });
-});
-```
+You can wrap the Drizzle instance or use KV directly in route handlers. Pass the KV binding via context or a module-level variable (inject it before the first `getApp()` call).
 
 ### Cron Triggers
 

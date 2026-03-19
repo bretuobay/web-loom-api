@@ -1,132 +1,122 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { Hono } from 'hono';
 import { sessionAuth } from '../session-auth';
-import type { AuthAdapter, RequestContext, SessionValidationResult } from '@web-loom/api-core';
+import type { LuciaLike } from '../session-auth';
+import type { AuthUser } from '../types';
 
-function createMockAdapter(overrides: Partial<AuthAdapter> = {}): AuthAdapter {
+const VALID_USER: AuthUser = { id: 'u1', email: 'test@example.com', role: 'user' };
+const MOCK_SESSION = { id: 's1' };
+
+function makeLucia(overrides: Partial<LuciaLike> = {}): LuciaLike {
   return {
-    createSession: vi.fn(),
-    validateSession: vi.fn(),
-    invalidateSession: vi.fn(),
-    createUser: vi.fn(),
-    getUser: vi.fn(),
-    updateUser: vi.fn(),
-    hashPassword: vi.fn(),
-    verifyPassword: vi.fn(),
-    getOAuthAuthorizationUrl: vi.fn(),
-    handleOAuthCallback: vi.fn(),
-    createApiKey: vi.fn(),
-    validateApiKey: vi.fn(),
-    revokeApiKey: vi.fn(),
+    validateSession: vi.fn().mockResolvedValue({ session: MOCK_SESSION, user: { id: 'u1', email: 'test@example.com', role: 'user' } }),
+    createSessionCookie: vi.fn().mockReturnValue({ name: 'session', value: 's1', attributes: {} }),
+    createBlankSessionCookie: vi.fn().mockReturnValue({ name: 'session', value: '', attributes: {} }),
     ...overrides,
-  } as AuthAdapter;
-}
-
-function createCtx(headers: Record<string, string> = {}): RequestContext {
-  const h = new Headers(headers);
-  return {
-    request: new Request('http://localhost/test', { headers: h }),
-    params: {},
-    query: {},
-    body: {},
-    metadata: new Map(),
   };
 }
 
+function buildApp(lucia: LuciaLike, cookieName?: string) {
+  const app = new Hono();
+  app.use('/test', sessionAuth({ lucia, cookieName }));
+  app.get('/test', (c) => c.json({ userId: c.var.user?.id }));
+  return app;
+}
+
 describe('sessionAuth', () => {
-  let next: ReturnType<typeof vi.fn>;
-
-  beforeEach(() => {
-    next = vi.fn(() => Promise.resolve(new Response('OK')));
+  it('returns 401 when no session cookie is present', async () => {
+    const lucia = makeLucia();
+    const app = buildApp(lucia);
+    const res = await app.request('/test');
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('should return 401 when no Authorization header is present', async () => {
-    const adapter = createMockAdapter();
-    const middleware = sessionAuth(adapter);
-    const response = await middleware(createCtx(), next);
-
-    expect(response.status).toBe(401);
-    const body = await response.json();
-    expect(body.code).toBe('UNAUTHORIZED');
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should return 401 when token prefix does not match', async () => {
-    const adapter = createMockAdapter();
-    const middleware = sessionAuth(adapter);
-    const response = await middleware(createCtx({ Authorization: 'ApiKey abc123' }), next);
-
-    expect(response.status).toBe(401);
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should return 401 when session is invalid', async () => {
-    const adapter = createMockAdapter({
-      validateSession: vi.fn().mockResolvedValue({ valid: false } satisfies SessionValidationResult),
+  it('returns 401 when lucia returns no session', async () => {
+    const lucia = makeLucia({
+      validateSession: vi.fn().mockResolvedValue({ session: null, user: null }),
     });
-    const middleware = sessionAuth(adapter);
-    const response = await middleware(createCtx({ Authorization: 'Bearer token123' }), next);
-
-    expect(response.status).toBe(401);
-    const body = await response.json();
-    expect(body.code).toBe('INVALID_TOKEN');
-    expect(next).not.toHaveBeenCalled();
+    const app = buildApp(lucia);
+    const res = await app.request('/test', {
+      headers: { Cookie: 'session=invalid-id' },
+    });
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('should attach user and session to context on valid session', async () => {
-    const mockUser = { id: 'u1', email: 'test@example.com', role: 'user' };
-    const mockSession = { id: 's1', userId: 'u1', expiresAt: new Date(), attributes: {} };
-    const adapter = createMockAdapter({
+  it('sets c.var.user and calls next on valid session cookie', async () => {
+    const lucia = makeLucia();
+    const app = buildApp(lucia);
+    const res = await app.request('/test', {
+      headers: { Cookie: 'session=valid-session-id' },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.userId).toBe('u1');
+  });
+
+  it('refreshes the session cookie on success', async () => {
+    const lucia = makeLucia();
+    const app = buildApp(lucia);
+    const res = await app.request('/test', {
+      headers: { Cookie: 'session=valid-session-id' },
+    });
+    expect(lucia.createSessionCookie).toHaveBeenCalledWith('s1');
+    const setCookie = res.headers.get('Set-Cookie');
+    expect(setCookie).toBeTruthy();
+  });
+
+  it('clears the cookie when session is invalid', async () => {
+    const lucia = makeLucia({
+      validateSession: vi.fn().mockResolvedValue({ session: null, user: null }),
+    });
+    const app = buildApp(lucia);
+    const res = await app.request('/test', {
+      headers: { Cookie: 'session=stale-id' },
+    });
+    expect(res.status).toBe(401);
+    expect(lucia.createBlankSessionCookie).toHaveBeenCalled();
+  });
+
+  it('reads the custom cookie name when configured', async () => {
+    const lucia = makeLucia();
+    const app = buildApp(lucia, 'auth_session');
+    // No auth_session cookie → 401
+    const res401 = await app.request('/test', {
+      headers: { Cookie: 'session=some-id' },
+    });
+    expect(res401.status).toBe(401);
+
+    // Correct cookie name → 200
+    const res200 = await app.request('/test', {
+      headers: { Cookie: 'auth_session=valid-id' },
+    });
+    expect(res200.status).toBe(200);
+  });
+
+  it('uses a custom getUser mapping when provided', async () => {
+    const lucia = makeLucia({
       validateSession: vi.fn().mockResolvedValue({
-        valid: true,
-        user: mockUser,
-        session: mockSession,
-      } satisfies SessionValidationResult),
+        session: MOCK_SESSION,
+        user: { userId: 'mapped-1', emailAddress: 'mapped@example.com' },
+      }),
     });
+    const app = new Hono();
+    app.use(
+      '/test',
+      sessionAuth({
+        lucia,
+        getUser: (u) => ({ id: String(u.userId), email: u.emailAddress as string }),
+      }),
+    );
+    app.get('/test', (c) => c.json({ userId: c.var.user?.id }));
 
-    const ctx = createCtx({ Authorization: 'Bearer valid-token' });
-    const middleware = sessionAuth(adapter);
-    await middleware(ctx, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(ctx.user).toMatchObject({ id: 'u1', email: 'test@example.com', authMethod: 'session' });
-    expect(ctx.session).toBe(mockSession);
-  });
-
-  it('should pass through when optional and no token', async () => {
-    const adapter = createMockAdapter();
-    const middleware = sessionAuth(adapter, { optional: true });
-    const ctx = createCtx();
-    const response = await middleware(ctx, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(ctx.user).toBeUndefined();
-    expect(response).toBeDefined();
-  });
-
-  it('should pass through when optional and session is invalid', async () => {
-    const adapter = createMockAdapter({
-      validateSession: vi.fn().mockResolvedValue({ valid: false }),
+    const res = await app.request('/test', {
+      headers: { Cookie: 'session=valid-id' },
     });
-    const middleware = sessionAuth(adapter, { optional: true });
-    const ctx = createCtx({ Authorization: 'Bearer bad-token' });
-    await middleware(ctx, next);
-
-    expect(next).toHaveBeenCalled();
-    expect(ctx.user).toBeUndefined();
-  });
-
-  it('should support custom header name and token prefix', async () => {
-    const mockUser = { id: 'u1', email: 'a@b.com' };
-    const mockSession = { id: 's1', userId: 'u1', expiresAt: new Date(), attributes: {} };
-    const adapter = createMockAdapter({
-      validateSession: vi.fn().mockResolvedValue({ valid: true, user: mockUser, session: mockSession }),
-    });
-
-    const middleware = sessionAuth(adapter, { headerName: 'X-Session', tokenPrefix: 'Token' });
-    const ctx = createCtx({ 'X-Session': 'Token my-session-id' });
-    await middleware(ctx, next);
-
-    expect(adapter.validateSession).toHaveBeenCalledWith('my-session-id');
-    expect(next).toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect((await res.json()).userId).toBe('mapped-1');
   });
 });

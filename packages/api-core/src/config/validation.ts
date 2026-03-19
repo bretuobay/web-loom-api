@@ -39,32 +39,13 @@ export interface ValidationResult<T> {
 // ============================================================================
 
 /**
- * Schema for adapter configuration
- */
-const adapterConfigSchema = z.object({
-  package: z.string().min(1, { message: 'Adapter package name is required' }),
-  options: z.record(z.string(), z.unknown()).optional(),
-});
-
-/**
- * Schema for adapters configuration
- */
-const adaptersConfigSchema = z.object({
-  api: adapterConfigSchema,
-  database: adapterConfigSchema,
-  validation: adapterConfigSchema,
-  auth: adapterConfigSchema.optional(),
-  email: adapterConfigSchema.optional(),
-});
-
-/**
  * Schema for database configuration
  */
 const databaseConfigSchema = z.object({
   url: z.string().min(1, { message: 'Database URL is required' }),
+  driver: z.enum(['neon-serverless', 'libsql', 'pg']),
   poolSize: z.number().int({ message: 'Pool size must be an integer' }).positive({ message: 'Pool size must be positive' }).optional(),
   connectionTimeout: z.number().int({ message: 'Connection timeout must be an integer' }).positive({ message: 'Connection timeout must be positive' }).optional(),
-  readReplicas: z.array(z.string()).optional(),
   ssl: z.boolean().optional(),
 });
 
@@ -189,11 +170,20 @@ const developmentConfigSchema = z.object({
  * Main configuration schema
  */
 export const webLoomConfigSchema = z.object({
-  adapters: adaptersConfigSchema,
   database: databaseConfigSchema,
-  security: securityConfigSchema,
-  features: featureFlagsSchema,
-  observability: observabilityConfigSchema,
+  routes: z.object({ dir: z.string().optional() }).optional(),
+  openapi: z
+    .object({
+      enabled: z.boolean().optional(),
+      ui: z.enum(['swagger', 'scalar']).optional(),
+      title: z.string().optional(),
+      version: z.string().optional(),
+      description: z.string().optional(),
+    })
+    .optional(),
+  security: securityConfigSchema.optional(),
+  features: featureFlagsSchema.optional(),
+  observability: observabilityConfigSchema.optional(),
   development: developmentConfigSchema.optional(),
 });
 

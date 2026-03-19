@@ -23,7 +23,7 @@ import type { APIGatewayProxyEvent, APIGatewayV2Event, LambdaFunctionURLEvent } 
 
 /**
  * Application interface expected by the Lambda handler.
- * Compatible with the Web Loom APIFrameworkAdapter's handleRequest method.
+ * Compatible with the Web Loom Application's handleRequest method.
  */
 export interface LambdaApp {
   handleRequest(request: Request): Promise<Response>;

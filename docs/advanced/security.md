@@ -10,7 +10,7 @@ Configure allowed origins to prevent unauthorized cross-origin requests:
 security: {
   cors: {
     // Production: restrict to your frontend
-    origin: ["https://app.example.com"],
+    origins: ["https://app.example.com"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     headers: ["Content-Type", "Authorization"],
@@ -62,17 +62,13 @@ rateLimit: {
 ### Session-Based Auth
 
 ```typescript
-import { luciaAdapter } from "@web-loom/api-adapter-lucia";
+import { sessionAuth } from "@web-loom/api-middleware-auth";
 
-defineConfig({
-  adapters: {
-    auth: luciaAdapter({
-      sessionExpiry: "30d",
-      cookieName: "session",
-      secureCookies: true,  // HTTPS only
-    }),
-  },
-});
+// In your route file or global middleware
+app.use("/*", sessionAuth({
+  lucia: luciaInstance,
+  cookieName: "session",
+}));
 ```
 
 ### API Key Auth
