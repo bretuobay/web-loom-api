@@ -39,15 +39,10 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "packages/api-adapters/*",
     "packages/api-deployment/*",
     "packages/api-generators/*",
     "packages/api-middleware/*"
   ],
-  "dependencies": {
-    "@neondatabase/serverless": "^0.10.4",
-    "drizzle-orm": "^0.38.4"
-  },
   "lint-staged": {
     "*.{ts,tsx,md,json,yaml,yml}": [
       "prettier --write"

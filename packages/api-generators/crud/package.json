@@ -5,6 +5,13 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -33,9 +40,6 @@
     "@libsql/client": "^0.14.0",
     "@types/node": "^22.10.5",
     "drizzle-orm": "^0.38.4",
-    "tsup": "^8.3.5",
-    "typescript": "5.9.2",
-    "vitest": "^2.1.8",
     "zod": "^4.3.6"
   }
 }
