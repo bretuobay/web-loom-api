@@ -2,6 +2,7 @@
   "name": "@web-loom/api-deployment-vercel",
   "version": "0.1.0",
   "description": "Vercel deployment adapter for Web Loom API Framework",
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

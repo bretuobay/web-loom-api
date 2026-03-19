@@ -2,6 +2,7 @@
   "name": "@web-loom/api-middleware-cors",
   "version": "0.1.0",
   "description": "CORS middleware for Web Loom API Framework",
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

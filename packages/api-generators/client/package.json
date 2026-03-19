@@ -2,6 +2,7 @@
   "name": "@web-loom/api-generator-client",
   "version": "0.1.0",
   "description": "TypeScript client generator for Web Loom API Framework",
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
