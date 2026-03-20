@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { Hono } from 'hono';
 
 vi.mock('../db/create-drizzle-db', () => ({
   createDrizzleDb: vi.fn(async () => ({
@@ -13,8 +14,28 @@ import { createApp } from './create-app';
 import { defineConfig } from '../config/define-config';
 import { defineModel } from '../models/define-model';
 import { modelRegistry } from '../models/registry';
-import { generateCrudRouter } from '../../../api-generators/crud/src/generate-crud-router';
-import { setupOpenApiRoutes } from '../../../api-generators/openapi/src/serve-openapi';
+import type { AnyModel, WebLoomVariables } from '../index';
+
+function testCrudGenerator(_model: AnyModel): Hono<{ Variables: WebLoomVariables }> {
+  const router = new Hono<{ Variables: WebLoomVariables }>();
+  router.get('/', (c) => c.json({ data: [] }));
+  router.get('/:id', (c) => c.json({ data: { id: c.req.param('id') } }));
+  return router;
+}
+
+async function testOpenApiSetup(
+  app: Hono<{ Variables: WebLoomVariables }>,
+  models: AnyModel[]
+): Promise<void> {
+  const paths = Object.fromEntries(
+    models.flatMap((model) => [
+      [`/api${model.meta.basePath}`, { get: { summary: `List ${model.meta.name}` } }],
+      [`/api${model.meta.basePath}/{id}`, { get: { summary: `Read ${model.meta.name}` } }],
+    ])
+  );
+
+  app.get('/openapi.json', (c) => c.json({ openapi: '3.1.0', paths }));
+}
 
 describe('createApp()', () => {
   beforeEach(() => {
@@ -51,8 +72,8 @@ describe('createApp()', () => {
         },
       }),
       {
-        crudGenerator: generateCrudRouter,
-        openapiSetup: setupOpenApiRoutes,
+        crudGenerator: testCrudGenerator,
+        openapiSetup: testOpenApiSetup,
       }
     );
 
