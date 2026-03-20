@@ -15,6 +15,7 @@
  */
 
 import { Hono } from 'hono';
+import type { Env } from 'hono';
 import { logger } from 'hono/logger';
 import { compress } from 'hono/compress';
 import { resolve } from 'node:path';
@@ -37,9 +38,9 @@ function joinPaths(...parts: string[]): string {
   return segments.length ? `/${segments.join('/')}` : '/';
 }
 
-function registerMountedRouterRoutes(
+function registerMountedRouterRoutes<TRouterEnv extends Env>(
   routeRegistry: RouteRegistry,
-  router: Hono<any>,
+  router: Hono<TRouterEnv>,
   mountPath: string
 ): void {
   const seen = new Set<string>();
@@ -80,7 +81,7 @@ export interface CreateAppOptions {
    * Pass setupOpenApiRoutes from @web-loom/api-generator-openapi.
    */
   openapiSetup?: (
-    hono: Hono<any>,
+    hono: Hono<{ Variables: WebLoomVariables }>,
     models: AnyModel[],
     routeMetas: RouteMetaEntry[],
     config: import('../config/types').OpenApiConfig
