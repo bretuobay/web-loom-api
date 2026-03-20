@@ -1,53 +1,44 @@
 /**
  * Minimal Example — App Configuration
  *
- * Defines the Web Loom config with sensible defaults.
- * Adapters are selected here: Hono for HTTP, Drizzle for DB, Zod for validation.
+ * Defines the Web Loom config using only the fields the current API accepts.
+ * Database connection and driver are required; everything else is optional.
  */
 import { defineConfig } from '@web-loom/api-core';
-import { honoAdapter } from '@web-loom/api-adapter-hono';
-import { drizzleAdapter } from '@web-loom/api-adapter-drizzle';
-import { zodAdapter } from '@web-loom/api-adapter-zod';
 
 export default defineConfig({
-  // Adapter selection — swap any of these without changing app code
-  adapters: {
-    api: honoAdapter(),
-    database: drizzleAdapter(),
-    validation: zodAdapter(),
-  },
-
-  // Database connection
   database: {
     url: process.env.DATABASE_URL!,
-    poolSize: 5,
+    driver: 'neon-serverless',
+    poolSize: 1,
   },
 
-  // Security defaults
+  // Route files are auto-discovered from this directory
+  routes: { dir: './src/routes' },
+
+  openapi: {
+    enabled: true,
+    title: 'Minimal API',
+    version: '1.0.0',
+  },
+
   security: {
     cors: {
-      origin: ['http://localhost:3000'],
+      origins: ['http://localhost:3000'],
       credentials: true,
     },
   },
 
-  // Enable auto-generated CRUD routes for all models
-  features: {
-    crud: true,
-  },
+  // Enable auto-generated CRUD routes for all registered models
+  features: { crud: true },
 
-  // Development niceties
   development: {
     hotReload: true,
     apiDocs: true,
     detailedErrors: true,
   },
 
-  // Basic logging
   observability: {
-    logging: {
-      level: 'info',
-      format: 'pretty',
-    },
+    logging: { level: 'info', format: 'pretty' },
   },
 });

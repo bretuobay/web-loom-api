@@ -282,15 +282,15 @@ describe('generateOpenApiDocument', () => {
     const model = makeModel();
     const doc = generateOpenApiDocument([model], [], { title: 'T', version: '1' });
 
-    expect(doc.paths['/users']).toBeDefined();
-    expect(doc.paths['/users/{id}']).toBeDefined();
+    expect(doc.paths['/api/users']).toBeDefined();
+    expect(doc.paths['/api/users/{id}']).toBeDefined();
   });
 
   it('excludes models with crud: false', () => {
     const model = makeModel({ crud: false });
     const doc = generateOpenApiDocument([model], [], { title: 'T', version: '1' });
 
-    expect(doc.paths['/users']).toBeUndefined();
+    expect(doc.paths['/api/users']).toBeUndefined();
   });
 
   it('includes hand-written route paths from routeMetas', () => {
@@ -305,6 +305,18 @@ describe('generateOpenApiDocument', () => {
     const doc = generateOpenApiDocument([model], routeMetas, { title: 'T', version: '1' });
 
     expect(doc.paths['/export']).toBeDefined();
+  });
+
+  it('allows overriding the generated CRUD route base path', () => {
+    const model = makeModel();
+    const doc = generateOpenApiDocument([model], [], {
+      title: 'T',
+      version: '1',
+      routeBasePath: '/v1',
+    });
+
+    expect(doc.paths['/v1/users']).toBeDefined();
+    expect(doc.paths['/v1/users/{id}']).toBeDefined();
   });
 
   it('uses default title/version when config is empty', () => {

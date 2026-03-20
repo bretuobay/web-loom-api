@@ -5,6 +5,11 @@ import { buildManualPathItems } from './builders/manual-paths';
 type SchemaObject = Record<string, unknown>;
 type PathsObject = Record<string, Record<string, unknown>>;
 
+function joinPaths(...parts: string[]): string {
+  const segments = parts.flatMap((part) => part.split('/').filter(Boolean));
+  return segments.length ? `/${segments.join('/')}` : '/';
+}
+
 export interface OpenApiDocument {
   openapi: '3.1.0';
   info: { title: string; version: string; description?: string };
@@ -27,11 +32,22 @@ export function generateOpenApiDocument(
 ): OpenApiDocument {
   const schemas: Record<string, SchemaObject> = {};
   const paths: PathsObject = {};
+  const routeBasePath = config.routeBasePath ?? '/api';
 
   // CRUD routes
   for (const model of models) {
     if (!model.meta.crud) continue;
-    buildCrudPathItems(model, paths, schemas);
+    buildCrudPathItems(
+      {
+        ...model,
+        meta: {
+          ...model.meta,
+          basePath: joinPaths(routeBasePath, model.meta.basePath),
+        },
+      },
+      paths,
+      schemas
+    );
   }
 
   // Hand-written routes

@@ -1,51 +1,44 @@
 /**
  * Minimal Example — User Model
  *
- * Defines the User model using defineModel(). The framework uses this
- * definition to generate database schemas, validation rules, CRUD routes,
- * and TypeScript types automatically.
+ * Defines the Drizzle table schema first, then registers it as a Web Loom
+ * model. The select schema override hides the password hash from API responses.
  */
+import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 import { defineModel } from '@web-loom/api-core';
+import { z } from 'zod';
 
-export const User = defineModel({
-  name: 'User',
-  tableName: 'users',
-
-  fields: [
-    {
-      name: 'id',
-      type: 'uuid',
-      database: { primaryKey: true, default: 'gen_random_uuid()' },
-    },
-    {
-      name: 'name',
-      type: 'string',
-      validation: { required: true, minLength: 1, maxLength: 100 },
-    },
-    {
-      name: 'email',
-      type: 'string',
-      validation: { required: true, format: 'email' },
-      database: { unique: true },
-    },
-    {
-      name: 'password',
-      type: 'string',
-      validation: { required: true, minLength: 8 },
-      // Excluded from API responses by default
-      database: { select: false },
-    },
-    {
-      name: 'createdAt',
-      type: 'datetime',
-      default: () => new Date(),
-      database: { index: true },
-    },
-  ],
-
-  options: {
-    timestamps: true,
-    // Auto-generate CRUD endpoints for this model
-    crud: true,
-  },
+export const usersTable = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// Exclude passwordHash from public API responses
+const userSelectSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  createdAt: z.date(),
+});
+
+export const UserModel = defineModel(
+  usersTable,
+  {
+    name: 'User',
+    basePath: '/users',
+    crud: {
+      list: { auth: true },
+      create: { auth: false },
+      read: { auth: false },
+      update: { auth: true },
+      delete: { auth: true },
+    },
+  },
+  { select: userSelectSchema }
+);
+
+export type User = typeof usersTable.$inferSelect;
+export type NewUser = typeof usersTable.$inferInsert;

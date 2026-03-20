@@ -1,39 +1,74 @@
 # @web-loom/api
 
-A modular REST API framework for building serverless APIs on top of [Hono](https://hono.dev), [Drizzle ORM](https://orm.drizzle.team), and [Zod](https://zod.dev).
+Cloudflare-first REST API framework and package platform for agency products built on Hono, Drizzle ORM, and Zod.
 
-Write once, deploy anywhere — Vercel Edge, Cloudflare Workers, AWS Lambda, or Docker.
+## Standard V1
 
-## Why Web Loom API?
+The current agency standard path is:
 
-- **Serverless-first** — optimized for cold starts and edge deployment
-- **Model-driven** — define a Drizzle table once, get CRUD routes, OpenAPI specs, and typed clients automatically
-- **No magic adapters** — Hono, Drizzle, and Zod are first-class; you write real Drizzle queries in route handlers
-- **Platform-agnostic** — deploy to Vercel, Cloudflare, AWS Lambda, or Docker from the same codebase
-- **OpenAPI built-in** — live `/openapi.json`, `/openapi.yaml`, and `/docs` (Swagger or Scalar)
+- Deployment: **Cloudflare Workers**
+- Database: **Neon Postgres** with `neon-serverless`
+- Route base: **`/api`**
+- Auth: **JWT + API key**
+- Contracts: **OpenAPI + `/docs` enabled by default**
+
+Other deployment packages remain in the repo, but Cloudflare is the only tier-1 target for the current standard.
+
+## What Web Loom API Does
+
+- boots a Hono app with a Drizzle database connection
+- discovers route files and mounts them under `/api`
+- generates CRUD routes from `defineModel()` registrations
+- serves `/openapi.json`, `/openapi.yaml`, and `/docs`
+- keeps application code portable across serverless runtimes
+
+## Install
+
+```bash
+npm install \
+  @web-loom/api-core \
+  @web-loom/api-generator-crud \
+  @web-loom/api-generator-openapi \
+  @web-loom/api-middleware-auth \
+  drizzle-orm \
+  @neondatabase/serverless \
+  hono \
+  zod
+```
+
+For Cloudflare deployment:
+
+```bash
+npm install @web-loom/api-deployment-cloudflare
+```
 
 ## Quick Start
 
-```bash
-npm install @web-loom/api-core drizzle-orm
-```
-
-```typescript
+```ts
 // webloom.config.ts
 import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: 'neon-serverless', // or "libsql" | "pg"
+    driver: 'neon-serverless',
+    poolSize: 1,
   },
   routes: { dir: './src/routes' },
-  openapi: { enabled: true, title: 'My API', version: '1.0.0' },
+  features: { crud: true },
+  openapi: {
+    enabled: true,
+    title: 'My API',
+    version: '1.0.0',
+  },
+  observability: {
+    logging: { level: 'info', format: 'json' },
+  },
 });
 ```
 
-```typescript
-// src/schema.ts — your Drizzle table is the single source of truth
+```ts
+// src/models/user.ts
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 import { defineModel } from '@web-loom/api-core';
 
@@ -41,200 +76,100 @@ export const usersTable = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// Registers the model; auto-generates 6 CRUD routes at /users
-export const User = defineModel(usersTable, {
+export const UserModel = defineModel(usersTable, {
   name: 'User',
+  basePath: '/users',
   crud: true,
 });
 ```
 
-```typescript
-// src/routes/users.ts — hand-written routes alongside generated CRUD
-import { defineRoutes, validate } from '@web-loom/api-core';
-import { z } from 'zod';
-import { usersTable } from '../schema';
+```ts
+// src/routes/users.ts
+import { defineRoutes } from '@web-loom/api-core';
+import { usersTable } from '../models/user';
+import { ilike } from 'drizzle-orm';
 
-const app = defineRoutes();
+const routes = defineRoutes();
 
-// GET /users/search?q=...
-app.get('/search', async (c) => {
+// Mounted at /api/users/search because the file lives at src/routes/users.ts
+routes.get('/search', async (c) => {
   const q = c.req.query('q') ?? '';
   const users = await c.var.db
     .select()
     .from(usersTable)
-    .where(like(usersTable.name, `%${q}%`));
+    .where(ilike(usersTable.name, `%${q}%`))
+    .limit(20);
+
   return c.json({ users });
 });
 
-export default app;
+export default routes;
 ```
 
-```typescript
-// src/index.ts
+```ts
+// src/app.ts
 import { createApp } from '@web-loom/api-core';
 import config from '../webloom.config';
-import './src/schema'; // import models so they register
+import './models/user';
 
-const app = await createApp(config);
-await app.start(3000);
+export const app = await createApp(config);
 ```
 
-## Packages
+```ts
+// src/cloudflare/index.ts
+import { createCloudflareHandler } from '@web-loom/api-deployment-cloudflare';
+import { app } from '../app';
 
-### Core
-
-| Package                | Description                                                  |
-| ---------------------- | ------------------------------------------------------------ |
-| `@web-loom/api-core`   | Core runtime, model registry, route discovery, configuration |
-| `@web-loom/api-shared` | Shared types and utilities                                   |
-| `@web-loom/api-cli`    | CLI for code generation and scaffolding (`webloom` command)  |
-
-### Generators
-
-| Package                           | Description                                            |
-| --------------------------------- | ------------------------------------------------------ |
-| `@web-loom/api-generator-crud`    | Automatic CRUD route generation from model definitions |
-| `@web-loom/api-generator-openapi` | OpenAPI 3.1 document generation + Swagger/Scalar UI    |
-
-### Middleware
-
-| Package                         | Description                                                  |
-| ------------------------------- | ------------------------------------------------------------ |
-| `@web-loom/api-middleware-auth` | JWT, session, and API key auth; RBAC guards; CSRF protection |
-
-### Deployment
-
-| Package                               | Description                    |
-| ------------------------------------- | ------------------------------ |
-| `@web-loom/api-deployment-vercel`     | Vercel Edge/Serverless handler |
-| `@web-loom/api-deployment-cloudflare` | Cloudflare Workers handler     |
-| `@web-loom/api-deployment-aws`        | AWS Lambda handler             |
-
-## Deploy Anywhere
-
-```typescript
-// Node.js / Docker
-const app = await createApp(config);
-await app.start(3000);
-
-// Vercel Edge / Cloudflare Workers / AWS Lambda
-export default { fetch: (req: Request) => app.handleRequest(req) };
+export default {
+  fetch: createCloudflareHandler(app),
+};
 ```
 
-Or use the deployment packages which set up the entry point for you:
+## Default Routes
 
-```typescript
-// Cloudflare Workers (packages/api-deployment-cloudflare)
-import { app } from './app';
-export default { fetch: app.handleRequest.bind(app) };
-```
+With the standard path enabled:
 
-## Authentication
+- generated CRUD lives under `/api/<resource>`
+- discovered route files live under `/api/...`
+- health endpoints live at `/health` and `/ready`
+- OpenAPI lives at `/openapi.json` and `/openapi.yaml`
+- docs UI lives at `/docs`
 
-```typescript
-import { jwtAuth, apiKeyAuth, requireRole, composeAuth } from "@web-loom/api-middleware-auth";
+Example:
 
-const app = defineRoutes();
+- `src/routes/users.ts` + `routes.get('/search')` => `GET /api/users/search`
+- `defineModel(... basePath: '/users', crud: true)` => CRUD at `/api/users` and `/api/users/:id`
 
-// Protect all routes with JWT
-app.use("/*", jwtAuth({ secret: process.env.JWT_SECRET! }));
+## Examples
 
-// Restrict an endpoint to admins
-app.delete("/:id", requireRole("admin"), async (c) => { ... });
+- [examples/serverless](/home/bretuobay/prjts/web-loom-api/examples/serverless) is the canonical Cloudflare-first example
+- [examples/minimal](/home/bretuobay/prjts/web-loom-api/examples/minimal) shows the smallest Neon + JWT flow
+- [examples/full-stack](/home/bretuobay/prjts/web-loom-api/examples/full-stack) shows jobs, webhooks, uploads, and richer auth patterns
 
-// Accept JWT or API key on the same route
-app.use("/*", composeAuth(
-  jwtAuth({ secret: process.env.JWT_SECRET! }),
-  apiKeyAuth({ validate: async (key) => lookupApiKey(key) }),
-));
-```
+## Package Baseline
 
-## OpenAPI
+Recommended baseline for agency apps:
 
-```typescript
-import { openApiMeta } from "@web-loom/api-core";
+- `@web-loom/api-core`
+- `@web-loom/api-generator-crud`
+- `@web-loom/api-generator-openapi`
+- `@web-loom/api-middleware-auth`
+- `@web-loom/api-health`
+- `@web-loom/api-logging`
+- `@web-loom/api-metrics`
+- `@web-loom/api-deployment-cloudflare`
 
-// Annotate hand-written routes for OpenAPI docs
-app.post(
-  "/send-invite",
-  openApiMeta({
-    summary: "Send an invitation email",
-    tags: ["invites"],
-    operationId: "sendInvite",
-    request: { body: z.object({ email: z.string().email() }) },
-    responses: { 204: { description: "Sent" } },
-  }),
-  async (c) => { ... }
-);
-```
+Optional extensions:
 
-Live endpoints (when `openapi.enabled: true`):
+- `@web-loom/api-jobs`
+- `@web-loom/api-webhooks`
+- `@web-loom/api-uploads`
 
-- `GET /openapi.json` — OpenAPI 3.1 spec
-- `GET /openapi.yaml` — YAML version
-- `GET /docs` — Swagger UI or Scalar
+## Notes
 
-Generate a static file or typed client with the CLI:
-
-```bash
-npx webloom generate openapi --output ./openapi.json
-npx webloom generate client --input ./openapi.json --output ./src/client
-```
-
-## Project Structure
-
-```
-packages/
-  api-core/              # Core runtime and registries
-  api-shared/            # Shared types
-  api-cli/               # CLI tools
-  api-middleware/
-    auth/                # JWT, session, API key auth; RBAC; CSRF
-  api-generators/
-    crud/                # CRUD route generation
-    openapi/             # OpenAPI document generation
-  api-deployment/
-    vercel/              # Vercel deployment adapter
-    cloudflare/          # Cloudflare Workers deployment adapter
-    aws/                 # AWS Lambda deployment adapter
-examples/
-  minimal/               # Simple CRUD API
-  full-stack/            # Full-featured app
-  serverless/            # Multi-platform deployment
-docs/                    # Documentation
-```
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build all packages
-npx turbo run build
-
-# Run all tests
-npx turbo run test
-
-# Type check
-npx turbo run check-types
-
-# Lint
-npx turbo run lint
-```
-
-## Documentation
-
-See the [docs/](./docs/) directory:
-
-- [Getting Started](./docs/getting-started.md)
-- [Core Concepts](./docs/core-concepts/) — stack overview, models, configuration, routing
-- [API Reference](./docs/api-reference/) — full API documentation
-- [Deployment Guides](./docs/deployment/) — Vercel, Cloudflare, AWS, Docker
-
-## License
-
-MIT
+- Route files should define paths relative to their file mount path. A file at `src/routes/users.ts` should use `routes.get('/')`, `routes.get('/search')`, and `routes.get('/:id/details')`, not `routes.get('/users')`.
+- Automatic CRUD and OpenAPI serving require `@web-loom/api-generator-crud` and `@web-loom/api-generator-openapi` to be installed.
+- Vercel, AWS, and Docker packages remain available, but they are not part of the current standard path.

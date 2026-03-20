@@ -1,47 +1,26 @@
 /**
  * Full-Stack Example — Auth Middleware
  *
- * Sets up authentication strategies: session-based auth for browsers
- * and API key auth for programmatic access. Also demonstrates role-based
- * access control (RBAC).
+ * Re-exports composed auth strategies for use in route files.
+ * No `defineMiddleware` — just direct Hono-compatible middleware from
+ * @web-loom/api-middleware-auth.
+ *
+ * Usage:
+ *   routes.get('/admin', authenticate, adminOnly, handler)
  */
-import { defineMiddleware } from '@web-loom/api-core';
-import { sessionAuth, apiKeyAuth, requireRole } from '@web-loom/api-middleware-auth';
+import { jwtAuth, apiKeyAuth, composeAuth, requireRole } from '@web-loom/api-middleware-auth';
 
 /**
- * Combined auth middleware — accepts either a session cookie or an API key.
- * Attaches the authenticated user to `ctx.user`.
+ * Accepts either a JWT Bearer token or an X-API-Key header.
+ * Sets c.var.user on success.
  */
-export const authenticate = defineMiddleware(
-  sessionAuth({ cookieName: 'session' }),
+export const authenticate = composeAuth(
+  jwtAuth({ secret: process.env.JWT_SECRET! }),
   apiKeyAuth({ header: 'X-API-Key' })
 );
 
-/**
- * Require the "admin" role. Must be used after `authenticate`.
- *
- * Usage:
- *   middleware: [authenticate, adminOnly]
- */
+/** Requires the "admin" role. Must be used after `authenticate`. */
 export const adminOnly = requireRole('admin');
 
-/**
- * Require the "moderator" or "admin" role.
- */
+/** Requires "moderator" or "admin" role. */
 export const moderatorOrAdmin = requireRole('moderator', 'admin');
-
-/**
- * Owner-only middleware — ensures the authenticated user owns the resource.
- * Compares `ctx.user.id` against the resource's `userId` field.
- *
- * Usage:
- *   middleware: [authenticate, ownerOnly("userId")]
- */
-export const ownerOnly = (field: string = 'userId') =>
-  defineMiddleware(async (ctx, next) => {
-    const resource = ctx.resource;
-    if (!resource || resource[field] !== ctx.user?.id) {
-      return ctx.json({ error: 'Forbidden' }, 403);
-    }
-    return next();
-  });

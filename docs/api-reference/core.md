@@ -2,6 +2,8 @@
 
 The core package provides the runtime, model system, routing, validation, OpenAPI annotation, and the primary configuration API.
 
+In the current standard path, application routes and generated CRUD are mounted under `/api`.
+
 ---
 
 ## `createApp(config, options?)`
@@ -13,19 +15,19 @@ function createApp(config: WebLoomConfig, options?: CreateAppOptions): Promise<A
 
 interface CreateAppOptions {
   /**
-   * Callback to register CRUD routes on the Hono instance.
-   * Used internally by @web-loom/api-generator-crud to avoid circular deps.
+   * Optional override for CRUD router creation.
+   * The standard path auto-loads @web-loom/api-generator-crud when installed.
    */
-  crudGenerator?: (hono: Hono<any>, models: AnyModel[]) => void;
+  crudGenerator?: (model: AnyModel) => Hono<any>;
 
   /**
-   * Callback to register OpenAPI routes.
-   * Used internally by @web-loom/api-generator-openapi.
+   * Optional override for OpenAPI route setup.
+   * The standard path auto-loads @web-loom/api-generator-openapi when installed.
    */
   openapiSetup?: (
     hono: Hono<any>,
     models: AnyModel[],
-    routeMetas: unknown[],
+    routeMetas: RouteMetaEntry[],
     config: OpenApiConfig
   ) => Promise<void>;
 }
@@ -41,6 +43,13 @@ import './schema'; // ensure models are registered before createApp
 const app = await createApp(config);
 await app.start(3000);
 ```
+
+By default:
+
+- generated CRUD is mounted under `/api`
+- discovered route files are mounted under `/api`
+- `/health` and `/ready` stay at the root
+- OpenAPI routes are auto-served when the OpenAPI generator package is installed
 
 **Returns:** `Application` — see below.
 

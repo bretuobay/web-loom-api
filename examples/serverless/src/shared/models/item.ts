@@ -1,44 +1,31 @@
 /**
  * Serverless Example — Item Model
  *
- * A simple model shared across all deployment targets.
- * Kept lightweight to minimize cold start overhead.
+ * Lightweight Drizzle table + defineModel registration.
+ * Kept minimal to reduce cold start overhead.
  */
+import { pgTable, uuid, text, numeric, timestamp } from 'drizzle-orm/pg-core';
 import { defineModel } from '@web-loom/api-core';
 
-export const Item = defineModel({
+export const itemsTable = pgTable('items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const ItemModel = defineModel(itemsTable, {
   name: 'Item',
-  tableName: 'items',
-
-  fields: [
-    {
-      name: 'id',
-      type: 'uuid',
-      database: { primaryKey: true, default: 'gen_random_uuid()' },
-    },
-    {
-      name: 'name',
-      type: 'string',
-      validation: { required: true, minLength: 1, maxLength: 200 },
-    },
-    {
-      name: 'description',
-      type: 'text',
-    },
-    {
-      name: 'price',
-      type: 'number',
-      validation: { required: true, min: 0 },
-    },
-    {
-      name: 'createdAt',
-      type: 'datetime',
-      default: () => new Date(),
-    },
-  ],
-
-  options: {
-    timestamps: true,
-    crud: true,
+  basePath: '/items',
+  crud: {
+    list: { auth: false },
+    create: { auth: false },
+    read: { auth: false },
+    update: { auth: false },
+    delete: { auth: false },
   },
 });
+
+export type Item = typeof itemsTable.$inferSelect;
+export type NewItem = typeof itemsTable.$inferInsert;

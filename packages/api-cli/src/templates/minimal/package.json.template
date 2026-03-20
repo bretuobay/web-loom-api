@@ -1,29 +1,29 @@
 {
   "name": "{{PROJECT_NAME}}",
   "version": "0.1.0",
-  "description": "Web Loom API project",
+  "description": "Web Loom API minimal project",
   "type": "module",
   "scripts": {
-    "dev": "webloom dev",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "migrate:create": "webloom migrate create",
-    "migrate:up": "webloom migrate up",
-    "migrate:down": "webloom migrate down",
-    "seed": "webloom seed",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
     "test": "vitest"
   },
   "dependencies": {
     "@web-loom/api-core": "^0.1.0",
-    "@web-loom/api-shared": "^0.1.0",
-    "@web-loom/api-adapter-hono": "^0.1.0",
-    "@web-loom/api-adapter-drizzle": "^0.1.0",
-    "@web-loom/api-adapter-zod": "^0.1.0"
+    "@web-loom/api-generator-crud": "^0.1.0",
+    "@web-loom/api-generator-openapi": "^0.1.0",
+    "@web-loom/api-middleware-auth": "^0.1.0",
+    "drizzle-orm": "^0.38.4",
+    "@neondatabase/serverless": "^0.10.4",
+    "hono": "^4.12.8",
+    "jose": "^5.0.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@web-loom/api-cli": "^0.1.0",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.0.0",
     "typescript": "^5.9.2",
-    "vitest": "^2.1.8",
-    "@types/node": "^22.10.5"
+    "vitest": "^2.1.8"
   }
 }

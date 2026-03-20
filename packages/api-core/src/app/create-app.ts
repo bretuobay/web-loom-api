@@ -15,6 +15,7 @@
  */
 
 import { Hono } from 'hono';
+import type { Env } from 'hono';
 import { logger } from 'hono/logger';
 import { compress } from 'hono/compress';
 import { resolve } from 'node:path';
@@ -27,6 +28,41 @@ import { RouteRegistry } from '../registry/route-registry';
 import { createDrizzleDb } from '../db/create-drizzle-db';
 import { globalErrorHandler } from '../routing/error-handler';
 import { discoverAndMountRoutes } from '../routing/route-discovery';
+import type { HTTPMethod } from '@web-loom/api-shared';
+import type { RouteMetaEntry } from '../routing/open-api-meta';
+
+const DEFAULT_API_BASE_PATH = '/api';
+
+function joinPaths(...parts: string[]): string {
+  const segments = parts.flatMap((part) => part.split('/').filter(Boolean));
+  return segments.length ? `/${segments.join('/')}` : '/';
+}
+
+const importOptionalModule = new Function('specifier', 'return import(specifier)') as <TModule>(
+  specifier: string
+) => Promise<TModule>;
+
+function registerMountedRouterRoutes<TRouterEnv extends Env>(
+  routeRegistry: RouteRegistry,
+  router: Hono<TRouterEnv>,
+  mountPath: string
+): void {
+  const seen = new Set<string>();
+
+  for (const route of router.routes) {
+    const fullPath = joinPaths(mountPath, route.path);
+    const key = `${route.method.toUpperCase()} ${fullPath}`;
+
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    routeRegistry.register({
+      path: fullPath,
+      method: route.method.toUpperCase() as HTTPMethod,
+      handler: route.handler as () => Promise<Response>,
+    });
+  }
+}
 
 export interface CreateAppOptions {
   /**
@@ -40,7 +76,7 @@ export interface CreateAppOptions {
    * const app = await createApp(config, { crudGenerator: generateCrudRouter });
    * ```
    */
-  crudGenerator?: (model: AnyModel) => Hono;
+  crudGenerator?: (model: AnyModel) => Hono<{ Variables: WebLoomVariables }>;
 
   /**
    * Optional OpenAPI route setup callback. When provided, registers
@@ -51,7 +87,7 @@ export interface CreateAppOptions {
   openapiSetup?: (
     hono: Hono<{ Variables: WebLoomVariables }>,
     models: AnyModel[],
-    routeMetas: unknown[],
+    routeMetas: RouteMetaEntry[],
     config: import('../config/types').OpenApiConfig
   ) => Promise<void>;
 }
@@ -75,6 +111,7 @@ export async function createApp(
 
   // ── Registries ───────────────────────────────────────────────────────────
   const routeRegistry = new RouteRegistry();
+  const routeMetas: RouteMetaEntry[] = [];
 
   // ── Hono instance ────────────────────────────────────────────────────────
   const hono = new Hono<{ Variables: WebLoomVariables }>();
@@ -123,6 +160,11 @@ export async function createApp(
   // ── Built-in routes ──────────────────────────────────────────────────────
 
   hono.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
+  routeRegistry.register({
+    path: '/health',
+    method: 'GET',
+    handler: async () => new Response(),
+  });
 
   // /ready: perform a lightweight DB health check
   hono.get('/ready', async (c) => {
@@ -142,13 +184,33 @@ export async function createApp(
       return c.json({ status: 'unavailable', timestamp: new Date().toISOString() }, 503);
     }
   });
+  routeRegistry.register({
+    path: '/ready',
+    method: 'GET',
+    handler: async () => new Response(),
+  });
 
   // ── CRUD routes (before file-based routes) ─────────────────────────────────
-  if (options?.crudGenerator) {
+  let crudGenerator = options?.crudGenerator;
+  if (!crudGenerator && config.features?.crud !== false) {
+    try {
+      ({ generateCrudRouter: crudGenerator } = await importOptionalModule<{
+        generateCrudRouter: NonNullable<CreateAppOptions['crudGenerator']>;
+      }>('@web-loom/api-generator-crud'));
+    } catch {
+      console.warn(
+        '[web-loom] CRUD is enabled but @web-loom/api-generator-crud is not installed; skipping generated CRUD routes.'
+      );
+    }
+  }
+
+  if (crudGenerator && config.features?.crud !== false) {
     for (const model of modelRegistry.getAll()) {
       if (!model.meta.crud) continue;
-      const router = options.crudGenerator(model);
-      hono.route(model.meta.basePath, router);
+      const router = crudGenerator(model);
+      const mountPath = joinPaths(DEFAULT_API_BASE_PATH, model.meta.basePath);
+      registerMountedRouterRoutes(routeRegistry, router, mountPath);
+      hono.route(mountPath, router);
     }
   }
 
@@ -156,12 +218,43 @@ export async function createApp(
 
   if (config.routes?.dir) {
     const routesDir = resolve(process.cwd(), config.routes.dir);
-    await discoverAndMountRoutes(hono, routesDir);
+    await discoverAndMountRoutes(hono, routesDir, {
+      basePath: DEFAULT_API_BASE_PATH,
+      routeRegistry,
+      routeMetaEntries: routeMetas,
+    });
   }
 
   // ── OpenAPI routes (after all app routes) ────────────────────────────────
-  if (options?.openapiSetup && config.openapi?.enabled !== false) {
-    await options.openapiSetup(hono, modelRegistry.getAll(), [], config.openapi ?? {});
+  let openapiSetup = options?.openapiSetup;
+  if (!openapiSetup && config.openapi?.enabled !== false) {
+    try {
+      ({ setupOpenApiRoutes: openapiSetup } = await importOptionalModule<{
+        setupOpenApiRoutes: NonNullable<CreateAppOptions['openapiSetup']>;
+      }>('@web-loom/api-generator-openapi'));
+    } catch {
+      console.warn(
+        '[web-loom] OpenAPI is enabled but @web-loom/api-generator-openapi is not installed; skipping /openapi.json and /docs routes.'
+      );
+    }
+  }
+
+  if (openapiSetup && config.openapi?.enabled !== false) {
+    await openapiSetup(hono, modelRegistry.getAll(), routeMetas, {
+      routeBasePath: DEFAULT_API_BASE_PATH,
+      ...(config.openapi ?? {}),
+    });
+
+    routeRegistry.register({
+      path: '/openapi.json',
+      method: 'GET',
+      handler: async () => new Response(),
+    });
+    routeRegistry.register({
+      path: '/openapi.yaml',
+      method: 'GET',
+      handler: async () => new Response(),
+    });
   }
 
   // ── Global error handler ──────────────────────────────────────────────────

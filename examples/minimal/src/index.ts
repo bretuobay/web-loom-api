@@ -1,11 +1,9 @@
 /**
  * Minimal Example — App Entry Point
  *
- * Bootstraps the Web Loom API application. The framework handles:
- * - Loading configuration from config.ts
- * - Initializing adapters (Hono, Drizzle, Zod)
- * - Discovering models from src/models/
- * - Discovering routes from src/routes/
+ * Bootstraps the Web Loom API. The framework handles:
+ * - Connecting to the database (driver from config)
+ * - Discovering route files from config.routes.dir
  * - Generating CRUD endpoints for registered models
  * - Starting the HTTP server
  */
@@ -15,12 +13,11 @@ import config from './config';
 async function main() {
   const app = await createApp(config);
 
-  // The app is ready — models are registered, routes are discovered,
-  // and CRUD endpoints are generated automatically.
-  await app.start();
+  const port = Number(process.env.PORT ?? 3000);
+  await app.start(port);
 
-  console.log(`🕸️  Web Loom API running at http://localhost:${app.port}`);
-  console.log(`📖  API docs at http://localhost:${app.port}/docs`);
+  console.log(`Web Loom API running at http://localhost:${port}`);
+  console.log(`API docs at http://localhost:${port}/docs`);
 }
 
 main().catch((err) => {

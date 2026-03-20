@@ -1,18 +1,19 @@
 import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
-  server: {
-    port: 3000,
-    host: '0.0.0.0',
-  },
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/mydb',
-    poolSize: 10,
+    url: process.env.DATABASE_URL!,
+    driver: 'neon-serverless',
+    poolSize: 1,
   },
-  security: {
-    cors: {
-      enabled: true,
-      origins: ['http://localhost:3000'],
-    },
+  routes: { dir: './src/routes' },
+  features: { crud: true },
+  openapi: {
+    enabled: true,
+    title: '{{PROJECT_NAME}} API',
+    version: '1.0.0',
+  },
+  observability: {
+    logging: { level: 'info', format: 'json' },
   },
 });

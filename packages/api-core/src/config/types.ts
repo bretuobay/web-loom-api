@@ -93,6 +93,12 @@ export interface OpenApiConfig {
 
   /** Longer description rendered in the docs UI */
   description?: string;
+
+  /**
+   * Base path prepended to generated API route paths in the OpenAPI document.
+   * @default '/api'
+   */
+  routeBasePath?: string;
 }
 
 // ============================================================================

@@ -1,0 +1,28 @@
+{
+  "name": "@web-loom/example-serverless",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/shared/app.ts",
+    "deploy:vercel": "vercel deploy",
+    "deploy:cloudflare": "wrangler deploy",
+    "deploy:aws": "serverless deploy"
+  },
+  "dependencies": {
+    "@web-loom/api-core": "workspace:*",
+    "@web-loom/api-deployment-aws": "workspace:*",
+    "@web-loom/api-deployment-cloudflare": "workspace:*",
+    "@web-loom/api-deployment-vercel": "workspace:*",
+    "drizzle-orm": "^0.36.0",
+    "hono": "^4.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "drizzle-zod": "^0.5.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
+  }
+}

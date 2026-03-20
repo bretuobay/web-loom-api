@@ -1,29 +1,29 @@
 /**
  * Serverless Example — AWS Lambda Handler
  *
- * Wraps the shared app for AWS Lambda with API Gateway v2 (HTTP API).
- * Includes cold start optimization techniques:
- * - Module-level app initialization (persists across warm invocations)
- * - Minimal import footprint
- * - Connection reuse via keep-alive
+ * createLambdaHandler() accepts an Application instance directly.
+ * The app is initialized at module scope so it's reused across warm
+ * invocations (typical cold start: ~80 ms).
  *
- * Deploy with:
- *   serverless deploy
- *
- * Or with AWS CDK / SAM.
+ * Deploy with: serverless deploy  /  AWS CDK  /  SAM
  */
 import { createLambdaHandler } from '@web-loom/api-deployment-aws';
+import type { LambdaHandler } from '@web-loom/api-deployment-aws';
 import { getApp } from '../shared/app';
 
-/**
- * Lambda handler — converts API Gateway v2 events into Web Standard
- * Request objects, routes them through the Web Loom app, and converts
- * the Response back to a Lambda-compatible format.
- *
- * Cold start optimization: the app is initialized once at module load
- * and reused across warm invocations. Typical cold start: ~80ms.
- */
-export const handler = createLambdaHandler(async () => {
-  const app = await getApp();
-  return app;
-});
+// Module-level init — cached across warm invocations
+const appPromise = getApp();
+
+// Lazily build the Lambda handler once the app is ready
+let _handler: LambdaHandler | null = null;
+
+export const handler: LambdaHandler = async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+
+  if (!_handler) {
+    const app = await appPromise;
+    _handler = createLambdaHandler(app);
+  }
+
+  return _handler(event, context);
+};

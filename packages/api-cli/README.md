@@ -1,91 +1,37 @@
 # @web-loom/api-cli
 
-Command-line interface for the Web Loom API Framework.
+CLI for scaffolding and generating Web Loom API projects.
 
-## Installation
+## Current Position
 
-```bash
-npm install -g @web-loom/api-cli
-```
+The CLI exists and is usable for scaffolding/templates and generation commands, but the current agency standard is still centered on the Cloudflare-first runtime path described in the root README.
 
-## Usage
+## Install
 
 ```bash
-webloom [command] [options]
+npm install -D @web-loom/api-cli
 ```
-
-### Global Options
-
-- `--debug` - Enable debug mode with verbose logging
-- `--config <path>` - Path to configuration file (default: `webloom.config.ts`)
-- `--no-color` - Disable colored output
-- `-v, --version` - Display version number
-- `-h, --help` - Display help for command
 
 ## Commands
 
-Commands will be added in subsequent tasks:
-
-- `webloom init` - Initialize a new Web Loom project
-- `webloom generate` - Generate code (models, routes, CRUD, etc.)
-- `webloom migrate` - Run database migrations
-- `webloom dev` - Start development server
-- `webloom seed` - Seed database with test data
-
-## Examples
-
 ```bash
-# Show help
-webloom --help
-
-# Show version
-webloom --version
-
-# Enable debug mode
-webloom --debug [command]
-
-# Use custom config file
-webloom --config custom.config.ts [command]
+webloom init
+webloom generate
+webloom migrate
+webloom dev
+webloom seed
 ```
 
-## Development
+## Standard Template Direction
 
-```bash
-# Install dependencies
-npm install
+The templates are being aligned to:
 
-# Run tests
-npm test
+- Cloudflare Workers as the default deployment target
+- Neon Postgres as the default database
+- `/api` as the application route base
+- OpenAPI enabled by default
 
-# Build
-npm run build
+## Notes
 
-# Type check
-npm run check-types
-```
-
-## Architecture
-
-The CLI is built with:
-
-- **Commander.js** - Command-line interface framework
-- **Chalk** - Terminal string styling
-- **Ora** - Elegant terminal spinners
-
-### Structure
-
-```
-src/
-├── cli.ts              # CLI entry point
-├── program.ts          # Program configuration
-├── version.ts          # Version constant
-├── utils/
-│   ├── logger.ts       # Logging utilities
-│   ├── error-handler.ts # Error handling
-│   └── index.ts        # Utility exports
-└── __tests__/          # Test files
-```
-
-## License
-
-MIT
+- `webloom dev` is not the primary standard path for Cloudflare projects yet; prefer the runtime and deployment setup described in the main repo docs.
+- Use the generated templates as a starting point, then align them with the current standard defaults from the root README if needed.

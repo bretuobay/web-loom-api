@@ -1,82 +1,54 @@
 /**
  * Full-Stack Example — User Model
  *
- * User model with authentication fields, role-based access, and
- * a one-to-many relationship with Posts.
+ * Drizzle table first, then registered with defineModel. The select schema
+ * override strips the password hash and API key from all API responses.
  */
+import { pgTable, pgEnum, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 import { defineModel } from '@web-loom/api-core';
+import { z } from 'zod';
 
-export const User = defineModel({
-  name: 'User',
-  tableName: 'users',
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator']);
 
-  fields: [
-    {
-      name: 'id',
-      type: 'uuid',
-      database: { primaryKey: true, default: 'gen_random_uuid()' },
-    },
-    {
-      name: 'name',
-      type: 'string',
-      validation: { required: true, minLength: 1, maxLength: 100 },
-    },
-    {
-      name: 'email',
-      type: 'string',
-      validation: { required: true, format: 'email' },
-      database: { unique: true },
-    },
-    {
-      name: 'password',
-      type: 'string',
-      validation: { required: true, minLength: 8 },
-      database: { select: false },
-    },
-    {
-      name: 'role',
-      type: 'enum',
-      validation: { enum: ['user', 'admin', 'moderator'] },
-      default: 'user',
-    },
-    {
-      name: 'avatarUrl',
-      type: 'string',
-      validation: { format: 'url' },
-    },
-    {
-      name: 'apiKey',
-      type: 'string',
-      database: { unique: true, select: false },
-    },
-    {
-      name: 'createdAt',
-      type: 'datetime',
-      default: () => new Date(),
-    },
-    {
-      name: 'updatedAt',
-      type: 'datetime',
-      default: () => new Date(),
-    },
-  ],
+export const usersTable = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  role: userRoleEnum('role').notNull().default('user'),
+  avatarUrl: text('avatar_url'),
+  apiKey: text('api_key').unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'), // soft-delete
+});
 
-  // Relationships are used by the CRUD generator and query builder
-  relationships: [{ type: 'hasMany', model: 'Post', foreignKey: 'userId' }],
+// Public shape — hides credential fields
+const userSelectSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  role: z.enum(['user', 'admin', 'moderator']),
+  avatarUrl: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
 
-  options: {
-    timestamps: true,
-    softDelete: true,
+export const UserModel = defineModel(
+  usersTable,
+  {
+    name: 'User',
+    basePath: '/users',
     crud: {
-      // Only admins can list all users
-      list: { auth: 'admin' },
-      // Anyone can create (sign up)
+      list: { auth: true },
       create: { auth: false },
-      // Users can read public profiles
       read: { auth: false },
-      // Users can update their own profile
-      update: { auth: 'owner' },
-      delete: { auth: 'admin' },
+      update: { auth: true },
+      delete: { auth: true },
     },
   },
-});
+  { select: userSelectSchema }
+);
+
+export type User = typeof usersTable.$inferSelect;
+export type NewUser = typeof usersTable.$inferInsert;
