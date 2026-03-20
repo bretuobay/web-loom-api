@@ -1,17 +1,19 @@
 # Routing Guide
 
-Web Loom API supports two routing approaches: **file-based routing** (auto-discovery from `src/routes/`) and **CRUD generation** from models. Both work together — CRUD routes are mounted first and hand-written routes can override them.
+Web Loom API supports two routing approaches: **file-based routing** (auto-discovery from `src/routes/`) and **CRUD generation** from models.
+
+In the current standard runtime path, both are mounted under **`/api`**. CRUD routes are mounted first and hand-written routes are mounted after that.
 
 ## File-Based Routing
 
 Route files in `src/routes/` (configurable via `routes.dir`) are discovered automatically at startup. Each file must export a Hono app instance as its **default export**.
 
-| File Path                     | Mount Path       |
-| ----------------------------- | ---------------- |
-| `src/routes/users.ts`         | `/users`         |
-| `src/routes/users/[id].ts`    | `/users/:id`     |
-| `src/routes/api/v1/health.ts` | `/api/v1/health` |
-| `src/routes/index.ts`         | `/`              |
+| File Path                     | Mount Path           |
+| ----------------------------- | -------------------- |
+| `src/routes/users.ts`         | `/api/users`         |
+| `src/routes/users/[id].ts`    | `/api/users/:id`     |
+| `src/routes/api/v1/health.ts` | `/api/api/v1/health` |
+| `src/routes/index.ts`         | `/api`               |
 
 ## `defineRoutes()`
 
@@ -41,13 +43,15 @@ app.get('/:id', async (c) => {
 export default app;
 ```
 
+Important: route paths inside the file are relative to the file mount path. A file at `src/routes/users.ts` should use `'/'`, `'/search'`, or `'/:id/details'`, not `'/users'`.
+
 ## Dynamic Segments
 
 Use `[param]` in directory or file names for dynamic URL segments:
 
 ```
-src/routes/users/[id].ts        →  /users/:id
-src/routes/posts/[id]/comments  →  /posts/:id/comments
+src/routes/users/[id].ts        →  /api/users/:id
+src/routes/posts/[id]/comments  →  /api/posts/:id/comments
 ```
 
 ## `validate()` — Request Validation
@@ -214,12 +218,12 @@ export default app;
 When a model has `crud: true` or `crud: { ... }`, these routes are auto-generated and mounted before file-based routes:
 
 ```
-GET    /users          → List (paginated, filterable, sortable)
-POST   /users          → Create
-GET    /users/:id      → Read by ID
-PUT    /users/:id      → Replace (full body required)
-PATCH  /users/:id      → Partial update
-DELETE /users/:id      → Delete (or soft-delete)
+GET    /api/users          → List (paginated, filterable, sortable)
+POST   /api/users          → Create
+GET    /api/users/:id      → Read by ID
+PUT    /api/users/:id      → Replace (full body required)
+PATCH  /api/users/:id      → Partial update
+DELETE /api/users/:id      → Delete (or soft-delete)
 ```
 
 ### List Query Parameters

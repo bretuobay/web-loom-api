@@ -16,8 +16,8 @@ const routes = defineRoutes();
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-// POST /uploads/avatar — Upload a user avatar
-routes.post('/uploads/avatar', authenticate, async (c) => {
+// POST /api/uploads/avatar — Upload a user avatar
+routes.post('/avatar', authenticate, async (c) => {
   const body = await c.req.parseBody();
   const file = body['avatar'];
 
@@ -43,8 +43,8 @@ routes.post('/uploads/avatar', authenticate, async (c) => {
   return c.json({ url, size: file.size, mimeType: file.type });
 });
 
-// DELETE /uploads/avatar — Remove avatar
-routes.delete('/uploads/avatar', authenticate, async (c) => {
+// DELETE /api/uploads/avatar — Remove avatar
+routes.delete('/avatar', authenticate, async (c) => {
   const [user] = await c.var.db
     .select({ avatarUrl: usersTable.avatarUrl })
     .from(usersTable)

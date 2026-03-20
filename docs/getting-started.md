@@ -1,69 +1,57 @@
 # Getting Started
 
-Build a production-ready REST API in minutes with Web Loom API.
+Build a Cloudflare-first API with Neon, Hono, Drizzle, and Zod.
 
-## Prerequisites
-
-- **Node.js** 20 or later
-- **npm**, **pnpm**, or **yarn**
-- A database: [Neon](https://neon.tech) (Postgres serverless), [Turso](https://turso.tech) (SQLite edge), or a standard PostgreSQL instance
-
-## Installation
+## Install
 
 ```bash
-# Core runtime
-npm install @web-loom/api-core
-
-# Drizzle ORM + your database driver (pick one)
-npm install drizzle-orm @neondatabase/serverless   # Neon Postgres
-npm install drizzle-orm @libsql/client             # Turso / SQLite
-npm install drizzle-orm pg                         # Standard Postgres
-
-# CLI for code generation
-npm install -D @web-loom/api-cli
+npm install \
+  @web-loom/api-core \
+  @web-loom/api-generator-crud \
+  @web-loom/api-generator-openapi \
+  @web-loom/api-middleware-auth \
+  @web-loom/api-deployment-cloudflare \
+  drizzle-orm \
+  @neondatabase/serverless \
+  hono \
+  zod
 ```
 
-Or scaffold a new project:
+## 1. Configure the app
 
-```bash
-npx @web-loom/api-cli init my-api
-cd my-api
-npm install
-```
-
-## Quick Start
-
-### 1. Configuration
-
-Create `webloom.config.ts` at the project root:
-
-```typescript
+```ts
+// webloom.config.ts
 import { defineConfig } from '@web-loom/api-core';
 
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: 'neon-serverless', // "neon-serverless" | "libsql" | "pg"
+    driver: 'neon-serverless',
+    poolSize: 1,
   },
-  routes: {
-    dir: './src/routes', // default — can be omitted
-  },
+  routes: { dir: './src/routes' },
+  features: { crud: true },
   openapi: {
     enabled: true,
     title: 'My API',
     version: '1.0.0',
   },
+  security: {
+    cors: {
+      origins: ['http://localhost:3000'],
+      credentials: true,
+    },
+  },
+  observability: {
+    logging: { level: 'info', format: 'json' },
+  },
 });
 ```
 
-`defineConfig()` throws a `ConfigurationError` at startup if `DATABASE_URL` is missing or any field is invalid.
+## 2. Define a model
 
-### 2. Define a model
-
-The Drizzle table is the single source of truth. `defineModel()` wraps it to derive Zod validation schemas and register CRUD routes.
-
-```typescript
-// src/schema.ts
+```ts
+// src/models/user.ts
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 import { defineModel } from '@web-loom/api-core';
 
@@ -71,214 +59,90 @@ export const usersTable = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// Registers the model in the global registry.
-// crud: true generates all 6 CRUD endpoints at /users.
-export const User = defineModel(usersTable, {
+export const UserModel = defineModel(usersTable, {
   name: 'User',
+  basePath: '/users',
   crud: true,
 });
 ```
 
-With `crud: true` these endpoints are generated automatically:
+This generates:
 
-| Method   | Path         | Description                            |
-| -------- | ------------ | -------------------------------------- |
-| `GET`    | `/users`     | List (paginated, filterable, sortable) |
-| `POST`   | `/users`     | Create                                 |
-| `GET`    | `/users/:id` | Read by ID                             |
-| `PUT`    | `/users/:id` | Replace (full update)                  |
-| `PATCH`  | `/users/:id` | Partial update                         |
-| `DELETE` | `/users/:id` | Delete                                 |
+- `GET /api/users`
+- `POST /api/users`
+- `GET /api/users/:id`
+- `PUT /api/users/:id`
+- `PATCH /api/users/:id`
+- `DELETE /api/users/:id`
 
-### 3. Add custom routes
+## 3. Add a custom route
 
-Route files in `src/routes/` are discovered automatically. `defineRoutes()` returns a typed Hono router with `c.var.db` pre-injected.
-
-```typescript
+```ts
 // src/routes/users.ts
-import { defineRoutes, validate } from '@web-loom/api-core';
-import { z } from 'zod';
-import { usersTable } from '../schema';
-import { eq } from 'drizzle-orm';
-
-const app = defineRoutes();
-
-// GET /users/me  (custom endpoint alongside generated CRUD)
-app.get('/me', async (c) => {
-  const userId = c.req.header('X-User-Id') ?? '';
-  const [user] = await c.var.db.select().from(usersTable).where(eq(usersTable.id, userId));
-
-  if (!user) return c.json({ error: { code: 'NOT_FOUND', message: 'User not found' } }, 404);
-  return c.json({ user });
-});
-
-export default app;
-```
-
-### 4. Start the server
-
-```typescript
-// src/index.ts
-import { createApp } from '@web-loom/api-core';
-import config from '../webloom.config';
-import './schema'; // import models so they register before createApp
-
-const app = await createApp(config);
-await app.start(3000);
-console.log('Web Loom API running at http://localhost:3000');
-```
-
-### 5. Run it
-
-```bash
-# Development
-npx tsx src/index.ts
-
-# Or use the CLI dev server (tsx + watch)
-npx webloom dev
-```
-
-```bash
-# Create a user
-curl -X POST http://localhost:3000/users \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Alice", "email": "alice@example.com"}'
-
-# List users
-curl http://localhost:3000/users
-
-# Paginate, filter, sort
-curl "http://localhost:3000/users?page=1&limit=20&sort=-createdAt&search=alice"
-
-# OpenAPI spec
-curl http://localhost:3000/openapi.json
-
-# Interactive docs
-open http://localhost:3000/docs
-```
-
----
-
-## Your First API in 5 Minutes
-
-### Minute 1 — Project setup
-
-```bash
-mkdir task-tracker && cd task-tracker
-npm init -y
-npm install @web-loom/api-core drizzle-orm @neondatabase/serverless
-npm install -D tsx @web-loom/api-cli
-```
-
-Create `webloom.config.ts`:
-
-```typescript
-import { defineConfig } from '@web-loom/api-core';
-
-export default defineConfig({
-  database: { url: process.env.DATABASE_URL!, driver: 'neon-serverless' },
-  openapi: { enabled: true, title: 'Task Tracker', version: '1.0.0' },
-});
-```
-
-### Minute 2 — Define the schema
-
-```typescript
-// src/schema.ts
-import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
-import { defineModel } from '@web-loom/api-core';
-
-export const tasksTable = pgTable('tasks', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  status: text('status').notNull().default('todo'),
-  priority: text('priority').notNull().default('medium'),
-  dueDate: timestamp('due_date'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-export const Task = defineModel(tasksTable, {
-  name: 'Task',
-  crud: {
-    list: { auth: false },
-    create: { auth: true },
-    update: { auth: true },
-    delete: { auth: true },
-  },
-});
-```
-
-### Minute 3 — Custom route
-
-```typescript
-// src/routes/tasks.ts
 import { defineRoutes } from '@web-loom/api-core';
-import { tasksTable } from '../schema';
-import { lt, ne } from 'drizzle-orm';
+import { usersTable } from '../models/user';
+import { ilike } from 'drizzle-orm';
 
-const app = defineRoutes();
+const routes = defineRoutes();
 
-// GET /tasks/overdue
-app.get('/overdue', async (c) => {
-  const tasks = await c.var.db
+routes.get('/search', async (c) => {
+  const q = c.req.query('q') ?? '';
+  const users = await c.var.db
     .select()
-    .from(tasksTable)
-    .where(lt(tasksTable.dueDate, new Date()))
-    // ne requires drizzle-orm; status != "done"
-    .limit(50);
+    .from(usersTable)
+    .where(ilike(usersTable.name, `%${q}%`))
+    .limit(20);
 
-  return c.json({ tasks });
+  return c.json({ users });
 });
 
-export default app;
+export default routes;
 ```
 
-### Minute 4 — Entry point
+Because the file is `src/routes/users.ts`, this route is served at `GET /api/users/search`.
 
-```typescript
-// src/index.ts
+## 4. Create the app
+
+```ts
+// src/app.ts
 import { createApp } from '@web-loom/api-core';
 import config from '../webloom.config';
-import './schema';
+import './models/user';
 
-const app = await createApp(config);
-await app.start(3000);
+export const app = await createApp(config);
 ```
 
-### Minute 5 — Try it
+## 5. Deploy on Cloudflare
 
-```bash
-export DATABASE_URL=postgresql://localhost:5432/task_tracker
-npx tsx src/index.ts
+```ts
+// src/cloudflare/index.ts
+import { createCloudflareHandler } from '@web-loom/api-deployment-cloudflare';
+import { app } from '../app';
+
+export default {
+  fetch: createCloudflareHandler(app),
+};
 ```
 
-```bash
-# Create a task
-curl -X POST http://localhost:3000/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Write docs", "priority": "high"}'
+## 6. What you get by default
 
-# List tasks
-curl http://localhost:3000/tasks
+- app routes under `/api`
+- generated CRUD under `/api/<resource>`
+- `GET /health`
+- `GET /ready`
+- `GET /openapi.json`
+- `GET /openapi.yaml`
+- `GET /docs`
 
-# Custom: overdue tasks
-curl http://localhost:3000/tasks/overdue
+## Auth Convention
 
-# Docs UI
-open http://localhost:3000/docs
-```
+The standard path uses:
 
----
+- JWT bearer tokens for user-authenticated routes
+- API keys for programmatic access
+- `composeAuth()` for routes that accept either mechanism
 
-## Next Steps
-
-- [Core Concepts: Models](./core-concepts/models.md) — Drizzle tables, schema overrides, CRUD options
-- [Core Concepts: Routing](./core-concepts/routing.md) — File-based routing, `validate()`, OpenAPI annotations
-- [Core Concepts: Configuration](./core-concepts/configuration.md) — `defineConfig()` full reference
-- [API Reference: Auth Middleware](./api-reference/middleware.md) — JWT, session, API key auth
-- [Deployment Guides](./deployment/vercel.md) — Vercel, Cloudflare, AWS
+See the [minimal example](../examples/minimal/README.md) and [full-stack example](../examples/full-stack/README.md) for the current auth shape.

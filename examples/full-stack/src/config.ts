@@ -10,9 +10,8 @@ import { defineConfig } from '@web-loom/api-core';
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: 'pg',
-    poolSize: 10,
-    ssl: true,
+    driver: 'neon-serverless',
+    poolSize: 1,
   },
 
   routes: { dir: './src/routes' },
@@ -45,7 +44,6 @@ export default defineConfig({
   observability: {
     logging: { level: 'info', format: 'json' },
     metrics: { enabled: true, endpoint: '/metrics' },
-    tracing: { enabled: true, sampleRate: 0.1 },
   },
 
   development: {

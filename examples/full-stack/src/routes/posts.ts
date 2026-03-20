@@ -26,8 +26,8 @@ const createPostSchema = z.object({
 
 const updatePostSchema = createPostSchema.partial();
 
-// GET /posts — List published posts
-routes.get('/posts', async (c) => {
+// GET /api/posts/feed — Curated published feed
+routes.get('/feed', async (c) => {
   const posts = await c.var.db
     .select({
       id: postsTable.id,
@@ -46,8 +46,8 @@ routes.get('/posts', async (c) => {
   return c.json({ posts });
 });
 
-// GET /posts/:id — Single post with author
-routes.get('/posts/:id', async (c) => {
+// GET /api/posts/:id/details — Single post with author + comments
+routes.get('/:id/details', async (c) => {
   const [post] = await c.var.db
     .select({
       id: postsTable.id,
@@ -76,8 +76,8 @@ routes.get('/posts/:id', async (c) => {
   return c.json({ post: { ...post, comments } });
 });
 
-// POST /posts — Create post (authenticated)
-routes.post('/posts', authenticate, validate('json', createPostSchema), async (c) => {
+// POST /api/posts/create — Bespoke create flow with jobs + webhooks
+routes.post('/create', authenticate, validate('json', createPostSchema), async (c) => {
   const data = c.req.valid('json');
   const userId = c.var.user!.id;
 
@@ -105,8 +105,8 @@ routes.post('/posts', authenticate, validate('json', createPostSchema), async (c
   return c.json({ post }, 201);
 });
 
-// PUT /posts/:id — Update post (owner only)
-routes.put('/posts/:id', authenticate, validate('json', updatePostSchema), async (c) => {
+// PUT /api/posts/:id/edit — Owner-only edit with extra slug logic
+routes.put('/:id/edit', authenticate, validate('json', updatePostSchema), async (c) => {
   const postId = c.req.param('id');
   const [existing] = await c.var.db
     .select()
@@ -132,8 +132,8 @@ routes.put('/posts/:id', authenticate, validate('json', updatePostSchema), async
   return c.json({ post });
 });
 
-// DELETE /posts/:id — Soft-delete (owner only)
-routes.delete('/posts/:id', authenticate, async (c) => {
+// DELETE /api/posts/:id/remove — Soft-delete (owner only)
+routes.delete('/:id/remove', authenticate, async (c) => {
   const postId = c.req.param('id');
   const [existing] = await c.var.db
     .select()

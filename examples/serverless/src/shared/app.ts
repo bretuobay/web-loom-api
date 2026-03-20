@@ -21,7 +21,11 @@ const config = defineConfig({
     connectionTimeout: 5_000,
   },
 
-  routes: { dir: './src/shared/routes' },
+  openapi: {
+    enabled: true,
+    title: 'Serverless Example API',
+    version: '1.0.0',
+  },
 
   security: {
     cors: {

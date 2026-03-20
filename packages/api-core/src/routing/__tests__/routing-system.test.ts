@@ -12,6 +12,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 
@@ -22,6 +23,7 @@ import { globalErrorHandler } from '../error-handler';
 import { RouteLoadError, RouteConflictError } from '../errors';
 import { discoverAndMountRoutes } from '../route-discovery';
 import type { WebLoomVariables } from '../../types';
+import { RouteRegistry } from '../../registry/route-registry';
 
 // ---------------------------------------------------------------------------
 // filePathToMountPath
@@ -219,5 +221,51 @@ describe('discoverAndMountRoutes', () => {
     expect(error.code).toBe('ROUTE_CONFLICT_ERROR');
     expect(error.files).toEqual(['routes/a.ts', 'routes/b.ts']);
     expect(error.conflictPath).toBe('GET /users');
+  });
+
+  it('mounts discovered routes under a base path and collects OpenAPI metadata once per route', async () => {
+    const routeFile = join(tmpDir, 'users.ts');
+    await writeFile(
+      routeFile,
+      `
+        import { defineRoutes, openApiMeta } from '${pathToFileURL(join(process.cwd(), 'src/index.ts')).href}';
+
+        const routes = defineRoutes();
+
+        routes.get(
+          '/',
+          openApiMeta({
+            summary: 'List users',
+            operationId: 'listUsers',
+            responses: { 200: { description: 'OK' } },
+          }),
+          (c) => c.json({ ok: true })
+        );
+
+        export default routes;
+      `
+    );
+
+    const app = new Hono<{ Variables: WebLoomVariables }>();
+    const routeRegistry = new RouteRegistry();
+    const routeMetas: Array<{ path: string; method: string; meta: { summary?: string } }> = [];
+
+    await discoverAndMountRoutes(app, tmpDir, {
+      basePath: '/api',
+      routeRegistry,
+      routeMetaEntries: routeMetas as any,
+    });
+
+    const res = await app.fetch(new Request('http://localhost/api/users'));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+
+    expect(routeRegistry.has('/api/users', 'GET')).toBe(true);
+    expect(routeMetas).toHaveLength(1);
+    expect(routeMetas[0]).toMatchObject({
+      path: '/api/users',
+      method: 'GET',
+    });
+    expect(routeMetas[0]?.meta.summary).toBe('List users');
   });
 });

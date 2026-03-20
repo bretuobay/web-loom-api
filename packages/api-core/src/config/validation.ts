@@ -205,6 +205,7 @@ export const webLoomConfigSchema = z.object({
       title: z.string().optional(),
       version: z.string().optional(),
       description: z.string().optional(),
+      routeBasePath: z.string().optional(),
     })
     .optional(),
   security: securityConfigSchema.optional(),

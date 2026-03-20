@@ -1,5 +1,7 @@
 # Model-Driven Development
 
+In the current standard runtime path, generated CRUD routes are mounted under `/api`. A model with `basePath: '/users'` generates routes at `/api/users` and `/api/users/:id`.
+
 In Web Loom API, the **Drizzle table definition is the single source of truth**. `defineModel()` wraps a Drizzle table to:
 
 1. Derive Zod validation schemas automatically via `drizzle-zod`

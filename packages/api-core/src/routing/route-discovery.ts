@@ -4,6 +4,63 @@ import { join } from 'node:path';
 import type { WebLoomVariables } from '../types';
 import { filePathToMountPath } from './path-utils';
 import { RouteLoadError, RouteConflictError } from './errors';
+import { getRouteMeta, type RouteMetaEntry } from './open-api-meta';
+import type { RouteRegistry } from '../registry/route-registry';
+import type { HTTPMethod } from '@web-loom/api-shared';
+
+interface DiscoverRoutesOptions {
+  basePath?: string;
+  routeRegistry?: RouteRegistry;
+  routeMetaEntries?: RouteMetaEntry[];
+}
+
+function joinPaths(...parts: string[]): string {
+  const segments = parts.flatMap((part) => part.split('/').filter(Boolean));
+  return segments.length ? `/${segments.join('/')}` : '/';
+}
+
+function buildRouteMetadata(meta: RouteMetaEntry['meta']) {
+  const responses = meta.responses
+    ? Object.entries(meta.responses).map(([status, response]) => {
+        const responseEntry: {
+          status: number;
+          description: string;
+          schema?: unknown;
+        } = {
+          status: Number(status),
+          description: response.description,
+        };
+
+        if (response.schema !== undefined) {
+          responseEntry.schema = response.schema;
+        }
+
+        return responseEntry;
+      })
+    : undefined;
+
+  const metadata: {
+    description?: string;
+    tags?: string[];
+    deprecated?: boolean;
+    responses?: Array<{ status: number; description: string; schema?: unknown }>;
+  } = {};
+
+  if (meta.description !== undefined) {
+    metadata.description = meta.description;
+  }
+  if (meta.tags !== undefined) {
+    metadata.tags = meta.tags;
+  }
+  if (meta.deprecated !== undefined) {
+    metadata.deprecated = meta.deprecated;
+  }
+  if (responses !== undefined) {
+    metadata.responses = responses;
+  }
+
+  return metadata;
+}
 
 /**
  * Recursively collect all .ts files under a directory, sorted for
@@ -35,7 +92,8 @@ async function collectRouteFiles(dir: string): Promise<string[]> {
  */
 export async function discoverAndMountRoutes(
   mainApp: Hono<{ Variables: WebLoomVariables }>,
-  routesDir: string
+  routesDir: string,
+  options: DiscoverRoutesOptions = {}
 ): Promise<void> {
   // Check directory existence; warn and bail if absent
   try {
@@ -49,6 +107,7 @@ export async function discoverAndMountRoutes(
 
   const files = await collectRouteFiles(routesDir);
   const seen = new Map<string, string>(); // "METHOD /path" → filePath
+  const basePath = options.basePath ?? '';
 
   for (const filePath of files) {
     const module = await import(filePath);
@@ -62,21 +121,65 @@ export async function discoverAndMountRoutes(
     }
 
     const mountPath = filePathToMountPath(filePath, routesDir);
+    const subRouter = router as Hono<{ Variables: WebLoomVariables }>;
+    const discoveredRoutes = new Map<
+      string,
+      { method: HTTPMethod; path: string; meta?: RouteMetaEntry['meta']; handler: unknown }
+    >();
 
-    // Conflict detection: inspect registered routes on the sub-router
-    for (const route of (router as Hono).routes) {
-      const key = `${route.method.toUpperCase()} ${mountPath === '/' ? '' : mountPath}${route.path}`;
-      if (seen.has(key)) {
-        throw new RouteConflictError(
-          route.method.toUpperCase(),
-          key.slice(route.method.length + 1),
-          seen.get(key) ?? filePath,
-          filePath
-        );
+    // Hono stores one entry per handler/middleware in the chain. Collapse those
+    // entries into one logical route per method+path before registering.
+    for (const route of subRouter.routes) {
+      const fullPath = joinPaths(basePath, mountPath, route.path);
+      const key = `${route.method.toUpperCase()} ${fullPath}`;
+      const existing = discoveredRoutes.get(key);
+      const meta = getRouteMeta(route.handler as Parameters<typeof getRouteMeta>[0]);
+      const entry: {
+        method: HTTPMethod;
+        path: string;
+        meta?: RouteMetaEntry['meta'];
+        handler: unknown;
+      } = {
+        method: route.method.toUpperCase() as HTTPMethod,
+        path: fullPath,
+        handler: route.handler,
+      };
+
+      const resolvedMeta = meta ?? existing?.meta;
+      if (resolvedMeta !== undefined) {
+        entry.meta = resolvedMeta;
       }
-      seen.set(key, filePath);
+
+      discoveredRoutes.set(key, entry);
     }
 
-    mainApp.route(mountPath, router as Hono);
+    for (const [key, route] of discoveredRoutes) {
+      if (seen.has(key)) {
+        throw new RouteConflictError(route.method, route.path, seen.get(key) ?? filePath, filePath);
+      }
+
+      seen.set(key, filePath);
+
+      options.routeRegistry?.register({
+        path: route.path,
+        method: route.method,
+        handler: route.handler as () => Promise<Response>,
+        ...(route.meta
+          ? {
+              metadata: buildRouteMetadata(route.meta),
+            }
+          : {}),
+      });
+
+      if (route.meta) {
+        options.routeMetaEntries?.push({
+          path: route.path,
+          method: route.method,
+          meta: route.meta,
+        });
+      }
+    }
+
+    mainApp.route(joinPaths(basePath, mountPath), subRouter);
   }
 }

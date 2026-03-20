@@ -9,12 +9,18 @@ import { defineConfig } from '@web-loom/api-core';
 export default defineConfig({
   database: {
     url: process.env.DATABASE_URL!,
-    driver: 'pg',
-    poolSize: 5,
+    driver: 'neon-serverless',
+    poolSize: 1,
   },
 
   // Route files are auto-discovered from this directory
   routes: { dir: './src/routes' },
+
+  openapi: {
+    enabled: true,
+    title: 'Minimal API',
+    version: '1.0.0',
+  },
 
   security: {
     cors: {

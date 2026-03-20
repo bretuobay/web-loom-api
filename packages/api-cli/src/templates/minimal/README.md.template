@@ -1,58 +1,17 @@
 # {{PROJECT_NAME}}
 
-Web Loom API project
+Minimal Web Loom API project.
 
-## Getting Started
+## Defaults
 
-1. Install dependencies:
+- Neon Postgres via `neon-serverless`
+- generated CRUD under `/api`
+- OpenAPI enabled by default
+
+## Start
 
 ```bash
 {{INSTALL_CMD}}
-```
-
-2. Copy `.env.example` to `.env` and configure:
-
-```bash
 cp .env.example .env
-```
-
-3. Run database migrations:
-
-```bash
-{{RUN_CMD}} migrate:up
-```
-
-4. Start development server:
-
-```bash
 {{RUN_CMD}} dev
 ```
-
-## Available Scripts
-
-- `{{RUN_CMD}} dev` - Start development server with hot reload
-- `{{RUN_CMD}} build` - Build for production
-- `{{RUN_CMD}} start` - Start production server
-- `{{RUN_CMD}} migrate:create` - Create a new migration
-- `{{RUN_CMD}} migrate:up` - Run pending migrations
-- `{{RUN_CMD}} migrate:down` - Rollback last migration
-- `{{RUN_CMD}} seed` - Seed database with test data
-- `{{RUN_CMD}} test` - Run tests
-
-## Project Structure
-
-```
-src/
-├── models/     # Data models
-├── routes/     # API routes
-└── index.ts    # Application entry point
-```
-
-## Documentation
-
-- [Web Loom Documentation](https://webloom.dev/docs)
-- [API Reference](https://webloom.dev/api)
-
-## License
-
-MIT
