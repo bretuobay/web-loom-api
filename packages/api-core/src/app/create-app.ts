@@ -38,6 +38,10 @@ function joinPaths(...parts: string[]): string {
   return segments.length ? `/${segments.join('/')}` : '/';
 }
 
+const importOptionalModule = new Function('specifier', 'return import(specifier)') as <TModule>(
+  specifier: string
+) => Promise<TModule>;
+
 function registerMountedRouterRoutes<TRouterEnv extends Env>(
   routeRegistry: RouteRegistry,
   router: Hono<TRouterEnv>,
@@ -190,7 +194,9 @@ export async function createApp(
   let crudGenerator = options?.crudGenerator;
   if (!crudGenerator && config.features?.crud !== false) {
     try {
-      ({ generateCrudRouter: crudGenerator } = await import('@web-loom/api-generator-crud'));
+      ({ generateCrudRouter: crudGenerator } = await importOptionalModule<{
+        generateCrudRouter: NonNullable<CreateAppOptions['crudGenerator']>;
+      }>('@web-loom/api-generator-crud'));
     } catch {
       console.warn(
         '[web-loom] CRUD is enabled but @web-loom/api-generator-crud is not installed; skipping generated CRUD routes.'
@@ -223,7 +229,9 @@ export async function createApp(
   let openapiSetup = options?.openapiSetup;
   if (!openapiSetup && config.openapi?.enabled !== false) {
     try {
-      ({ setupOpenApiRoutes: openapiSetup } = await import('@web-loom/api-generator-openapi'));
+      ({ setupOpenApiRoutes: openapiSetup } = await importOptionalModule<{
+        setupOpenApiRoutes: NonNullable<CreateAppOptions['openapiSetup']>;
+      }>('@web-loom/api-generator-openapi'));
     } catch {
       console.warn(
         '[web-loom] OpenAPI is enabled but @web-loom/api-generator-openapi is not installed; skipping /openapi.json and /docs routes.'

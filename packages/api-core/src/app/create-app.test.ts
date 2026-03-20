@@ -9,18 +9,12 @@ vi.mock('../db/create-drizzle-db', () => ({
   })),
 }));
 
-vi.mock('@web-loom/api-generator-crud', async () => {
-  return import('../../../api-generators/crud/src/index.ts');
-});
-
-vi.mock('@web-loom/api-generator-openapi', async () => {
-  return import('../../../api-generators/openapi/src/index.ts');
-});
-
 import { createApp } from './create-app';
 import { defineConfig } from '../config/define-config';
 import { defineModel } from '../models/define-model';
 import { modelRegistry } from '../models/registry';
+import { generateCrudRouter } from '../../../api-generators/crud/src/generate-crud-router';
+import { setupOpenApiRoutes } from '../../../api-generators/openapi/src/serve-openapi';
 
 describe('createApp()', () => {
   beforeEach(() => {
@@ -55,7 +49,11 @@ describe('createApp()', () => {
           title: 'Test API',
           version: '1.0.0',
         },
-      })
+      }),
+      {
+        crudGenerator: generateCrudRouter,
+        openapiSetup: setupOpenApiRoutes,
+      }
     );
 
     const openApiRes = await app.handleRequest(new Request('http://localhost/openapi.json'));
